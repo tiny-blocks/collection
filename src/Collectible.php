@@ -27,14 +27,14 @@ interface Collectible extends Countable, IteratorAggregate
      * @param iterable $elements The elements to initialize the collection with.
      * @return Collectible<Key, Value> A new Collectible instance.
      */
-    public static function from(iterable $elements): Collectible;
+    public static function createFrom(iterable $elements): Collectible;
 
     /**
      * Creates an empty Collectible instance.
      *
      * @return Collectible<Key, Value> An empty Collectible instance.
      */
-    public static function fromEmpty(): Collectible;
+    public static function createFromEmpty(): Collectible;
 
     /**
      * Adds one or more elements to the collection.
@@ -45,10 +45,10 @@ interface Collectible extends Countable, IteratorAggregate
     public function add(mixed ...$elements): Collectible;
 
     /**
-     * Applies a transformation to each element in the collection.
+     * Executes actions on each element in the collection without modifying it.
      *
      * @param Closure ...$actions The actions to perform on each element.
-     * @return Collectible<Key, Value> The updated collection.
+     * @return Collectible<Key, Value> The original collection for chaining.
      */
     public function each(Closure ...$actions): Collectible;
 

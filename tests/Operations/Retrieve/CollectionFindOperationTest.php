@@ -13,7 +13,7 @@ final class CollectionFindOperationTest extends TestCase
     public function testFindByInEmptyCollection(): void
     {
         /** @Given an empty collection */
-        $collection = Collection::from(elements: []);
+        $collection = Collection::createFrom(elements: []);
 
         /** @When attempting to find any element */
         $actual = $collection->findBy(fn(mixed $element): bool => true);
@@ -30,7 +30,7 @@ final class CollectionFindOperationTest extends TestCase
             new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH'),
             new CryptoCurrency(name: 'Binance Coin', price: 1500.0, symbol: 'BNB')
         ];
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When attempting to find an element that doesn't match any condition */
         $actual = $collection->findBy(fn(CryptoCurrency $element): bool => $element->symbol === 'XRP');
@@ -47,7 +47,7 @@ final class CollectionFindOperationTest extends TestCase
             new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH'),
             new CryptoCurrency(name: 'Binance Coin', price: 1500.0, symbol: 'BNB')
         ];
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When attempting to find the first element matching multiple predicates */
         $actual = $collection->findBy(
@@ -67,7 +67,7 @@ final class CollectionFindOperationTest extends TestCase
             new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH'),
             new CryptoCurrency(name: 'Binance Coin', price: 1500.0, symbol: 'BNB')
         ];
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When attempting to find the first matching element */
         $actual = $collection->findBy(fn(CryptoCurrency $element): bool => $element->symbol === 'ETH');
@@ -84,7 +84,7 @@ final class CollectionFindOperationTest extends TestCase
             new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH'),
             new CryptoCurrency(name: 'Binance Coin', price: 1500.0, symbol: 'BNB')
         ];
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When attempting to find an element matching multiple predicates that do not match */
         $actual = $collection->findBy(

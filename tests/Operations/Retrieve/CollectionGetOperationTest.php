@@ -19,7 +19,7 @@ final class CollectionGetOperationTest extends TestCase
             new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH'),
             new CryptoCurrency(name: 'Binance Coin', price: 1500.0, symbol: 'BNB')
         ];
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When attempting to get an element at index zero */
         $actual = $collection->getBy(index: 0);
@@ -36,7 +36,7 @@ final class CollectionGetOperationTest extends TestCase
             new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH'),
             new CryptoCurrency(name: 'Binance Coin', price: 1500.0, symbol: 'BNB')
         ];
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When attempting to get an element at a valid index */
         $actual = $collection->getBy(index: 1);
@@ -48,7 +48,7 @@ final class CollectionGetOperationTest extends TestCase
     public function testGetByIndexReturnsNullForNegativeIndex(): void
     {
         /** @Given a collection with elements */
-        $collection = Collection::from(elements: [
+        $collection = Collection::createFrom(elements: [
             new CryptoCurrency(name: 'Bitcoin', price: 60000.0, symbol: 'BTC'),
             new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH'),
             new CryptoCurrency(name: 'Binance Coin', price: 1500.0, symbol: 'BNB')
@@ -64,7 +64,7 @@ final class CollectionGetOperationTest extends TestCase
     public function testGetByIndexReturnsNullForEmptyCollection(): void
     {
         /** @Given an empty collection */
-        $collection = Collection::from(elements: []);
+        $collection = Collection::createFrom(elements: []);
 
         /** @When attempting to get an element at any index */
         $actual = $collection->getBy(index: 0);
@@ -76,7 +76,7 @@ final class CollectionGetOperationTest extends TestCase
     public function testGetByIndexReturnsNullForOutOfRangeIndex(): void
     {
         /** @Given a collection with elements */
-        $collection = Collection::from(elements: [
+        $collection = Collection::createFrom(elements: [
             new CryptoCurrency(name: 'Bitcoin', price: (float)rand(60000, 999999), symbol: 'BTC'),
             new CryptoCurrency(name: 'Ethereum', price: (float)rand(10000, 60000), symbol: 'ETH'),
             new CryptoCurrency(name: 'Binance Coin', price: (float)rand(1000, 2000), symbol: 'BNB')
@@ -96,7 +96,7 @@ final class CollectionGetOperationTest extends TestCase
             new CryptoCurrency(name: 'Bitcoin', price: 60000.0, symbol: 'BTC'),
             new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH')
         ];
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When attempting to get an element at a valid index with a default return value equal to the element */
         $expected = $elements[1];
@@ -110,7 +110,7 @@ final class CollectionGetOperationTest extends TestCase
     public function testGetByIndexReturnsExpectedValue(int $index, iterable $elements, mixed $expected): void
     {
         /** @Given a collection with elements */
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When attempting to get an element at the specified index */
         $actual = $collection->getBy(index: $index);

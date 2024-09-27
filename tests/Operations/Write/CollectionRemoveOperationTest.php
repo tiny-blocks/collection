@@ -26,7 +26,7 @@ final class CollectionRemoveOperationTest extends TestCase
         $ethereum = new CryptoCurrency(name: 'Ethereum', price: (float)rand(10000, 60000), symbol: 'ETH');
 
         /** @And a collection containing these elements */
-        $collection = Collection::from(elements: [$bitcoin, $ethereum]);
+        $collection = Collection::createFrom(elements: [$bitcoin, $ethereum]);
 
         /** @When removing all elements without a callback */
         $actual = $collection->removeAll();
@@ -39,7 +39,7 @@ final class CollectionRemoveOperationTest extends TestCase
     public function testRemoveSpecificElement(mixed $element, iterable $elements, iterable $expected): void
     {
         /** @Given a collection created from initial elements */
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When removing the specified element */
         $actual = $collection->remove(element: $element);
@@ -57,7 +57,7 @@ final class CollectionRemoveOperationTest extends TestCase
         $ethereum = new CryptoCurrency(name: 'Ethereum', price: (float)rand(10000, 60000), symbol: 'ETH');
 
         /** @And a collection containing these elements */
-        $collection = Collection::from(elements: [$bitcoin, $ethereum]);
+        $collection = Collection::createFrom(elements: [$bitcoin, $ethereum]);
 
         /** @When removing the Bitcoin (BTC) element using a filter */
         $actual = $collection->removeAll(filter: fn(CryptoCurrency $item) => $item === $bitcoin);

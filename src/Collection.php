@@ -44,12 +44,12 @@ class Collection implements Collectible
         $this->iterator = new InternalIterator(elements: $elements, operation: $operation);
     }
 
-    public static function from(iterable $elements): Collectible
+    public static function createFrom(iterable $elements): Collectible
     {
         return new Collection(operation: Create::fromEmpty(), elements: $elements);
     }
 
-    public static function fromEmpty(): Collectible
+    public static function createFromEmpty(): Collectible
     {
         return new Collection(operation: Create::fromEmpty());
     }
@@ -68,8 +68,7 @@ class Collection implements Collectible
 
     public function each(Closure ...$actions): Collectible
     {
-        $operation = Each::from(...$actions);
-        $this->iterator = $this->iterator->apply(operation: $operation);
+        Each::from(...$actions)->execute(elements: $this->iterator);
         return $this;
     }
 

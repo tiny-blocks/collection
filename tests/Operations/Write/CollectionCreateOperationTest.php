@@ -13,7 +13,7 @@ final class CollectionCreateOperationTest extends TestCase
     public function testEmptyCollectionShouldBeEmpty(): void
     {
         /** @Given an empty collection */
-        $collection = Collection::fromEmpty();
+        $collection = Collection::createFromEmpty();
 
         /** @Then it should be empty */
         self::assertTrue($collection->isEmpty());
@@ -22,13 +22,13 @@ final class CollectionCreateOperationTest extends TestCase
     public function testCreatingCollectionFromExistingCollection(): void
     {
         /** @Given a collection of cryptocurrencies */
-        $collection = Collection::from(elements: [
+        $collection = Collection::createFrom(elements: [
             new CryptoCurrency(name: 'Bitcoin', price: 60000.0, symbol: 'BTC'),
             new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH'),
         ]);
 
         /** @When creating another collection from the existing collection */
-        $collectionB = Collection::from(elements: $collection);
+        $collectionB = Collection::createFrom(elements: $collection);
 
         /** @Then the new collection should have the same number of elements */
         self::assertCount($collection->count(), $collectionB);

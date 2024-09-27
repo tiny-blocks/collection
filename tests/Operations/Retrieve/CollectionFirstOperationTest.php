@@ -18,7 +18,7 @@ final class CollectionFirstOperationTest extends TestCase
             new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH'),
             new CryptoCurrency(name: 'Binance Coin', price: 1500.0, symbol: 'BNB')
         ];
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When retrieving the first element */
         $actual = $collection->first();
@@ -30,7 +30,7 @@ final class CollectionFirstOperationTest extends TestCase
     public function testFirstReturnsDefaultValueWhenCollectionIsEmpty(): void
     {
         /** @Given an empty collection */
-        $collection = Collection::fromEmpty();
+        $collection = Collection::createFromEmpty();
 
         /** @When attempting to get the first element */
         $actual = $collection->first(defaultValueIfNotFound: 'default');
@@ -42,7 +42,7 @@ final class CollectionFirstOperationTest extends TestCase
     public function testFirstReturnsNullWhenCollectionIsEmptyWithoutDefaultValue(): void
     {
         /** @Given an empty collection */
-        $collection = Collection::fromEmpty();
+        $collection = Collection::createFromEmpty();
 
         /** @When retrieving the first element without a default value */
         $actual = $collection->first();
