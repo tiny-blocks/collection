@@ -1,0 +1,74 @@
+{
+    "name": "tiny-blocks/collection",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/tiny-blocks/collection",
+    "description": "Provides a flexible and efficient API to manipulate, iterate, and manage collections in a structured and type-safe manner.",
+    "prefer-stable": true,
+    "minimum-stability": "stable",
+    "keywords": [
+        "psr",
+        "json",
+        "array",
+        "psr-4",
+        "psr-12",
+        "collection",
+        "tiny-blocks"
+    ],
+    "authors": [
+        {
+            "name": "Gustavo Freze de Araujo Santos",
+            "homepage": "https://github.com/gustavofreze"
+        }
+    ],
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "infection/extension-installer": true
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "TinyBlocks\\Collection\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TinyBlocks\\Collection\\": "tests/"
+        }
+    },
+    "require": {
+        "php": "^8.2",
+        "tiny-blocks/serializer": "^3",
+        "tiny-blocks/value-object": "^2"
+    },
+    "require-dev": {
+        "infection/infection": "^0.29",
+        "phpmd/phpmd": "^2.15",
+        "phpunit/phpunit": "^11",
+        "squizlabs/php_codesniffer": "^3.10"
+    },
+    "scripts": {
+        "phpcs": "phpcs --standard=PSR12 --extensions=php ./src",
+        "phpmd": "phpmd ./src text phpmd.xml --suffixes php --ignore-violations-on-exit",
+        "test": "phpunit --log-junit=report/coverage/junit.xml --coverage-xml=report/coverage/coverage-xml --coverage-html=report/coverage/coverage-html tests",
+        "test-mutation": "infection --only-covered --logger-html=report/coverage/mutation-report.html --coverage=report/coverage --min-msi=100 --min-covered-msi=100 --threads=4",
+        "test-no-coverage": "phpunit --no-coverage",
+        "test-mutation-no-coverage": "infection --only-covered --min-msi=100 --threads=4",
+        "review": [
+            "@phpcs",
+            "@phpmd"
+        ],
+        "tests": [
+            "@test",
+            "@test-mutation"
+        ],
+        "tests-no-coverage": [
+            "@test-no-coverage",
+            "@test-mutation-no-coverage"
+        ],
+        "tests-file-no-coverage": [
+            "@test-no-coverage"
+        ]
+    }
+}
