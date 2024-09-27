@@ -17,7 +17,7 @@ final class CollectionMapToJsonOperationTest extends TestCase
     public function testCollectionToJsonConversion(iterable $elements, string $expected): void
     {
         /** @Given a collection with elements */
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When converting the collection to JSON */
         $actual = $collection->toJson();

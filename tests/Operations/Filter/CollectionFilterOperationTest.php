@@ -15,7 +15,7 @@ final class CollectionFilterOperationTest extends TestCase
     public function testFilterOnLargeDataset(): void
     {
         /** @Given a large collection with ten thousand elements */
-        $collection = Collection::from(elements: range(1, 10000));
+        $collection = Collection::createFrom(elements: range(1, 10000));
 
         /** @When filtering values greater than or equal to 9991 */
         $actual = $collection->filter(fn(int $value): bool => $value >= 9991);
@@ -31,7 +31,7 @@ final class CollectionFilterOperationTest extends TestCase
         iterable $predicates
     ): void {
         /** @Given a collection with elements */
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When filtering the collection with multiple predicates */
         $actual = $collection->filter(...$predicates);
@@ -44,7 +44,7 @@ final class CollectionFilterOperationTest extends TestCase
     public function testFilterAppliesDefaultArrayFilter(iterable $elements, iterable $expected): void
     {
         /** @Given a collection with elements */
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When filtering the collection without any predicates (using default truthy filter) */
         $actual = $collection->filter();
@@ -57,7 +57,7 @@ final class CollectionFilterOperationTest extends TestCase
     public function testFilterPreservesKeys(iterable $elements, iterable $expected): void
     {
         /** @Given a collection with elements and keys */
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When filtering the collection without any predicates (using default truthy filter) */
         $actual = $collection->filter();

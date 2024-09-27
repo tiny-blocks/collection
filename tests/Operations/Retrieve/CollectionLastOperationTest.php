@@ -18,7 +18,7 @@ final class CollectionLastOperationTest extends TestCase
             new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH'),
             new CryptoCurrency(name: 'Binance Coin', price: 1500.0, symbol: 'BNB')
         ];
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When retrieving the last element */
         $actual = $collection->last();
@@ -30,7 +30,7 @@ final class CollectionLastOperationTest extends TestCase
     public function testLastReturnsDefaultValueWhenCollectionIsEmpty(): void
     {
         /** @Given an empty collection */
-        $collection = Collection::fromEmpty();
+        $collection = Collection::createFromEmpty();
 
         /** @When attempting to get the last element */
         $actual = $collection->last(defaultValueIfNotFound: 'default');
@@ -42,7 +42,7 @@ final class CollectionLastOperationTest extends TestCase
     public function testLastReturnsNullWhenCollectionIsEmptyWithoutDefaultValue(): void
     {
         /** @Given an empty collection */
-        $collection = Collection::fromEmpty();
+        $collection = Collection::createFromEmpty();
 
         /** @When retrieving the last element without a default value */
         $actual = $collection->last();

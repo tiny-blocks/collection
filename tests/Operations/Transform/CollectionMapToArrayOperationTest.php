@@ -17,7 +17,7 @@ final class CollectionMapToArrayOperationTest extends TestCase
     public function testCollectionToArrayConversion(iterable $elements, iterable $expected): void
     {
         /** @Given a collection with elements */
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When converting the collection to array */
         $actual = $collection->toArray();

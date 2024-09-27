@@ -10,8 +10,10 @@
         "psr",
         "json",
         "array",
+        "yield",
         "psr-4",
         "psr-12",
+        "generator",
         "collection",
         "tiny-blocks"
     ],
