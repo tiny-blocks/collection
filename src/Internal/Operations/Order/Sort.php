@@ -24,10 +24,10 @@ final readonly class Sort implements ApplicableOperation
         $temporaryElements = iterator_to_array($elements);
 
         $predicate = is_null($this->predicate)
-            ? fn(mixed $first, mixed $second): int|float => $first <=> $second
-            : $this->predicate;
+            ? fn(mixed $first, mixed $second): int => $first <=> $second
+            : fn($first, $second): int => ($this->predicate)($first, $second);
 
-        $reversedPredicate = fn(mixed $first, mixed $second): int|float => -$predicate($first, $second);
+        $reversedPredicate = fn(mixed $first, mixed $second): int => -$predicate($first, $second);
 
         match ($this->order) {
             Order::ASCENDING_KEY    => ksort($temporaryElements),

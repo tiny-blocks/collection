@@ -63,7 +63,7 @@ use TinyBlocks\Collection\Collection;
 use TinyBlocks\Collection\Internal\Operations\Order\Order;
 use TinyBlocks\Collection\Internal\Operations\Transform\PreserveKeys;
 
-$collection = Collection::from(elements: [1, 2, 3, 4, 5])
+$collection = Collection::createFrom(elements: [1, 2, 3, 4, 5])
     ->add(6, 7) 
     ->filter(fn(int $value): bool => $value > 3) 
     ->sort(order: Order::ASCENDING_VALUE) 
@@ -219,6 +219,15 @@ These methods allow the collection's elements to be transformed or converted int
 
   ```php
   $collection->map(fn(int $value): int => $value * 2);
+  ```
+
+#### Applying actions without modifying elements
+
+- `each`: Executes actions on each element in the collection without modifying it.
+  The method is useful for performing side effects, such as logging or adding elements to another collection.
+
+  ```php
+  $collection->each(fn(Invoice $invoice): void => $collectionB->add(new InvoiceSummary($invoice->id, $invoice->amount)));
   ```
 
 #### Convert to array

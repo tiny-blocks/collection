@@ -15,7 +15,7 @@ final class CollectionTest extends TestCase
     public function testAddMapSortAndToJson(): void
     {
         /** @Given a collection */
-        $collection = Collection::from(elements: [8, 3, 7]);
+        $collection = Collection::createFrom(elements: [8, 3, 7]);
 
         /** @When adding, mapping to Amount objects, sorting by value, and converting to JSON */
         $collection
@@ -39,7 +39,7 @@ final class CollectionTest extends TestCase
     public function testFilterMapSortAndCount(): void
     {
         /** @Given a collection with values */
-        $collection = Collection::from(elements: [9.00, 3.95, 4.9, 5.0, 5.1, 120.00]);
+        $collection = Collection::createFrom(elements: [9.00, 3.95, 4.9, 5.0, 5.1, 120.00]);
 
         /** @When filtering values greater than 5, mapping them to Amounts,
          * sorting by value in ascending order, and counting
@@ -64,7 +64,7 @@ final class CollectionTest extends TestCase
     public function testMemoryUsageWithGenerators(): void
     {
         /** @Given a large collection with ten thousand elements */
-        $largeCollection = Collection::from(elements: range(1, 10000));
+        $largeCollection = Collection::createFrom(elements: range(1, 10000));
 
         /** @And I record the initial memory usage */
         $initialMemory = memory_get_usage();
@@ -93,7 +93,7 @@ final class CollectionTest extends TestCase
     public function testIterationWithoutStoringValues(): void
     {
         /** @Given a large collection with ten thousand elements */
-        $largeCollection = Collection::from(elements: range(1, 10000));
+        $largeCollection = Collection::createFrom(elements: range(1, 10000));
 
         /** @When I iterate through the collection to count values greater than 5000 */
         $count = 0;
@@ -110,7 +110,7 @@ final class CollectionTest extends TestCase
     public function testAddFilterRemoveSortAndToArray(): void
     {
         /** @Given a collection */
-        $collection = Collection::fromEmpty();
+        $collection = Collection::createFromEmpty();
 
         /** @When adding elements, filtering values greater than 5, removing specific values,
          * and sorting by value in descending order
@@ -132,7 +132,7 @@ final class CollectionTest extends TestCase
     public function testIteratorShouldBeReusedIfNoModification(): void
     {
         /** @Given a collection with elements */
-        $collection = Collection::from(elements: [1, 2, 3]);
+        $collection = Collection::createFrom(elements: [1, 2, 3]);
 
         /** @When retrieving the iterator for the first time */
         $iterator = $collection->getIterator();
@@ -148,7 +148,7 @@ final class CollectionTest extends TestCase
     public function testIteratorShouldBeRecreatedAfterModification(): void
     {
         /** @Given a collection with elements */
-        $collection = Collection::from(elements: [1, 2, 3]);
+        $collection = Collection::createFrom(elements: [1, 2, 3]);
 
         /** @When retrieving the iterator for the first time */
         $iterator = $collection->getIterator();

@@ -24,7 +24,7 @@ final class CollectionAddOperationTest extends TestCase
         iterable $expected
     ): void {
         /** @Given a collection created from initial elements */
-        $collection = Collection::from(elements: $fromElements);
+        $collection = Collection::createFrom(elements: $fromElements);
 
         /** @When adding elements to the collection using the add method */
         $collection->add(...$addElements);
@@ -40,7 +40,7 @@ final class CollectionAddOperationTest extends TestCase
         iterable $expected
     ): void {
         /** @Given a collection created from initial elements */
-        $collection = Collection::from(elements: $fromElements);
+        $collection = Collection::createFrom(elements: $fromElements);
 
         /** @When adding elements to the collection using the add method */
         $collection->add(...$addElements);
@@ -53,7 +53,7 @@ final class CollectionAddOperationTest extends TestCase
     public function testAddPrimitiveElementsToCollection(iterable $elements, iterable $expected): void
     {
         /** @Given an empty collection */
-        $collection = Collection::fromEmpty();
+        $collection = Collection::createFromEmpty();
 
         /** @When adding elements to the collection using add */
         $collection->add(...$elements);

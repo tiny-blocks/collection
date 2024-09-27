@@ -14,7 +14,7 @@ final class CollectionMapOperationTest extends TestCase
     public function testMapArrayToObject(): void
     {
         /** @Given a collection of arrays */
-        $collection = Collection::from(elements: [
+        $collection = Collection::createFrom(elements: [
             ['name' => 'Smaug', 'description' => 'Fire-breathing dragon'],
             ['name' => 'Shenron', 'description' => 'Eternal dragon'],
             ['name' => 'Toothless', 'description' => 'Night Fury dragon']
@@ -26,7 +26,7 @@ final class CollectionMapOperationTest extends TestCase
         });
 
         /** @Then the collection should contain transformed objects */
-        $expected = Collection::from(elements: [
+        $expected = Collection::createFrom(elements: [
             new Dragon(name: 'Smaug', description: 'Fire-breathing dragon'),
             new Dragon(name: 'Shenron', description: 'Eternal dragon'),
             new Dragon(name: 'Toothless', description: 'Night Fury dragon')
@@ -38,7 +38,7 @@ final class CollectionMapOperationTest extends TestCase
     public function testMapPreservesKeys(): void
     {
         /** @Given a collection with associative array elements */
-        $collection = Collection::from(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
+        $collection = Collection::createFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
 
         /** @When mapping the collection with a transformation */
         $actual = $collection->map(static fn(int $value): int => $value * 2);
@@ -50,7 +50,7 @@ final class CollectionMapOperationTest extends TestCase
     public function testMapEmptyCollection(): void
     {
         /** @Given an empty collection */
-        $collection = Collection::fromEmpty();
+        $collection = Collection::createFromEmpty();
 
         /** @When mapping the empty collection with transformations */
         $actual = $collection->map(
@@ -65,7 +65,7 @@ final class CollectionMapOperationTest extends TestCase
     public function testMapWithSingleTransformation(): void
     {
         /** @Given a collection with elements */
-        $collection = Collection::from(elements: [1, 2, 3]);
+        $collection = Collection::createFrom(elements: [1, 2, 3]);
 
         /** @When mapping the collection with a transformation */
         $actual = $collection->map(static fn(int $value): int => $value * 2);
@@ -81,7 +81,7 @@ final class CollectionMapOperationTest extends TestCase
         iterable $callbacks
     ): void {
         /** @Given a collection with elements */
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When mapping the collection with multiple transformations */
         $actual = $collection->map(...$callbacks);

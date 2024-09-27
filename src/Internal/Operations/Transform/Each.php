@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace TinyBlocks\Collection\Internal\Operations\Transform;
 
 use Closure;
-use Generator;
-use TinyBlocks\Collection\Internal\Operations\ApplicableOperation;
+use TinyBlocks\Collection\Internal\Operations\NonApplicableOperation;
 
-final class Each implements ApplicableOperation
+final class Each implements NonApplicableOperation
 {
     private array $actions;
 
@@ -22,14 +21,16 @@ final class Each implements ApplicableOperation
         return new Each(...$actions);
     }
 
-    public function apply(iterable $elements): Generator
+    public function execute(iterable $elements): void
     {
-        foreach ($elements as $key => $value) {
-            foreach ($this->actions as $action) {
-                $action($value, $key, $elements);
+        $runActions = function () use ($elements): void {
+            foreach ($elements as $key => $value) {
+                foreach ($this->actions as $action) {
+                    $action($value, $key);
+                }
             }
+        };
 
-            yield $key => $value;
-        }
+        $runActions();
     }
 }

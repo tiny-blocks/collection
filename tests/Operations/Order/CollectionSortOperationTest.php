@@ -16,7 +16,7 @@ final class CollectionSortOperationTest extends TestCase
     public function testSortAmountByValue(): void
     {
         /** @Given a collection of Amount objects */
-        $collection = Collection::from(elements: [
+        $collection = Collection::createFrom(elements: [
             new Amount(value: 200.00, currency: Currency::USD),
             new Amount(value: 100.50, currency: Currency::USD),
             new Amount(value: 150.75, currency: Currency::EUR)
@@ -46,7 +46,7 @@ final class CollectionSortOperationTest extends TestCase
     public function testSortEmptyCollection(): void
     {
         /** @Given an empty collection */
-        $collection = Collection::fromEmpty();
+        $collection = Collection::createFromEmpty();
 
         /** @When sorting the empty collection */
         $actual = $collection->sort();
@@ -59,7 +59,7 @@ final class CollectionSortOperationTest extends TestCase
     public function testSortAscendingByKey(iterable $elements, iterable $expected): void
     {
         /** @Given a collection with unordered elements */
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When sorting the collection in ascending order by key */
         $actual = $collection->sort();
@@ -72,7 +72,7 @@ final class CollectionSortOperationTest extends TestCase
     public function testSortAscendingByValue(iterable $elements, iterable $expected): void
     {
         /** @Given a collection with unordered elements */
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When sorting the collection in ascending order by value */
         $actual = $collection->sort(order: Order::ASCENDING_VALUE);
@@ -85,7 +85,7 @@ final class CollectionSortOperationTest extends TestCase
     public function testSortDescendingByKey(iterable $elements, iterable $expected): void
     {
         /** @Given a collection with unordered elements */
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When sorting the collection in descending order by key */
         $actual = $collection->sort(order: Order::DESCENDING_KEY);
@@ -98,7 +98,7 @@ final class CollectionSortOperationTest extends TestCase
     public function testSortDescendingByValue(iterable $elements, iterable $expected): void
     {
         /** @Given a collection with unordered elements */
-        $collection = Collection::from(elements: $elements);
+        $collection = Collection::createFrom(elements: $elements);
 
         /** @When sorting the collection in descending order by value */
         $actual = $collection->sort(order: Order::DESCENDING_VALUE);
