@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TinyBlocks\Collection\Operations\Write;
+
+use PHPUnit\Framework\TestCase;
+use TinyBlocks\Collection\Collection;
+use TinyBlocks\Collection\Models\CryptoCurrency;
+
+final class CollectionCreateOperationTest extends TestCase
+{
+    public function testEmptyCollectionShouldBeEmpty(): void
+    {
+        /** @Given an empty collection */
+        $collection = Collection::fromEmpty();
+
+        /** @Then it should be empty */
+        self::assertTrue($collection->isEmpty());
+    }
+
+    public function testCreatingCollectionFromExistingCollection(): void
+    {
+        /** @Given a collection of cryptocurrencies */
+        $collection = Collection::from(elements: [
+            new CryptoCurrency(name: 'Bitcoin', price: 60000.0, symbol: 'BTC'),
+            new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH'),
+        ]);
+
+        /** @When creating another collection from the existing collection */
+        $collectionB = Collection::from(elements: $collection);
+
+        /** @Then the new collection should have the same number of elements */
+        self::assertCount($collection->count(), $collectionB);
+
+        /** @And both collections should be equal */
+        self::assertTrue($collectionB->equals(other: $collection));
+
+        /** @And the elements in both collections should match */
+        foreach ($collection as $index => $element) {
+            self::assertEquals($element, $collectionB->getBy(index: $index));
+        }
+
+        /** @And the two collections should not be the same instance */
+        self::assertNotSame($collection, $collectionB);
+    }
+}
