@@ -6,7 +6,7 @@ namespace TinyBlocks\Collection\Models;
 
 final class InvoiceSummary
 {
-    public function __construct(public string $id, public float $amount)
+    public function __construct(public float $amount, public string $customer)
     {
     }
 }

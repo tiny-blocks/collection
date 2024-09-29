@@ -27,16 +27,16 @@ final class CollectionEachOperationTest extends TestCase
 
         /** @When mapping specific attributes from invoices to invoice summaries */
         $invoices->each(function (Invoice $invoice) use ($summaries): void {
-            $summaries->add(new InvoiceSummary(id: $invoice->id, amount: $invoice->amount));
+            $summaries->add(new InvoiceSummary(amount: $invoice->amount, customer: $invoice->customer));
         });
 
         /** @Then the invoice summaries should contain the mapped data */
         self::assertCount(3, $summaries);
 
         $expected = [
-            ['id' => 'INV001', 'amount' => 100.0],
-            ['id' => 'INV002', 'amount' => 150.5],
-            ['id' => 'INV003', 'amount' => 200.75]
+            ['amount' => 100.0, 'customer' => 'Customer A'],
+            ['amount' => 150.5, 'customer' => 'Customer B'],
+            ['amount' => 200.75, 'customer' => 'Customer C']
         ];
 
         self::assertEquals($expected, $summaries->toArray());

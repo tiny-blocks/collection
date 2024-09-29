@@ -23,14 +23,14 @@ final class Each implements NonApplicableOperation
 
     public function execute(iterable $elements): void
     {
-        $runActions = function () use ($elements): void {
+        $runActions = static function ($actions) use ($elements): void {
             foreach ($elements as $key => $value) {
-                foreach ($this->actions as $action) {
+                foreach ($actions as $action) {
                     $action($value, $key);
                 }
             }
         };
 
-        $runActions();
+        $runActions($this->actions);
     }
 }
