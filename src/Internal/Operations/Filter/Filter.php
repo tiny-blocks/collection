@@ -25,12 +25,14 @@ final class Filter implements ApplicableOperation
     public function apply(iterable $elements): Generator
     {
         $predicate = $this->predicates
-            ? fn(mixed $value, mixed $key): bool => array_reduce(
-                $this->predicates,
-                fn(bool $isValid, Closure $predicate): bool => $isValid && $predicate($value, $key),
-                true
-            )
-            : fn(mixed $value): bool => (bool)$value;
+            ? function (mixed $value, mixed $key): bool {
+                return array_reduce(
+                    $this->predicates,
+                    static fn(bool $isValid, Closure $predicate): bool => $isValid && $predicate($value, $key),
+                    true
+                );
+            }
+            : static fn(mixed $value): bool => (bool)$value;
 
         foreach ($elements as $key => $value) {
             if ($predicate($value, $key)) {

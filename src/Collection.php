@@ -6,6 +6,7 @@ namespace TinyBlocks\Collection;
 
 use Closure;
 use TinyBlocks\Collection\Internal\Iterators\InternalIterator;
+use TinyBlocks\Collection\Internal\Operations\Aggregate\Reduce;
 use TinyBlocks\Collection\Internal\Operations\ApplicableOperation;
 use TinyBlocks\Collection\Internal\Operations\Compare\Equals;
 use TinyBlocks\Collection\Internal\Operations\Filter\Filter;
@@ -31,9 +32,8 @@ use Traversable;
  * filtering, mapping, and transforming elements. Internally uses iterators to apply operations
  * lazily and efficiently.
  *
- * @template Key of array-key
- * @template Value
- * @implements Collectible<Key, Value>
+ * @template Element
+ * @implements Collectible<Element>
  */
 class Collection implements Collectible
 {
@@ -44,14 +44,14 @@ class Collection implements Collectible
         $this->iterator = new InternalIterator(elements: $elements, operation: $operation);
     }
 
-    public static function createFrom(iterable $elements): Collectible
+    public static function createFrom(iterable $elements): static
     {
-        return new Collection(operation: Create::fromEmpty(), elements: $elements);
+        return new static(operation: Create::fromEmpty(), elements: $elements);
     }
 
-    public static function createFromEmpty(): Collectible
+    public static function createFromEmpty(): static
     {
-        return new Collection(operation: Create::fromEmpty());
+        return new static(operation: Create::fromEmpty());
     }
 
     public function add(mixed ...$elements): Collectible
@@ -137,6 +137,11 @@ class Collection implements Collectible
         $operation = RemoveAll::from(filter: $filter);
         $this->iterator = $this->iterator->apply(operation: $operation);
         return $this;
+    }
+
+    public function reduce(Closure $aggregator, mixed $initial): mixed
+    {
+        return Reduce::from(elements: $this->iterator)->execute(aggregator: $aggregator, initial: $initial);
     }
 
     public function sort(Order $order = Order::ASCENDING_KEY, ?Closure $predicate = null): Collectible

@@ -10,6 +10,7 @@
     * [Ordering](#ordering)
     * [Retrieving](#retrieving)
     * [Comparing](#comparing)
+    * [Aggregation](#aggregation)
     * [Transforming](#transforming)
 * [License](#license)
 * [Contributing](#contributing)
@@ -207,6 +208,19 @@ These methods enable comparing collections to check for equality or to apply oth
   ```
 
 <div id='retrieving'></div>
+
+### Aggregation
+
+These methods perform operations that return a single value based on the collection's content, such as summing or
+combining elements.
+
+- `reduce`: Combines all elements in the collection into a single value using the provided aggregator function and an
+  initial value.
+  This method is useful for accumulating results, like summing or concatenating values.
+
+  ```php
+  $collection->reduce(aggregator: fn(float $carry, float $amount): float => $carry + $amount, initial: 0.0)
+  ```
 
 ### Transforming
 
