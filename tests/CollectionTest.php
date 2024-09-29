@@ -19,8 +19,8 @@ final class CollectionTest extends TestCase
 
         /** @When adding, mapping to Amount objects, sorting by value, and converting to JSON */
         $collection
-            ->add(4)
-            ->map(fn(int $value): Amount => new Amount(value: $value, currency: Currency::USD))
+            ->add(elements: 4)
+            ->map(transformations: fn(int $value): Amount => new Amount(value: $value, currency: Currency::USD))
             ->sort(
                 order: Order::ASCENDING_VALUE,
                 predicate: fn(Amount $first, Amount $second): int => $first->value <=> $second->value
@@ -45,8 +45,8 @@ final class CollectionTest extends TestCase
          * sorting by value in ascending order, and counting
          */
         $collection
-            ->filter(fn(float $value): bool => $value > 5)
-            ->map(fn(float $value): Amount => new Amount(value: $value, currency: Currency::BRL))
+            ->filter(predicate: fn(float $value): bool => $value > 5)
+            ->map(transformations: fn(float $value): Amount => new Amount(value: $value, currency: Currency::BRL))
             ->sort(
                 order: Order::ASCENDING_VALUE,
                 predicate: fn(Amount $first, Amount $second): int => $first->value <=> $second->value
@@ -117,7 +117,7 @@ final class CollectionTest extends TestCase
          */
         $collection
             ->add(2, 6, 10, 5)
-            ->filter(fn(int $value): bool => $value > 5)
+            ->filter(predicate: fn(int $value): bool => $value > 5)
             ->remove(element: 10)
             ->sort(
                 order: Order::DESCENDING_VALUE,
@@ -127,6 +127,50 @@ final class CollectionTest extends TestCase
         /** @Then asserting the resulting array */
         self::assertSame([6], $collection->toArray());
         self::assertSame(1, $collection->count());
+    }
+
+    public function testPerformanceAndMemoryArrayVsCollection(): void
+    {
+        /** @Given a large dataset */
+        $elements = range(1, 50000);
+
+        /** @When performing operations with an array */
+        $startArrayTime = microtime(true);
+        $startArrayMemory = memory_get_usage();
+
+        $array = $elements;
+        $array = array_map(fn(int $value): Amount => new Amount(value: $value, currency: Currency::USD), $array);
+        usort($array, fn(Amount $first, Amount $second): int => $first->value <=> $second->value);
+
+        $endArrayTime = microtime(true);
+        $endArrayMemory = memory_get_usage();
+
+        /** @Then assert that the array operations are performed */
+        $arrayExecutionTime = $endArrayTime - $startArrayTime;
+        $arrayMemoryUsage = $endArrayMemory - $startArrayMemory;
+
+        /** @When performing operations with Collection using Generator */
+        $startCollectionTime = microtime(true);
+        $startCollectionMemory = memory_get_usage();
+
+        $collection = Collection::createFrom(elements: $elements);
+        $collection
+            ->map(transformations: fn(int $value): Amount => new Amount(value: $value, currency: Currency::USD))
+            ->sort(
+                order: Order::ASCENDING_VALUE,
+                predicate: fn(Amount $first, Amount $second): int => $first->value <=> $second->value
+            );
+
+        $endCollectionTime = microtime(true);
+        $endCollectionMemory = memory_get_usage();
+
+        /** @Then assert that the collection operations are performed */
+        $collectionExecutionTime = $endCollectionTime - $startCollectionTime;
+        $collectionMemoryUsage = $endCollectionMemory - $startCollectionMemory;
+
+        /** @Then assert that the collection is faster and uses less memory */
+        self::assertLessThan($arrayExecutionTime, $collectionExecutionTime, 'Collection is slower than array.');
+        self::assertLessThan($arrayMemoryUsage, $collectionMemoryUsage, 'Collection uses more memory than array.');
     }
 
     public function testIteratorShouldBeReusedIfNoModification(): void
