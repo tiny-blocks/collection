@@ -7,19 +7,18 @@ namespace TinyBlocks\Collection\Internal\Operations;
 use Generator;
 
 /**
- * Defines operations applied to the collection.
+ * Defines operations that are applied lazily to the collection.
  *
  * @template Key of array-key
  * @template Value
- * @extends Operation
+ * @extends Operation<Key, Value>
  */
-interface ApplicableOperation extends Operation
+interface LazyOperation extends Operation
 {
     /**
-     * Apply the operation to the given elements.
+     * Apply the operation lazily to the given elements.
      *
-     * @param iterable $elements The collection of elements to apply the operation on.
-     *
+     * @param iterable<Key, Value> $elements The collection of elements to apply the operation on.
      * @return Generator<Key, Value> A generator that yields the results of applying the operation.
      */
     public function apply(iterable $elements): Generator;

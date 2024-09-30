@@ -7,7 +7,6 @@ namespace TinyBlocks\Collection;
 use Closure;
 use TinyBlocks\Collection\Internal\Iterators\InternalIterator;
 use TinyBlocks\Collection\Internal\Operations\Aggregate\Reduce;
-use TinyBlocks\Collection\Internal\Operations\ApplicableOperation;
 use TinyBlocks\Collection\Internal\Operations\Compare\Equals;
 use TinyBlocks\Collection\Internal\Operations\Filter\Filter;
 use TinyBlocks\Collection\Internal\Operations\Order\Order;
@@ -39,26 +38,24 @@ class Collection implements Collectible
 {
     private InternalIterator $iterator;
 
-    private function __construct(ApplicableOperation $operation, iterable $elements = [])
+    private function __construct(InternalIterator $iterator)
     {
-        $this->iterator = new InternalIterator(elements: $elements, operation: $operation);
+        $this->iterator = $iterator;
     }
 
     public static function createFrom(iterable $elements): static
     {
-        return new static(operation: Create::fromEmpty(), elements: $elements);
+        return new static(iterator: InternalIterator::from(elements: $elements, operations: Create::fromEmpty()));
     }
 
     public static function createFromEmpty(): static
     {
-        return new static(operation: Create::fromEmpty());
+        return self::createFrom(elements: []);
     }
 
-    public function add(mixed ...$elements): Collectible
+    public function add(mixed ...$elements): static
     {
-        $operation = Add::from(newElements: $elements);
-        $this->iterator = $this->iterator->apply(operation: $operation);
-        return $this;
+        return new static(iterator: $this->iterator->add(operation: Add::from(newElements: $elements)));
     }
 
     public function count(): int
@@ -66,7 +63,7 @@ class Collection implements Collectible
         return iterator_count($this->iterator);
     }
 
-    public function each(Closure ...$actions): Collectible
+    public function each(Closure ...$actions): static
     {
         Each::from(...$actions)->execute(elements: $this->iterator);
         return $this;
@@ -77,11 +74,9 @@ class Collection implements Collectible
         return Equals::from(elements: $this->iterator)->compareAll(other: $other);
     }
 
-    public function filter(?Closure ...$predicates): Collectible
+    public function filter(?Closure ...$predicates): static
     {
-        $operation = Filter::from(...$predicates);
-        $this->iterator = $this->iterator->apply(operation: $operation);
-        return $this;
+        return new static(iterator: $this->iterator->add(operation: Filter::from(...$predicates)));
     }
 
     public function findBy(Closure ...$predicates): mixed
@@ -118,25 +113,19 @@ class Collection implements Collectible
         return Last::from(elements: $this->iterator)->element(defaultValueIfNotFound: $defaultValueIfNotFound);
     }
 
-    public function map(Closure ...$transformations): Collectible
+    public function map(Closure ...$transformations): static
     {
-        $operation = Map::from(...$transformations);
-        $this->iterator = $this->iterator->apply(operation: $operation);
-        return $this;
+        return new static(iterator: $this->iterator->add(operation: Map::from(...$transformations)));
     }
 
-    public function remove(mixed $element): Collectible
+    public function remove(mixed $element): static
     {
-        $operation = Remove::from(element: $element);
-        $this->iterator = $this->iterator->apply(operation: $operation);
-        return $this;
+        return new static(iterator: $this->iterator->add(operation: Remove::from(element: $element)));
     }
 
-    public function removeAll(?Closure $filter = null): Collectible
+    public function removeAll(?Closure $filter = null): static
     {
-        $operation = RemoveAll::from(filter: $filter);
-        $this->iterator = $this->iterator->apply(operation: $operation);
-        return $this;
+        return new static(iterator: $this->iterator->add(operation: RemoveAll::from(filter: $filter)));
     }
 
     public function reduce(Closure $aggregator, mixed $initial): mixed
@@ -144,11 +133,13 @@ class Collection implements Collectible
         return Reduce::from(elements: $this->iterator)->execute(aggregator: $aggregator, initial: $initial);
     }
 
-    public function sort(Order $order = Order::ASCENDING_KEY, ?Closure $predicate = null): Collectible
+    public function sort(Order $order = Order::ASCENDING_KEY, ?Closure $predicate = null): static
     {
-        $operation = Sort::from(order: $order, predicate: $predicate);
-        $this->iterator = $this->iterator->apply(operation: $operation);
-        return $this;
+        return new static(
+            iterator: $this->iterator->add(
+                operation: Sort::from(order: $order, predicate: $predicate)
+            )
+        );
     }
 
     public function toArray(PreserveKeys $preserveKeys = PreserveKeys::PRESERVE): array

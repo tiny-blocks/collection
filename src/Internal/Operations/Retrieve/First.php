@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace TinyBlocks\Collection\Internal\Operations\Retrieve;
 
-use TinyBlocks\Collection\Internal\Operations\NonApplicableOperation;
+use TinyBlocks\Collection\Internal\Operations\ImmediateOperation;
 
-final readonly class First implements NonApplicableOperation
+final readonly class First implements ImmediateOperation
 {
     public function __construct(private iterable $elements)
     {

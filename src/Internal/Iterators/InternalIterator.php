@@ -6,7 +6,7 @@ namespace TinyBlocks\Collection\Internal\Iterators;
 
 use Generator;
 use IteratorAggregate;
-use TinyBlocks\Collection\Internal\Operations\ApplicableOperation;
+use TinyBlocks\Collection\Internal\Operations\LazyOperation;
 
 /**
  * A generator-based iterator that applies operations lazily to collections,
@@ -16,15 +16,34 @@ use TinyBlocks\Collection\Internal\Operations\ApplicableOperation;
  * @template Value
  * @implements IteratorAggregate<Key, Value>
  */
-final readonly class InternalIterator implements IteratorAggregate
+final class InternalIterator implements IteratorAggregate
 {
-    public function __construct(private iterable $elements, private ApplicableOperation $operation)
+    /**
+     * @param iterable $elements
+     * @param iterable<LazyOperation> $operations
+     */
+    private function __construct(private readonly iterable $elements, private iterable $operations)
     {
     }
 
-    public function apply(ApplicableOperation $operation): InternalIterator
+    /**
+     * @param iterable $elements
+     * @param LazyOperation ...$operations
+     * @return InternalIterator
+     */
+    public static function from(iterable $elements, LazyOperation ...$operations): InternalIterator
     {
-        return new InternalIterator(elements: $this, operation: $operation);
+        return new InternalIterator(elements: $elements, operations: $operations);
+    }
+
+    /**
+     * @param LazyOperation $operation
+     * @return InternalIterator
+     */
+    public function add(LazyOperation $operation): InternalIterator
+    {
+        $this->operations[] = $operation;
+        return $this;
     }
 
     /**
@@ -32,6 +51,12 @@ final readonly class InternalIterator implements IteratorAggregate
      */
     public function getIterator(): Generator
     {
-        yield from $this->operation->apply(elements: $this->elements);
+        $currentElements = $this->elements;
+
+        foreach ($this->operations as $operation) {
+            $currentElements = $operation->apply(elements: $currentElements);
+        }
+
+        yield from $currentElements;
     }
 }

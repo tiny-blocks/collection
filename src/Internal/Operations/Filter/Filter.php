@@ -6,9 +6,9 @@ namespace TinyBlocks\Collection\Internal\Operations\Filter;
 
 use Closure;
 use Generator;
-use TinyBlocks\Collection\Internal\Operations\ApplicableOperation;
+use TinyBlocks\Collection\Internal\Operations\LazyOperation;
 
-final class Filter implements ApplicableOperation
+final class Filter implements LazyOperation
 {
     private array $predicates;
 
@@ -26,11 +26,12 @@ final class Filter implements ApplicableOperation
     {
         $predicate = $this->predicates
             ? function (mixed $value, mixed $key): bool {
-                return array_reduce(
-                    $this->predicates,
-                    static fn(bool $isValid, Closure $predicate): bool => $isValid && $predicate($value, $key),
-                    true
-                );
+                foreach ($this->predicates as $predicate) {
+                    if (!$predicate($value, $key)) {
+                        return false;
+                    }
+                }
+                return true;
             }
             : static fn(mixed $value): bool => (bool)$value;
 

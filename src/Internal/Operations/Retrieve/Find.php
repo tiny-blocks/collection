@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace TinyBlocks\Collection\Internal\Operations\Retrieve;
 
 use Closure;
-use TinyBlocks\Collection\Internal\Operations\NonApplicableOperation;
+use TinyBlocks\Collection\Internal\Operations\ImmediateOperation;
 
-final readonly class Find implements NonApplicableOperation
+final readonly class Find implements ImmediateOperation
 {
     private function __construct(private iterable $elements)
     {
