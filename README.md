@@ -12,6 +12,7 @@
     * [Comparing](#comparing)
     * [Aggregation](#aggregation)
     * [Transforming](#transforming)
+* [FAQ](#faq)
 * [License](#license)
 * [Contributing](#contributing)
 
@@ -21,7 +22,8 @@
 
 The `Collection` library provides a flexible and efficient API to manipulate, iterate, and manage collections in a
 structured and type-safe manner.
-It leverages PHP's [Generators](https://www.php.net/manual/en/language.generators.overview.php) for optimized memory
+
+It leverages [PHP's Generators](https://www.php.net/manual/en/language.generators.overview.php) for optimized memory
 usage and lazy evaluation, ensuring that large datasets are handled efficiently without loading all
 elements into memory at once.
 
@@ -65,10 +67,10 @@ use TinyBlocks\Collection\Internal\Operations\Order\Order;
 use TinyBlocks\Collection\Internal\Operations\Transform\PreserveKeys;
 
 $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5])
-    ->add(6, 7) 
-    ->filter(fn(int $value): bool => $value > 3) 
+    ->add(elements: [6, 7]) 
+    ->filter(predicates: fn(int $value): bool => $value > 3) 
     ->sort(order: Order::ASCENDING_VALUE) 
-    ->map(fn(int $value): int => $value * 2) 
+    ->map(transformations: fn(int $value): int => $value * 2) 
     ->toArray(preserveKeys: PreserveKeys::DISCARD); 
 
 # Output: [8, 10, 12, 14]
@@ -78,108 +80,114 @@ $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5])
 
 ### Writing
 
-These methods enable adding, removing, and modifying elements in the collection.
+These methods enable adding, removing, and modifying elements in the Collection.
 
 #### Adding elements
 
-- `add`:
-  Adds one or more elements to the collection.
+- `add`: Adds one or more elements to the Collection.
 
   ```php
   $collection->add(elements: [1, 2, 3]);
   ```
 
   ```php
-  $collection->add('X', 'Y', 'Z');
+  $collection ->add('X', 'Y', 'Z');
   ```
 
 #### Removing elements
 
-- `remove`: Removes a specific element from the collection.
+- `remove`: Removes a specific element from the Collection.
 
   ```php
   $collection->remove(element: 1);
   ```
 
-- `removeAll`: Removes elements from the collection based on the provided filter.
-  If no filter is passed, all elements in the collection will be removed.
+- `removeAll`: Removes elements from the Collection.
+  </br></br>
+    - **With a filter**: Removes only the elements that match the provided filter.
 
-  ```php
-  $collection->removeAll(filter: fn(Amount $amount): bool => $amount->value > 10.0);
-  ```
+      ```php
+      $collection->removeAll(filter: fn(Amount $amount): bool => $amount->value > 10.0);
+      ```
 
-  ```php
-  $collection->removeAll();
-  ```
+    - **Without a filter**: Removes all elements from the Collection.
+
+      ```php
+      $collection->removeAll();
+      ```
 
 <div id='ordering'></div>
 
 ### Filtering
 
-These methods enable filtering elements in the collection based on specific conditions.
+These methods enable filtering elements in the Collection based on specific conditions.
 
 #### Filter by predicate
 
-- `filter`: Filters elements in the collection based on the provided predicates.
-  If no predicates are provided, all empty or falsy values (e.g., null, false, empty arrays) will be removed.
+- `filter`: Filters elements in the Collection.
+  </br></br>
 
-  ```php
-  $collection->filter(fn(Amount $amount): bool => $amount->value > 100);
-  ```
+    - **With predicates**: Filter elements are based on the provided predicates.
 
-  ```php
-  $collection->filter();
-  ```
+      ```php
+      $collection->filter(predicates: fn(Amount $amount): bool => $amount->value > 100);
+      ```
 
-<div id='comparing'></div>
+    - **Without predicates**: Removes all empty or false values (e.g., `null`, `false`, empty arrays).
+
+      ```php
+      $collection->filter();
+      ```
+
+<div id='ordering'></div>
 
 ### Ordering
 
-These methods enable sorting elements in the collection based on the specified order and optional predicates.
+These methods enable sorting elements in the Collection based on the specified order and optional predicates.
 
-- `sort`: Sorts the collection based on the provided order and optional predicate.
-  You can sort elements in ascending or descending order based on keys or values.
-  Optionally, you can provide a predicate to determine how the elements should be compared.
+- `sort`: Sorts the Collection.
+  </br></br>
 
-  **Sorts the collection based on the provided order**.
+    - **Sort by order**: You can sort the Collection in ascending or descending order based on keys or values.
 
-  ```php
-  use TinyBlocks\Collection\Internal\Operations\Order\Order;
+      ```php
+      use TinyBlocks\Collection\Internal\Operations\Order\Order;
+  
+      $collection->sort(order: Order::ASCENDING_KEY);
+      $collection->sort(order: Order::DESCENDING_KEY);
+      $collection->sort(order: Order::ASCENDING_VALUE);
+      $collection->sort(order: Order::DESCENDING_VALUE);
+      ```
 
-  $collection->sort(order: Order::ASCENDING_KEY);
-  $collection->sort(order: Order::DESCENDING_KEY);
-  $collection->sort(order: Order::ASCENDING_VALUE);
-  $collection->sort(order: Order::DESCENDING_VALUE);
-  ```
+    - **Sort by custom predicate**: Sort the Collection using a custom predicate to determine how elements should be
+      compared.
 
-  **Sorts the collection using a custom predicate to define how elements should be compared**.
+      ```php
+      $collection->sort(order: Order::ASCENDING_VALUE, predicate: fn(Amount $amount): float => $amount->value);
+      ```
 
-  ```php
-  $collection->sort(order: Order::ASCENDING_VALUE, predicate: fn(Amount $amount): float => $amount->value);
-  ```
-
-<div id='filtering'></div>
+<div id='retrieving'></div>
 
 ### Retrieving
 
-These methods allow access to elements within the collection, such as fetching the first or last element, or finding
+These methods allow access to elements within the Collection, such as fetching the first or last element or finding
 elements that match a specific condition.
 
 #### Retrieve single elements
 
-- `first`: Retrieves the first element from the collection, or returns a default value if the collection is empty.
+- `first`: Retrieves the first element from the Collection or returns a default value if the Collection is empty.
 
   ```php
   $collection->first(defaultValueIfNotFound: 'default');
   ```
 
-- `getBy`: Retrieves an element by its index, or returns a default value if the index is out of range.
+- `getBy`: Retrieves an element by its index or returns a default value if the index is out of range.
 
   ```php
   $collection->getBy(index: 0, defaultValueIfNotFound: 'default');
   ```
 
-- `last`: Retrieves the last element from the collection, or returns a default value if the collection is empty.
+- `last`: Retrieves the last element from the Collection or returns a default value if the Collection is empty.
 
   ```php
   $collection->last(defaultValueIfNotFound: 'default');
@@ -190,10 +198,10 @@ elements that match a specific condition.
 - `findBy`: Finds the first element that matches one or more predicates.
 
   ```php
-  $collection->findBy(fn(CryptoCurrency $crypto): bool => $crypto->symbol === 'BTC');
+  $collection->findBy(predicates: fn(CryptoCurrency $crypto): bool => $crypto->symbol === 'ETH');
   ```
 
-<div id='transforming'></div>
+<div id='comparing'></div>
 
 ### Comparing
 
@@ -201,64 +209,117 @@ These methods enable comparing collections to check for equality or to apply oth
 
 #### Compare collections for equality
 
-- `equals`: Compares the current collection with another collection to check if they are equal.
+- `equals`: Compares the current Collection with another collection to check if they are equal.
 
   ```php
-  $isEqual = $collectionA->equals(other: $collectionB);
+  $collectionA->equals(other: $collectionB);
   ```
 
-<div id='retrieving'></div>
+<div id='aggregation'></div>
 
 ### Aggregation
 
-These methods perform operations that return a single value based on the collection's content, such as summing or
+These methods perform operations that return a single value based on the Collection's content, such as summing or
 combining elements.
 
-- `reduce`: Combines all elements in the collection into a single value using the provided aggregator function and an
+- `reduce`: Combines all elements in the Collection into a single value using the provided aggregator function and an
   initial value.
-  This method is useful for accumulating results, like summing or concatenating values.
+  This method is helpful for accumulating results, like summing or concatenating values.
 
   ```php
   $collection->reduce(aggregator: fn(float $carry, float $amount): float => $carry + $amount, initial: 0.0)
   ```
 
+<div id='transforming'></div>
+
 ### Transforming
 
-These methods allow the collection's elements to be transformed or converted into different formats.
+These methods allow the Collection's elements to be transformed or converted into different formats.
 
 #### Mapping elements
 
-- `map`: Applies transformations to each element in the collection and returns a new collection with the transformed
+- `map`: Applies transformations to each element in the Collection and returns a new collection with the transformed
   elements.
 
   ```php
-  $collection->map(fn(int $value): int => $value * 2);
+  $collection->map(transformations: fn(int $value): int => $value * 2);
   ```
 
 #### Applying actions without modifying elements
 
-- `each`: Executes actions on each element in the collection without modifying it.
-  The method is useful for performing side effects, such as logging or adding elements to another collection.
+- `each`: Executes actions on each element in the Collection without modification.
+  The method is helpful for performing side effects, such as logging or adding elements to another collection.
 
   ```php
-  $collection->each(fn(Invoice $invoice): void => $collectionB->add(new InvoiceSummary($invoice->id, $invoice->amount)));
+  $collection->each(actions: fn(Invoice $invoice): void => $collectionB->add(elements: new InvoiceSummary(amount: $invoice->amount, customer: $invoice->customer)));
   ```
 
 #### Convert to array
 
-- `toArray`: Converts the collection into an array.
+- `toArray`: Converts the Collection into an array.
+  </br></br>
 
-  ```php
-  $collection->toArray();
-  ```
+    - **With preserving keys**: Converts while keeping the original keys.
+
+      ```php
+      $collection->toArray(preserveKeys: PreserveKeys::PRESERVE);
+      ```
+
+    - **Without preserving keys**: Converts while discarding the keys.
+
+      ```php
+      $collection->toArray(preserveKeys: PreserveKeys::DISCARD);
+      ```
 
 #### Convert to JSON
 
-- `toJson`: Converts the collection into a JSON string.
+- `toJson`: Converts the Collection into a JSON string.
+  </br></br>
 
-  ```php
-  $collection->toJson();
-  ```
+    - **With preserving keys**: Converts while keeping the original keys.
+
+      ```php
+      $collection->toJson(preserveKeys: PreserveKeys::PRESERVE);
+      ```
+
+    - **Without preserving keys**: Converts while discarding the keys.
+
+      ```php
+      $collection->toJson(preserveKeys: PreserveKeys::DISCARD);
+      ```
+
+<div id='faq'></div> 
+
+## FAQ
+
+### 01. Why is my iterator consumed after certain operations?
+
+The `Collection` class leverages [PHP's Generators](https://www.php.net/manual/en/language.generators.overview.php) to
+provide lazy evaluation, meaning elements are only generated as needed.
+
+It cannot be reused once a generator is consumed (i.e., after you iterate over it or apply certain operations).
+
+This behavior is intended to optimize memory usage and performance but can sometimes lead to confusion when reusing an
+iterator after operations like `reduce`, `map`, or `filter`.
+
+### 02. Why do operations like reduce or map seem to "consume" my Collection?
+
+Operations like `reduce` and `map`, rely on consuming the collection elements,
+using PHP generators for memory efficiency.
+
+Once these operations are performed, the generator is exhausted, meaning you cannot retrieve the elements again unless
+you regenerate the Collection.
+
+### 03. How does lazy evaluation affect memory usage in Collection?
+
+Lazy evaluation, enabled by [PHP's Generators](https://www.php.net/manual/en/language.generators.overview.php), allows
+Collection to handle large datasets without loading all elements into memory at once.
+
+This results in significant memory savings when working with large datasets or performing complex
+chained operations.
+
+However, this also means that some operations will entirely consume the generator, and you won't be
+able to reaccess the elements unless you recreate the Collection.
 
 <div id='license'></div>
 

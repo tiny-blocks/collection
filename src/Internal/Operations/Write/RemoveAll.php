@@ -6,9 +6,9 @@ namespace TinyBlocks\Collection\Internal\Operations\Write;
 
 use Closure;
 use Generator;
-use TinyBlocks\Collection\Internal\Operations\ApplicableOperation;
+use TinyBlocks\Collection\Internal\Operations\LazyOperation;
 
-final readonly class RemoveAll implements ApplicableOperation
+final readonly class RemoveAll implements LazyOperation
 {
     private function __construct(private ?Closure $filter)
     {

@@ -6,9 +6,9 @@ namespace TinyBlocks\Collection\Internal\Operations\Compare;
 
 use TinyBlocks\Collection\Collectible;
 use TinyBlocks\Collection\Internal\Iterators\IterableIteratorAggregate;
-use TinyBlocks\Collection\Internal\Operations\NonApplicableOperation;
+use TinyBlocks\Collection\Internal\Operations\ImmediateOperation;
 
-final readonly class Equals implements NonApplicableOperation
+final readonly class Equals implements ImmediateOperation
 {
     private function __construct(private iterable $elements)
     {

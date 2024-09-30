@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace TinyBlocks\Collection\Internal\Operations\Transform;
 
 use Closure;
-use TinyBlocks\Collection\Internal\Operations\NonApplicableOperation;
+use TinyBlocks\Collection\Internal\Operations\ImmediateOperation;
 
-final class Each implements NonApplicableOperation
+final class Each implements ImmediateOperation
 {
     private array $actions;
 

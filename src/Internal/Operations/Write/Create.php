@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace TinyBlocks\Collection\Internal\Operations\Write;
 
 use Generator;
-use TinyBlocks\Collection\Internal\Operations\ApplicableOperation;
+use TinyBlocks\Collection\Internal\Operations\LazyOperation;
 
-final class Create implements ApplicableOperation
+final class Create implements LazyOperation
 {
     public static function fromEmpty(): Create
     {

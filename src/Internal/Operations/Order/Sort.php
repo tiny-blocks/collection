@@ -6,9 +6,9 @@ namespace TinyBlocks\Collection\Internal\Operations\Order;
 
 use Closure;
 use Generator;
-use TinyBlocks\Collection\Internal\Operations\ApplicableOperation;
+use TinyBlocks\Collection\Internal\Operations\LazyOperation;
 
-final readonly class Sort implements ApplicableOperation
+final readonly class Sort implements LazyOperation
 {
     private function __construct(private Order $order, private ?Closure $predicate)
     {
