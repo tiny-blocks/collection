@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace TinyBlocks\Collection\Internal\Operations\Write;
 
 use Generator;
-use TinyBlocks\Collection\Internal\Operations\ApplicableOperation;
+use TinyBlocks\Collection\Internal\Operations\LazyOperation;
 use TinyBlocks\Collection\Internal\Operations\Compare\Equals;
 
-final readonly class Remove implements ApplicableOperation
+final readonly class Remove implements LazyOperation
 {
     private function __construct(private mixed $element)
     {

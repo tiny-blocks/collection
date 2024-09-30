@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace TinyBlocks\Collection\Internal\Operations\Aggregate;
 
 use Closure;
-use TinyBlocks\Collection\Internal\Operations\NonApplicableOperation;
+use TinyBlocks\Collection\Internal\Operations\ImmediateOperation;
 
-final readonly class Reduce implements NonApplicableOperation
+final readonly class Reduce implements ImmediateOperation
 {
     public function __construct(private iterable $elements)
     {

@@ -6,9 +6,9 @@ namespace TinyBlocks\Collection\Internal\Operations\Transform;
 
 use Closure;
 use Generator;
-use TinyBlocks\Collection\Internal\Operations\ApplicableOperation;
+use TinyBlocks\Collection\Internal\Operations\LazyOperation;
 
-final class Map implements ApplicableOperation
+final class Map implements LazyOperation
 {
     private array $transformations;
 
