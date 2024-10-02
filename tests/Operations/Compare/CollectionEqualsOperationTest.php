@@ -10,7 +10,7 @@ use stdClass;
 use TinyBlocks\Collection\Collection;
 use TinyBlocks\Collection\Models\CryptoCurrency;
 
-final class CollectionCompareOperationTest extends TestCase
+final class CollectionEqualsOperationTest extends TestCase
 {
     #[DataProvider('collectionsEqualDataProvider')]
     public function testCollectionsAreEqual(iterable $elementsA, iterable $elementsB): void

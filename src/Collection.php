@@ -7,6 +7,7 @@ namespace TinyBlocks\Collection;
 use Closure;
 use TinyBlocks\Collection\Internal\Iterators\InternalIterator;
 use TinyBlocks\Collection\Internal\Operations\Aggregate\Reduce;
+use TinyBlocks\Collection\Internal\Operations\Compare\Contains;
 use TinyBlocks\Collection\Internal\Operations\Compare\Equals;
 use TinyBlocks\Collection\Internal\Operations\Filter\Filter;
 use TinyBlocks\Collection\Internal\Operations\Order\Order;
@@ -45,7 +46,7 @@ class Collection implements Collectible
 
     public static function createFrom(iterable $elements): static
     {
-        return new static(iterator: InternalIterator::from(elements: $elements, operations: Create::fromEmpty()));
+        return new static(iterator: InternalIterator::from(elements: $elements, operation: Create::fromEmpty()));
     }
 
     public static function createFromEmpty(): static
@@ -56,6 +57,11 @@ class Collection implements Collectible
     public function add(mixed ...$elements): static
     {
         return new static(iterator: $this->iterator->add(operation: Add::from(newElements: $elements)));
+    }
+
+    public function contains(mixed $element): bool
+    {
+        return Contains::from(elements: $this->iterator)->exists(element: $element);
     }
 
     public function count(): int
