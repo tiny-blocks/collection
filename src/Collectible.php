@@ -14,8 +14,10 @@ use Traversable;
 /**
  * Represents a collection that can be manipulated, iterated, and counted.
  *
+ * @template Key of int|string
+ * @template Value of mixed
  * @template Element of mixed
- * @extends IteratorAggregate<int, Element>
+ * @extends IteratorAggregate<Key, Value>
  */
 interface Collectible extends Countable, IteratorAggregate
 {
@@ -41,6 +43,21 @@ interface Collectible extends Countable, IteratorAggregate
      * @return Collectible<Element> The updated collection.
      */
     public function add(mixed ...$elements): Collectible;
+
+    /**
+     * Checks if the collection contains a specific element.
+     *
+     * @param Element $element The element to check for.
+     * @return bool True if the element is found, false otherwise.
+     */
+    public function contains(mixed $element): bool;
+
+    /**
+     * Returns the total number of elements in the Collection.
+     *
+     * @return int The number of elements in the collection.
+     */
+    public function count(): int;
 
     /**
      * Executes actions on each element in the collection without modifying it.
@@ -84,13 +101,6 @@ interface Collectible extends Countable, IteratorAggregate
     public function first(mixed $defaultValueIfNotFound = null): mixed;
 
     /**
-     * Counts the number of elements in the collection.
-     *
-     * @return int The number of elements in the collection.
-     */
-    public function count(): int;
-
-    /**
      * Retrieves an element by its index, or a default value if not found.
      *
      * @param int $index The index of the element to retrieve.
@@ -102,7 +112,7 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Returns an iterator for traversing the collection.
      *
-     * @return Traversable<int, Element> An iterator for the collection.
+     * @return Traversable<Key, Value> An iterator for the collection.
      */
     public function getIterator(): Traversable;
 
@@ -184,7 +194,7 @@ interface Collectible extends Countable, IteratorAggregate
      * By default, `PreserveKeys::PRESERVE` is used.
      *
      * @param PreserveKeys $preserveKeys The option to preserve or discard array keys.
-     * @return array<int, Element> The resulting array.
+     * @return array<Key, Value> The resulting array.
      */
     public function toArray(PreserveKeys $preserveKeys = PreserveKeys::PRESERVE): array;
 

@@ -145,42 +145,48 @@ These methods enable filtering elements in the Collection based on specific cond
 
 These methods enable sorting elements in the Collection based on the specified order and optional predicates.
 
+#### Sort by order and custom predicate
+
 - `sort`: Sorts the Collection.
-  </br></br>
 
-    - **Sort by order**: You can sort the Collection in ascending or descending order based on keys or values.
-      </br></br>
-      `Order::ASCENDING_KEY`: Sorts the collection in ascending order by key.
+  ```
+  Order::ASCENDING_KEY: Sorts the collection in ascending order by key.
+  Order::DESCENDING_KEY: Sorts the collection in descending order by key.
+  Order::ASCENDING_VALUE: Sorts the collection in ascending order by value.
+  Order::DESCENDING_VALUE: Sorts the collection in descending order by value.
+  ```
 
-      `Order::DESCENDING_KEY`: Sorts the collection in descending order by key.
+  By default, `Order::ASCENDING_KEY` is used.
 
-      `Order::ASCENDING_VALUE`: Sorts the collection in ascending order by value.
+  ```php
+  use TinyBlocks\Collection\Internal\Operations\Order\Order;
+        
+  $collection->sort(order: Order::DESCENDING_VALUE);
+  ```
 
-      `Order::DESCENDING_VALUE`: Sorts the collection in descending order by value.
-      </br></br>
-      By default, `Order::ASCENDING_KEY` is used.
+  Sort the Collection using a custom predicate to determine how elements should be
+  compared.
 
-      ```php
-      use TinyBlocks\Collection\Internal\Operations\Order\Order;
-
-      $collection->sort(order: Order::DESCENDING_VALUE);
-      ```
-
-    - **Sort by custom predicate**: Sort the Collection using a custom predicate to determine how elements should be
-      compared.
-
-      ```php
-      use TinyBlocks\Collection\Internal\Operations\Order\Order;
-
-      $collection->sort(order: Order::ASCENDING_VALUE, predicate: fn(Amount $amount): float => $amount->value);
-      ```
+  ```php
+  use TinyBlocks\Collection\Internal\Operations\Order\Order;
+        
+  $collection->sort(order: Order::ASCENDING_VALUE, predicate: fn(Amount $amount): float => $amount->value);
+  ``` 
 
 <div id='retrieving'></div>
 
 ### Retrieving
 
-These methods allow access to elements within the Collection, such as fetching the first or last element or finding
-elements that match a specific condition.
+These methods allow access to elements within the Collection, such as fetching the first or last element, counting the
+elements, or finding elements that match a specific condition.
+
+#### Retrieve count
+
+- `count`: Returns the total number of elements in the Collection.
+
+  ```php
+  $collection->count();
+  ```
 
 #### Retrieve single elements
 
@@ -215,6 +221,14 @@ elements that match a specific condition.
 ### Comparing
 
 These methods enable comparing collections to check for equality or to apply other comparison logic.
+
+#### Check if collection contains element
+
+- `contains`: Checks if the Collection contains a specific element.
+
+  ```php
+  $collection->contains(element: 5);
+  ```
 
 #### Compare collections for equality
 
@@ -266,34 +280,36 @@ These methods allow the Collection's elements to be transformed or converted int
 #### Convert to array
 
 - `toArray`: Converts the Collection into an array.
-  </br></br>
-  `PreserveKeys::DISCARD`: Converts while discarding the keys.
 
-  `PreserveKeys::PRESERVE`: Converts while preserving the original keys.
-  </br></br>
-  **By default, `PreserveKeys::PRESERVE` is used.**
+  ```
+  PreserveKeys::DISCARD: Converts while discarding the keys.
+  PreserveKeys::PRESERVE: Converts while preserving the original keys.
+  ```
 
-    ```php
-    use TinyBlocks\Collection\Internal\Operations\Transform\PreserveKeys;
+  By default, `PreserveKeys::PRESERVE` is used.
 
-    $collection->toArray(preserveKeys: PreserveKeys::DISCARD);
-    ```
+  ```php
+  use TinyBlocks\Collection\Internal\Operations\Transform\PreserveKeys;
+  
+  $collection->toArray(preserveKeys: PreserveKeys::DISCARD);
+  ```
 
 #### Convert to JSON
 
 - `toJson`: Converts the Collection into a JSON string.
-  </br></br>
-  `PreserveKeys::DISCARD`: Converts while discarding the keys.
 
-  `PreserveKeys::PRESERVE`: Converts while preserving the original keys.
-  </br></br>
-  **By default, `PreserveKeys::PRESERVE` is used.**
+  ```
+  PreserveKeys::DISCARD: Converts while discarding the keys.
+  PreserveKeys::PRESERVE: Converts while preserving the original keys.
+  ```
 
-    ```php
-    use TinyBlocks\Collection\Internal\Operations\Transform\PreserveKeys;
+  By default, `PreserveKeys::PRESERVE` is used.
 
-    $collection->toJson(preserveKeys: PreserveKeys::DISCARD);
-    ```
+  ```php
+  use TinyBlocks\Collection\Internal\Operations\Transform\PreserveKeys;
+  
+  $collection->toJson(preserveKeys: PreserveKeys::DISCARD);
+  ```
 
 <div id='faq'></div> 
 
@@ -307,18 +323,18 @@ provide lazy evaluation, meaning elements are only generated as needed.
 It cannot be reused once a generator is consumed (i.e., after you iterate over it or apply certain operations).
 
 This behavior is intended to optimize memory usage and performance but can sometimes lead to confusion when reusing an
-iterator after operations like `reduce`, `map`, or `filter`.
+iterator after operations like `count`, `toJson`, or `toArray`.
 
 ### 02. How does lazy evaluation affect memory usage in Collection?
 
 Lazy evaluation, enabled by [PHP's Generators](https://www.php.net/manual/en/language.generators.overview.php), allows
-Collection to handle large datasets without loading all elements into memory at once.
+`Collection` to handle large datasets without loading all elements into memory at once.
 
 This results in significant memory savings when working with large datasets or performing complex
 chained operations.
 
 However, this also means that some operations will entirely consume the generator, and you won't be
-able to reaccess the elements unless you recreate the Collection.
+able to reaccess the elements unless you recreate the `Collection`.
 
 <div id='license'></div>
 
