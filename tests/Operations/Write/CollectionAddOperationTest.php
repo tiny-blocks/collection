@@ -17,8 +17,8 @@ use TinyBlocks\Collection\Models\Products;
 
 final class CollectionAddOperationTest extends TestCase
 {
-    #[DataProvider('fromElementsAndAdditionsDataProvider')]
-    public function testFromAndAddPrimitiveElementsToCollection(
+    #[DataProvider('elementsAndAdditionsDataProvider')]
+    public function testAddElementsToCollection(
         iterable $fromElements,
         iterable $addElements,
         iterable $expected
@@ -33,101 +33,7 @@ final class CollectionAddOperationTest extends TestCase
         self::assertSame($expected, $collection->toArray());
     }
 
-    #[DataProvider('fromElementsAndAddObjectsDataProvider')]
-    public function testFromAndAddObjectsToCollection(
-        iterable $fromElements,
-        iterable $addElements,
-        iterable $expected
-    ): void {
-        /** @Given a collection created from initial elements */
-        $collection = Collection::createFrom(elements: $fromElements);
-
-        /** @When adding elements to the collection using the add method */
-        $collection->add(...$addElements);
-
-        /** @Then the collection should contain the expected elements */
-        self::assertSame($expected, $collection->toArray());
-    }
-
-    #[DataProvider('primitiveElementsDataProvider')]
-    public function testAddPrimitiveElementsToCollection(iterable $elements, iterable $expected): void
-    {
-        /** @Given an empty collection */
-        $collection = Collection::createFromEmpty();
-
-        /** @When adding elements to the collection using add */
-        $collection->add(...$elements);
-
-        /** @Then the collection should contain the expected elements */
-        self::assertSame($expected, iterator_to_array($collection));
-    }
-
-    public static function primitiveElementsDataProvider(): iterable
-    {
-        yield 'Add single float' => [
-            'elements' => [3.14],
-            'expected' => [3.14]
-        ];
-
-        yield 'Add single string' => [
-            'elements' => ['test'],
-            'expected' => ['test']
-        ];
-
-        yield 'Add boolean values' => [
-            'elements' => [true, false],
-            'expected' => [true, false]
-        ];
-
-        yield 'Add single integer' => [
-            'elements' => [42],
-            'expected' => [42]
-        ];
-
-        yield 'Add single array' => [
-            'elements' => [[1, 2, 3]],
-            'expected' => [[1, 2, 3]]
-        ];
-
-        yield 'Add null value' => [
-            'elements' => [null],
-            'expected' => [null]
-        ];
-
-        yield 'Add mixed types of primitives' => [
-            'elements' => [42, 'test', 3.14, null, [1, 2, 3]],
-            'expected' => [42, 'test', 3.14, null, [1, 2, 3]]
-        ];
-    }
-
-    public static function fromElementsAndAdditionsDataProvider(): iterable
-    {
-        yield 'From with array and add null' => [
-            'fromElements' => [[1, 2, 3]],
-            'addElements'  => [null],
-            'expected'     => [[1, 2, 3], null]
-        ];
-
-        yield 'From with integer and add boolean' => [
-            'fromElements' => [42],
-            'addElements'  => [true],
-            'expected'     => [42, true]
-        ];
-
-        yield 'From with mixed types and add more' => [
-            'fromElements' => [1, 'hello'],
-            'addElements'  => [2.5, false],
-            'expected'     => [1, 'hello', 2.5, false]
-        ];
-
-        yield 'From with single float and add string' => [
-            'fromElements' => [3.14],
-            'addElements'  => ['test'],
-            'expected'     => [3.14, 'test']
-        ];
-    }
-
-    public static function fromElementsAndAddObjectsDataProvider(): iterable
+    public static function elementsAndAdditionsDataProvider(): iterable
     {
         $dragonOne = new Dragon(name: 'Udron', description: 'The taker of life.');
         $dragonTwo = new Dragon(name: 'Ignarion', description: 'Majestic guardian of fiery realms.');
@@ -142,7 +48,31 @@ final class CollectionAddOperationTest extends TestCase
         $orderOne = new Order(id: 1, products: new Products(elements: [$productOne, $productTwo]));
         $orderTwo = new Order(id: 2, products: new Products(elements: [$productOne]));
 
-        yield 'Add Orders objects' => [
+        yield 'Add null value' => [
+            'fromElements' => [],
+            'addElements'  => [null],
+            'expected'     => [null]
+        ];
+
+        yield 'Add single array' => [
+            'fromElements' => [],
+            'addElements'  => [[1, 2, 3]],
+            'expected'     => [[1, 2, 3]]
+        ];
+
+        yield 'Add single float' => [
+            'fromElements' => [],
+            'addElements'  => [3.14],
+            'expected'     => [3.14]
+        ];
+
+        yield 'Add single string' => [
+            'fromElements' => [],
+            'addElements'  => ['test'],
+            'expected'     => ['test']
+        ];
+
+        yield 'Add orders objects' => [
             'fromElements' => [$orderOne],
             'addElements'  => [$orderTwo],
             'expected'     => [
@@ -157,7 +87,7 @@ final class CollectionAddOperationTest extends TestCase
             ]
         ];
 
-        yield 'Add Dragon objects' => [
+        yield 'Add dragon objects' => [
             'fromElements' => [$dragonOne],
             'addElements'  => [$dragonTwo, $dragonThree],
             'expected'     => [
@@ -167,13 +97,31 @@ final class CollectionAddOperationTest extends TestCase
             ]
         ];
 
-        yield 'Add CryptoCurrency objects' => [
+        yield 'Add boolean values' => [
+            'fromElements' => [],
+            'addElements'  => [true, false],
+            'expected'     => [true, false]
+        ];
+
+        yield 'Add single integer' => [
+            'fromElements' => [],
+            'addElements'  => [42],
+            'expected'     => [42]
+        ];
+
+        yield 'Add crypto currency objects' => [
             'fromElements' => [$bitcoin],
             'addElements'  => [$ethereum],
             'expected'     => [
                 ['name' => $bitcoin->name, 'price' => $bitcoin->price, 'symbol' => $bitcoin->symbol],
                 ['name' => $ethereum->name, 'price' => $ethereum->price, 'symbol' => $ethereum->symbol]
             ]
+        ];
+
+        yield 'Add mixed types of primitives' => [
+            'fromElements' => [],
+            'addElements'  => [42, 'test', 3.14, null, [1, 2, 3]],
+            'expected'     => [42, 'test', 3.14, null, [1, 2, 3]]
         ];
     }
 }

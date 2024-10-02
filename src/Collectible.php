@@ -14,7 +14,7 @@ use Traversable;
 /**
  * Represents a collection that can be manipulated, iterated, and counted.
  *
- * @template Element
+ * @template Element of mixed
  * @extends IteratorAggregate<int, Element>
  */
 interface Collectible extends Countable, IteratorAggregate
@@ -160,6 +160,14 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Sorts the collection based on the provided order and predicate.
      *
+     * The order should be provided from the `Order` enum:
+     *  - `Order::ASCENDING_KEY`: Sorts in ascending order by key.
+     *  - `Order::DESCENDING_KEY`: Sorts in descending order by key.
+     *  - `Order::ASCENDING_VALUE`: Sorts in ascending order by value.
+     *  - `Order::DESCENDING_VALUE`: Sorts in descending order by value.
+     *
+     * By default, `Order::ASCENDING_KEY` is used.
+     *
      * @param Order $order The order in which to sort the collection.
      * @param Closure(Element, Element): int|null $predicate The predicate to use for sorting.
      * @return Collectible<Element> The updated collection.
@@ -169,7 +177,13 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Converts the collection to an array.
      *
-     * @param PreserveKeys $preserveKeys The option to preserve array keys.
+     * The key preservation behavior should be provided from the `PreserveKeys` enum:
+     *  - `PreserveKeys::PRESERVE`: Preserves the array keys.
+     *  - `PreserveKeys::DISCARD`: Discards the array keys.
+     *
+     * By default, `PreserveKeys::PRESERVE` is used.
+     *
+     * @param PreserveKeys $preserveKeys The option to preserve or discard array keys.
      * @return array<int, Element> The resulting array.
      */
     public function toArray(PreserveKeys $preserveKeys = PreserveKeys::PRESERVE): array;
@@ -177,7 +191,13 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Converts the collection to a JSON string.
      *
-     * @param PreserveKeys $preserveKeys The option to preserve array keys.
+     * The key preservation behavior should be provided from the `PreserveKeys` enum:
+     *  - `PreserveKeys::PRESERVE`: Preserves the array keys.
+     *  - `PreserveKeys::DISCARD`: Discards the array keys.
+     *
+     * By default, `PreserveKeys::PRESERVE` is used.
+     *
+     * @param PreserveKeys $preserveKeys The option to preserve or discard array keys.
      * @return string The resulting JSON string.
      */
     public function toJson(PreserveKeys $preserveKeys = PreserveKeys::PRESERVE): string;

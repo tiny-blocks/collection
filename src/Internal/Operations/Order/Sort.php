@@ -21,19 +21,26 @@ final readonly class Sort implements LazyOperation
 
     public function apply(iterable $elements): Generator
     {
-        $temporaryElements = iterator_to_array($elements);
+        $temporaryElements = [];
+
+        foreach ($elements as $key => $value) {
+            $temporaryElements[$key] = $value;
+        }
 
         $predicate = is_null($this->predicate)
-            ? fn(mixed $first, mixed $second): int => $first <=> $second
-            : fn($first, $second): int => ($this->predicate)($first, $second);
+            ? static fn(mixed $first, mixed $second): int => $first <=> $second
+            : $this->predicate;
 
-        $reversedPredicate = fn(mixed $first, mixed $second): int => -$predicate($first, $second);
+        $ascendingPredicate = static fn(mixed $first, mixed $second): int => $predicate($first, $second);
+        $descendingPredicate = is_null($this->predicate)
+            ? static fn(mixed $first, mixed $second): int => $predicate($second, $first)
+            : $predicate;
 
         match ($this->order) {
             Order::ASCENDING_KEY    => ksort($temporaryElements),
             Order::DESCENDING_KEY   => krsort($temporaryElements),
-            Order::ASCENDING_VALUE  => uasort($temporaryElements, $predicate),
-            Order::DESCENDING_VALUE => uasort($temporaryElements, $reversedPredicate)
+            Order::ASCENDING_VALUE  => uasort($temporaryElements, $ascendingPredicate),
+            Order::DESCENDING_VALUE => uasort($temporaryElements, $descendingPredicate)
         };
 
         foreach ($temporaryElements as $key => $value) {
