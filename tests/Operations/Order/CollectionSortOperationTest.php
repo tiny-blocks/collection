@@ -13,36 +13,6 @@ use TinyBlocks\Collection\Models\Currency;
 
 final class CollectionSortOperationTest extends TestCase
 {
-    public function testSortAmountByValue(): void
-    {
-        /** @Given a collection of Amount objects */
-        $collection = Collection::createFrom(elements: [
-            new Amount(value: 200.00, currency: Currency::USD),
-            new Amount(value: 100.50, currency: Currency::USD),
-            new Amount(value: 150.75, currency: Currency::EUR)
-        ]);
-
-        /** @When sorting the collection in ascending order by the Amount's value */
-        $collection->sort(
-            order: Order::ASCENDING_VALUE,
-            predicate: fn(
-                Amount $firstAmount,
-                Amount $secondAmount
-            ): int => $firstAmount->value <=> $secondAmount->value
-        );
-
-        /** @Then the collection should be sorted by the Amount's value in ascending order */
-        $expected = [
-            new Amount(value: 100.50, currency: Currency::USD),
-            new Amount(value: 150.75, currency: Currency::EUR),
-            new Amount(value: 200.00, currency: Currency::USD)
-        ];
-
-        self::assertEquals($expected[0], $collection->getBy(index: 0));
-        self::assertEquals($expected[1], $collection->getBy(index: 1));
-        self::assertEquals($expected[2], $collection->getBy(index: 2));
-    }
-
     public function testSortEmptyCollection(): void
     {
         /** @Given an empty collection */
@@ -68,19 +38,6 @@ final class CollectionSortOperationTest extends TestCase
         self::assertSame($expected, $actual->toArray());
     }
 
-    #[DataProvider('ascendingValueSortDataProvider')]
-    public function testSortAscendingByValue(iterable $elements, iterable $expected): void
-    {
-        /** @Given a collection with unordered elements */
-        $collection = Collection::createFrom(elements: $elements);
-
-        /** @When sorting the collection in ascending order by value */
-        $actual = $collection->sort(order: Order::ASCENDING_VALUE);
-
-        /** @Then the collection should be sorted by value in ascending order */
-        self::assertSame($expected, $actual->toArray());
-    }
-
     #[DataProvider('descendingKeySortDataProvider')]
     public function testSortDescendingByKey(iterable $elements, iterable $expected): void
     {
@@ -91,6 +48,19 @@ final class CollectionSortOperationTest extends TestCase
         $actual = $collection->sort(order: Order::DESCENDING_KEY);
 
         /** @Then the collection should be sorted by key in descending order */
+        self::assertSame($expected, $actual->toArray());
+    }
+
+    #[DataProvider('ascendingValueSortDataProvider')]
+    public function testSortAscendingByValue(iterable $elements, iterable $expected): void
+    {
+        /** @Given a collection with unordered elements */
+        $collection = Collection::createFrom(elements: $elements);
+
+        /** @When sorting the collection in ascending order by value */
+        $actual = $collection->sort(order: Order::ASCENDING_VALUE);
+
+        /** @Then the collection should be sorted by value in ascending order */
         self::assertSame($expected, $actual->toArray());
     }
 
@@ -132,6 +102,19 @@ final class CollectionSortOperationTest extends TestCase
             'expected' => [1 => 1.1, 2 => 2.2, 4 => 3.3, 5 => 4.4, 3 => 5.5]
         ];
 
+        yield 'Objects ascending by value' => [
+            'elements' => [
+                new Amount(value: 200.00, currency: Currency::USD),
+                new Amount(value: 150.75, currency: Currency::EUR),
+                new Amount(value: 100.50, currency: Currency::USD)
+            ],
+            'expected' => [
+                2 => ['value' => 100.50, 'currency' => Currency::USD->name],
+                1 => ['value' => 150.75, 'currency' => Currency::EUR->name],
+                0 => ['value' => 200.00, 'currency' => Currency::USD->name]
+            ]
+        ];
+
         yield 'Strings ascending by value' => [
             'elements' => [3 => 'c', 1 => 'a', 4 => 'd', 5 => 'b', 2 => 'e'],
             'expected' => [1 => 'a', 5 => 'b', 3 => 'c', 4 => 'd', 2 => 'e']
@@ -166,6 +149,19 @@ final class CollectionSortOperationTest extends TestCase
         yield 'Floats descending by value' => [
             'elements' => [3 => 5.5, 1 => 1.1, 4 => 3.3, 5 => 4.4, 2 => 2.2],
             'expected' => [3 => 5.5, 5 => 4.4, 4 => 3.3, 2 => 2.2, 1 => 1.1]
+        ];
+
+        yield 'Objects descending by value' => [
+            'elements' => [
+                new Amount(value: 100.50, currency: Currency::USD),
+                new Amount(value: 150.75, currency: Currency::EUR),
+                new Amount(value: 200.00, currency: Currency::USD)
+            ],
+            'expected' => [
+                2 => ['value' => 200.00, 'currency' => Currency::USD->name],
+                1 => ['value' => 150.75, 'currency' => Currency::EUR->name],
+                0 => ['value' => 100.50, 'currency' => Currency::USD->name]
+            ]
         ];
 
         yield 'Strings descending by value' => [

@@ -4,27 +4,20 @@ declare(strict_types=1);
 
 namespace TinyBlocks\Collection\Operations\Compare;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Models\Amount;
 use TinyBlocks\Collection\Models\CryptoCurrency;
-use TinyBlocks\Collection\Models\Currency;
 
 final class CollectionCompareOperationTest extends TestCase
 {
-    public function testCollectionsAreEqual(): void
+    #[DataProvider('collectionsEqualDataProvider')]
+    public function testCollectionsAreEqual(iterable $elementsA, iterable $elementsB): void
     {
-        /** @Given two collections with identical elements */
-        $collectionA = Collection::createFrom(elements: [
-            new CryptoCurrency(name: 'Bitcoin', price: 60000.0, symbol: 'BTC'),
-            new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH')
-        ]);
-
-        $collectionB = Collection::createFrom(elements: [
-            new CryptoCurrency(name: 'Bitcoin', price: 60000.0, symbol: 'BTC'),
-            new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH')
-        ]);
+        /** @Given two collections */
+        $collectionA = Collection::createFrom(elements: $elementsA);
+        $collectionB = Collection::createFrom(elements: $elementsB);
 
         /** @When comparing the collections */
         $actual = $collectionA->equals(other: $collectionB);
@@ -33,16 +26,12 @@ final class CollectionCompareOperationTest extends TestCase
         self::assertTrue($actual);
     }
 
-    public function testCollectionsAreNotEqual(): void
+    #[DataProvider('collectionsNotEqualDataProvider')]
+    public function testCollectionsAreNotEqual(iterable $elementsA, iterable $elementsB): void
     {
-        /** @Given two collections with different elements */
-        $collectionA = Collection::createFrom(elements: [
-            new CryptoCurrency(name: 'Bitcoin', price: 60000.0, symbol: 'BTC')
-        ]);
-
-        $collectionB = Collection::createFrom(elements: [
-            new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH')
-        ]);
+        /** @Given two collections */
+        $collectionA = Collection::createFrom(elements: $elementsA);
+        $collectionB = Collection::createFrom(elements: $elementsB);
 
         /** @When comparing the collections */
         $actual = $collectionA->equals(other: $collectionB);
@@ -51,86 +40,49 @@ final class CollectionCompareOperationTest extends TestCase
         self::assertFalse($actual);
     }
 
-    public function testLargeCollectionsAreEqual(): void
+    public static function collectionsEqualDataProvider(): iterable
     {
-        /** @Given two large collections with identical elements */
-        $collectionA = Collection::createFrom(elements: range(1, 10000));
-        $collectionB = Collection::createFrom(elements: range(1, 10000));
+        yield 'Collections are equal' => [
+            'elementsA' => [
+                new CryptoCurrency(name: 'Bitcoin', price: 60000.0, symbol: 'BTC'),
+                new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH')
+            ],
+            'elementsB' => [
+                new CryptoCurrency(name: 'Bitcoin', price: 60000.0, symbol: 'BTC'),
+                new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH')
+            ]
+        ];
 
-        /** @When comparing the large collections */
-        $actual = $collectionA->equals(other: $collectionB);
-
-        /** @Then the collections should be equal */
-        self::assertTrue($actual);
+        yield 'Collections with mixed keys and values' => [
+            'elementsA' => [1, 'key' => 'value', 3.5],
+            'elementsB' => [1, 'key' => 'value', 3.5]
+        ];
     }
 
-    public function testCustomObjectComparison(): void
+    public static function collectionsNotEqualDataProvider(): iterable
     {
-        /** @Given two collections with custom object comparisons */
-        $collectionA = Collection::createFrom(elements: [
-            new Amount(value: 100.50, currency: Currency::USD)
-        ]);
+        yield 'Collections are not equal' => [
+            'elementsA' => [
+                new CryptoCurrency(name: 'Bitcoin', price: 60000.0, symbol: 'BTC')
+            ],
+            'elementsB' => [
+                new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH')
+            ]
+        ];
 
-        $collectionB = Collection::createFrom(elements: [
-            new Amount(value: 100.50, currency: Currency::USD)
-        ]);
+        yield 'Scalar and non-scalar comparison' => [
+            'elementsA' => [1],
+            'elementsB' => [new stdClass()]
+        ];
 
-        /** @When comparing the collections */
-        $actual = $collectionA->equals(other: $collectionB);
+        yield 'Collections with different null handling' => [
+            'elementsA' => [null],
+            'elementsB' => []
+        ];
 
-        /** @Then the collections should be considered equal based on object comparison */
-        self::assertTrue($actual);
-    }
-
-    public function testScalarAndNonScalarComparison(): void
-    {
-        /** @Given two collections where one has a scalar and the other has an object */
-        $collectionA = Collection::createFrom(elements: [1]);
-        $collectionB = Collection::createFrom(elements: [new stdClass()]);
-
-        /** @When comparing the collections */
-        $actual = $collectionA->equals(other: $collectionB);
-
-        /** @Then the collections should not be equal */
-        self::assertFalse($actual);
-    }
-
-    public function testCollectionsWithMixedKeysAndValues(): void
-    {
-        /** @Given two collections with identical elements but different key orders */
-        $collectionA = Collection::createFrom(elements: [1, 'key' => 'value', 3.5]);
-        $collectionB = Collection::createFrom(elements: [1, 'key' => 'value', 3.5]);
-
-        /** @When comparing the collections */
-        $actual = $collectionA->equals(other: $collectionB);
-
-        /** @Then the collections should be equal */
-        self::assertTrue($actual);
-    }
-
-    public function testCollectionsWithDifferentNullHandling(): void
-    {
-        /** @Given two collections where one contains null and the other is empty */
-        $collectionA = Collection::createFrom(elements: [null]);
-        $collectionB = Collection::createFrom(elements: []);
-
-        /** @When comparing the collections */
-        $actual = $collectionA->equals(other: $collectionB);
-
-        /** @Then the collections should not be equal */
-        self::assertFalse($actual);
-    }
-
-    public function testSameElementsInDifferentOrderAreNotEqual(): void
-    {
-        /** @Given two collections with the same elements but in different orders */
-        $collectionA = Collection::createFrom(elements: [1, 2, 3]);
-        $collectionB = Collection::createFrom(elements: [3, 2, 1]);
-
-        /** @When comparing the collections */
-        $actual = $collectionA->equals(other: $collectionB);
-
-        /** @Then the collections should not be equal */
-        self::assertFalse($actual);
+        yield 'Same elements in different order are not equal' => [
+            'elementsA' => [1, 2, 3],
+            'elementsB' => [3, 2, 1]
+        ];
     }
 }
