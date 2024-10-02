@@ -12,12 +12,12 @@ final class Filter implements LazyOperation
 {
     private array $predicates;
 
-    private function __construct(Closure ...$predicates)
+    private function __construct(?Closure ...$predicates)
     {
         $this->predicates = $predicates;
     }
 
-    public static function from(Closure ...$predicates): Filter
+    public static function from(?Closure ...$predicates): Filter
     {
         return new Filter(...$predicates);
     }

@@ -12,28 +12,31 @@ use TinyBlocks\Collection\Internal\Operations\LazyOperation;
  * A generator-based iterator that applies operations lazily to collections,
  * ensuring efficient memory usage by yielding elements on demand.
  *
- * @template Key
- * @template Value
+ * @template Key of int|string
+ * @template Value of mixed
  * @implements IteratorAggregate<Key, Value>
  */
 final class InternalIterator implements IteratorAggregate
 {
+    private array $operations;
+
     /**
      * @param iterable $elements
-     * @param iterable<LazyOperation> $operations
+     * @param LazyOperation $operation
      */
-    private function __construct(private readonly iterable $elements, private iterable $operations)
+    private function __construct(private readonly iterable $elements, LazyOperation $operation)
     {
+        $this->operations[] = $operation;
     }
 
     /**
      * @param iterable $elements
-     * @param LazyOperation ...$operations
+     * @param LazyOperation $operation
      * @return InternalIterator
      */
-    public static function from(iterable $elements, LazyOperation ...$operations): InternalIterator
+    public static function from(iterable $elements, LazyOperation $operation): InternalIterator
     {
-        return new InternalIterator(elements: $elements, operations: $operations);
+        return new InternalIterator(elements: $elements, operation: $operation);
     }
 
     /**
