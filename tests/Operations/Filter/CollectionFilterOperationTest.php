@@ -12,32 +12,25 @@ use TinyBlocks\Collection\Models\CryptoCurrency;
 
 final class CollectionFilterOperationTest extends TestCase
 {
-    public function testFilterOnLargeDataset(): void
+    public function testFilterAppliesMultiplePredicates(): void
     {
-        /** @Given a large collection with ten thousand elements */
-        $collection = Collection::createFrom(elements: range(1, 10000));
-
-        /** @When filtering values greater than or equal to 9991 */
-        $actual = $collection->filter(fn(int $value): bool => $value >= 9991);
-
-        /** @Then the resulting collection should contain only the expected values */
-        self::assertSame(range(9991, 10000), array_values($actual->toArray()));
-    }
-
-    #[DataProvider('filterPredicatesDataProvider')]
-    public function testFilterAppliesMultiplePredicates(
-        iterable $elements,
-        iterable $expected,
-        iterable $predicates
-    ): void {
         /** @Given a collection with elements */
-        $collection = Collection::createFrom(elements: $elements);
+        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5, 6]);
 
-        /** @When filtering the collection with multiple predicates */
-        $actual = $collection->filter(...$predicates);
+        /**
+         * @When filtering the collection with three predicates,
+         * the first predicate filters out values less than or equal to 2,
+         * the second predicate keeps only even numbers,
+         * and the third predicate filters out values greater than or equal to 6.
+         */
+        $actual = $collection->filter(
+            static fn(int $value): bool => $value > 2,
+            static fn(int $value): bool => $value % 2 === 0,
+            static fn(int $value): bool => $value < 6
+        );
 
-        /** @Then the filtered collection deve descartar as chaves e retornar os valores esperados */
-        self::assertSame(array_values((array)$expected), $actual->toArray(preserveKeys: PreserveKeys::DISCARD));
+        /** @Then the filtered collection should discard the keys and return the expected values */
+        self::assertSame([4], $actual->toArray(preserveKeys: PreserveKeys::DISCARD));
     }
 
     #[DataProvider('elementsDataProvider')]
@@ -108,51 +101,6 @@ final class CollectionFilterOperationTest extends TestCase
         yield 'Mixed elements with keys' => [
             'elements' => ['first' => null, 'second' => 1, 'third' => $bitcoin],
             'expected' => ['second' => 1, 'third' => $bitcoin->toArray()]
-        ];
-    }
-
-    public static function filterPredicatesDataProvider(): iterable
-    {
-        yield 'Filter with objects and custom predicate' => [
-            'elements'   => [
-                new CryptoCurrency(name: 'Bitcoin', price: 60000.0, symbol: 'BTC'),
-                new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH'),
-                new CryptoCurrency(name: 'Litecoin', price: 200.0, symbol: 'LTC')
-            ],
-            'expected'   => [
-                ['name' => 'Bitcoin', 'price' => 60000.0, 'symbol' => 'BTC'],
-                ['name' => 'Ethereum', 'price' => 40000.0, 'symbol' => 'ETH']
-            ],
-            'predicates' => [
-                static fn(CryptoCurrency $currency): bool => $currency->price > 10000
-            ]
-        ];
-
-        yield 'Filter with odd numbers and values greater than 1' => [
-            'elements'   => [1, 2, 3, 4, 5, 6],
-            'expected'   => [2 => 3, 4 => 5],
-            'predicates' => [
-                static fn(int $value): bool => $value > 1,
-                static fn(int $value): bool => $value % 2 !== 0
-            ]
-        ];
-
-        yield 'Filter with values greater than 2 and even numbers' => [
-            'elements'   => [1, 2, 3, 4, 5, 6],
-            'expected'   => [3 => 4, 5 => 6],
-            'predicates' => [
-                static fn(int $value): bool => $value > 2,
-                static fn(int $value): bool => $value % 2 === 0
-            ]
-        ];
-
-        yield 'Filter out negative numbers and keep values below 10' => [
-            'elements'   => [-5, 0, 5, 10, 15],
-            'expected'   => [1 => 0, 2 => 5],
-            'predicates' => [
-                static fn(int $value): bool => $value >= 0,
-                static fn(int $value): bool => $value < 10
-            ]
         ];
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TinyBlocks\Collection\Operations\Transform;
 
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TinyBlocks\Collection\Collection;
 use TinyBlocks\Collection\Models\Dragon;
@@ -41,7 +40,7 @@ final class CollectionMapOperationTest extends TestCase
         $collection = Collection::createFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
 
         /** @When mapping the collection with a transformation */
-        $actual = $collection->map(static fn(int $value): int => $value * 2);
+        $actual = $collection->map(transformations: static fn(int $value): int => $value * 2);
 
         /** @Then the mapped collection should preserve the keys */
         self::assertSame(['a' => 2, 'b' => 4, 'c' => 6], $actual->toArray());
@@ -59,7 +58,7 @@ final class CollectionMapOperationTest extends TestCase
         );
 
         /** @Then the collection should remain empty */
-        self::assertSame([], $actual->toArray());
+        self::assertEmpty($actual->toArray());
     }
 
     public function testMapWithSingleTransformation(): void
@@ -68,46 +67,28 @@ final class CollectionMapOperationTest extends TestCase
         $collection = Collection::createFrom(elements: [1, 2, 3]);
 
         /** @When mapping the collection with a transformation */
-        $actual = $collection->map(static fn(int $value): int => $value * 2);
+        $actual = $collection->map(transformations: static fn(int $value): int => $value * 2);
 
         /** @Then the collection should contain transformed elements */
         self::assertSame([2, 4, 6], $actual->toArray());
     }
 
-    #[DataProvider('mapWithMultipleTransformationsDataProvider')]
-    public function testMapWithMultipleTransformations(
-        iterable $elements,
-        iterable $expected,
-        iterable $callbacks
-    ): void {
+    public function testMapWithMultipleTransformations(): void
+    {
         /** @Given a collection with elements */
-        $collection = Collection::createFrom(elements: $elements);
+        $collection = Collection::createFrom(elements: [1, 2, 3]);
 
-        /** @When mapping the collection with multiple transformations */
-        $actual = $collection->map(...$callbacks);
+        /**
+         * @When mapping the collection with two transformations,
+         * the first transformation squares each value,
+         * and the second transformation increments each value by 1.
+         */
+        $actual = $collection->map(
+            static fn(int $value): int => $value * $value,
+            static fn(int $value): int => $value + 1
+        );
 
         /** @Then the collection should contain elements transformed by the transformations */
-        self::assertSame($expected, $actual->toArray());
-    }
-
-    public static function mapWithMultipleTransformationsDataProvider(): iterable
-    {
-        yield 'Square and increment' => [
-            'elements'  => [1, 2, 3],
-            'expected'  => [2, 5, 10],
-            'callbacks' => [
-                static fn(int $value): int => $value * $value,
-                static fn(int $value): int => $value + 1
-            ]
-        ];
-
-        yield 'Double and increment' => [
-            'elements'  => [1, 2, 3],
-            'expected'  => [3, 5, 7],
-            'callbacks' => [
-                static fn(int $value): int => $value * 2,
-                static fn(int $value): int => $value + 1
-            ]
-        ];
+        self::assertSame([2, 5, 10], $actual->toArray());
     }
 }

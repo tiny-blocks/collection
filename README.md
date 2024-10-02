@@ -149,13 +149,20 @@ These methods enable sorting elements in the Collection based on the specified o
   </br></br>
 
     - **Sort by order**: You can sort the Collection in ascending or descending order based on keys or values.
+      </br></br>
+      `Order::ASCENDING_KEY`: Sorts the collection in ascending order by key.
+
+      `Order::DESCENDING_KEY`: Sorts the collection in descending order by key.
+
+      `Order::ASCENDING_VALUE`: Sorts the collection in ascending order by value.
+
+      `Order::DESCENDING_VALUE`: Sorts the collection in descending order by value.
+      </br></br>
+      By default, `Order::ASCENDING_KEY` is used.
 
       ```php
       use TinyBlocks\Collection\Internal\Operations\Order\Order;
-  
-      $collection->sort(order: Order::ASCENDING_KEY);
-      $collection->sort(order: Order::DESCENDING_KEY);
-      $collection->sort(order: Order::ASCENDING_VALUE);
+
       $collection->sort(order: Order::DESCENDING_VALUE);
       ```
 
@@ -163,6 +170,8 @@ These methods enable sorting elements in the Collection based on the specified o
       compared.
 
       ```php
+      use TinyBlocks\Collection\Internal\Operations\Order\Order;
+
       $collection->sort(order: Order::ASCENDING_VALUE, predicate: fn(Amount $amount): float => $amount->value);
       ```
 
@@ -258,35 +267,33 @@ These methods allow the Collection's elements to be transformed or converted int
 
 - `toArray`: Converts the Collection into an array.
   </br></br>
+  `PreserveKeys::DISCARD`: Converts while discarding the keys.
 
-    - **With preserving keys**: Converts while keeping the original keys.
+  `PreserveKeys::PRESERVE`: Converts while preserving the original keys.
+  </br></br>
+  **By default, `PreserveKeys::PRESERVE` is used.**
 
-      ```php
-      $collection->toArray(preserveKeys: PreserveKeys::PRESERVE);
-      ```
+    ```php
+    use TinyBlocks\Collection\Internal\Operations\Transform\PreserveKeys;
 
-    - **Without preserving keys**: Converts while discarding the keys.
-
-      ```php
-      $collection->toArray(preserveKeys: PreserveKeys::DISCARD);
-      ```
+    $collection->toArray(preserveKeys: PreserveKeys::DISCARD);
+    ```
 
 #### Convert to JSON
 
 - `toJson`: Converts the Collection into a JSON string.
   </br></br>
+  `PreserveKeys::DISCARD`: Converts while discarding the keys.
 
-    - **With preserving keys**: Converts while keeping the original keys.
+  `PreserveKeys::PRESERVE`: Converts while preserving the original keys.
+  </br></br>
+  **By default, `PreserveKeys::PRESERVE` is used.**
 
-      ```php
-      $collection->toJson(preserveKeys: PreserveKeys::PRESERVE);
-      ```
+    ```php
+    use TinyBlocks\Collection\Internal\Operations\Transform\PreserveKeys;
 
-    - **Without preserving keys**: Converts while discarding the keys.
-
-      ```php
-      $collection->toJson(preserveKeys: PreserveKeys::DISCARD);
-      ```
+    $collection->toJson(preserveKeys: PreserveKeys::DISCARD);
+    ```
 
 <div id='faq'></div> 
 
@@ -302,15 +309,7 @@ It cannot be reused once a generator is consumed (i.e., after you iterate over i
 This behavior is intended to optimize memory usage and performance but can sometimes lead to confusion when reusing an
 iterator after operations like `reduce`, `map`, or `filter`.
 
-### 02. Why do operations like reduce or map seem to "consume" my Collection?
-
-Operations like `reduce` and `map`, rely on consuming the collection elements,
-using PHP generators for memory efficiency.
-
-Once these operations are performed, the generator is exhausted, meaning you cannot retrieve the elements again unless
-you regenerate the Collection.
-
-### 03. How does lazy evaluation affect memory usage in Collection?
+### 02. How does lazy evaluation affect memory usage in Collection?
 
 Lazy evaluation, enabled by [PHP's Generators](https://www.php.net/manual/en/language.generators.overview.php), allows
 Collection to handle large datasets without loading all elements into memory at once.

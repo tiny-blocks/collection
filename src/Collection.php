@@ -31,7 +31,7 @@ use Traversable;
  * filtering, mapping, and transforming elements. Internally uses iterators to apply operations
  * lazily and efficiently.
  *
- * @template Element
+ * @template Element of mixed
  * @implements Collectible<Element>
  */
 class Collection implements Collectible
@@ -104,8 +104,7 @@ class Collection implements Collectible
 
     public function isEmpty(): bool
     {
-        $iterator = $this->iterator->getIterator();
-        return !$iterator->valid();
+        return !$this->iterator->getIterator()->valid();
     }
 
     public function last(mixed $defaultValueIfNotFound = null): mixed
