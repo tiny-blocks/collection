@@ -11,7 +11,6 @@ use Generator;
  *
  * @template Key of array-key
  * @template Value
- * @extends Operation
  */
 interface LazyOperation extends Operation
 {

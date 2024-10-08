@@ -7,7 +7,7 @@ namespace TinyBlocks\Collection\Internal\Operations\Transform;
 use Closure;
 use TinyBlocks\Collection\Internal\Operations\ImmediateOperation;
 
-final class Each implements ImmediateOperation
+final readonly class Each implements ImmediateOperation
 {
     private array $actions;
 

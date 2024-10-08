@@ -12,6 +12,7 @@
         "array",
         "yield",
         "iterator",
+        "iterators",
         "generator",
         "collection",
         "tiny-blocks"
