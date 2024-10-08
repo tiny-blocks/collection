@@ -8,7 +8,7 @@ use Closure;
 use Generator;
 use TinyBlocks\Collection\Internal\Operations\LazyOperation;
 
-final class Filter implements LazyOperation
+final readonly class Filter implements LazyOperation
 {
     private array $predicates;
 
