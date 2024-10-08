@@ -18,6 +18,9 @@ use TinyBlocks\Collection\Internal\Operations\LazyOperation;
  */
 final class InternalIterator implements IteratorAggregate
 {
+    /**
+     * @var LazyOperation[]
+     */
     private array $operations;
 
     /**

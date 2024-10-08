@@ -27,14 +27,14 @@ interface Collectible extends Countable, IteratorAggregate
      * @param iterable<Element> $elements The elements to initialize the collection with.
      * @return Collectible<Element> A new Collectible instance.
      */
-    public static function createFrom(iterable $elements): static;
+    public static function createFrom(iterable $elements): Collectible;
 
     /**
      * Creates an empty Collectible instance.
      *
      * @return Collectible<Element> An empty Collectible instance.
      */
-    public static function createFromEmpty(): static;
+    public static function createFromEmpty(): Collectible;
 
     /**
      * Adds one or more elements to the collection.
@@ -115,6 +115,15 @@ interface Collectible extends Countable, IteratorAggregate
      * @return Traversable<Key, Value> An iterator for the collection.
      */
     public function getIterator(): Traversable;
+
+    /**
+     * Groups the elements in the collection based on the provided criteria.
+     *
+     * @param Closure(Element): Key $grouping The function to define the group key for each element.
+     * @return Collectible<Key, Collectible<Key, Element, Element>, Element> A collection of collections,
+     *                                                                      grouped by the key returned by the closure.
+     */
+    public function groupBy(Closure $grouping): Collectible;
 
     /**
      * Determines if the collection is empty.

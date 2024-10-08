@@ -6,9 +6,5 @@ parameters:
   ignoreErrors:
     - '#Unsafe usage of new static#'
     - '#does not specify its types#'
-    - '#contains incompatible type#'
-    - '#specified in iterable type iterable#'
-    - '#is not subtype of native type static#'
-    - '#PHPDoc tag @extends has invalid value#'
-    - '#type has no value type specified in iterable type array#'
+    - '#type specified in iterable type#'
   reportUnmatchedIgnoredErrors: false

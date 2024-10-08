@@ -17,6 +17,7 @@ use TinyBlocks\Collection\Internal\Operations\Retrieve\First;
 use TinyBlocks\Collection\Internal\Operations\Retrieve\Get;
 use TinyBlocks\Collection\Internal\Operations\Retrieve\Last;
 use TinyBlocks\Collection\Internal\Operations\Transform\Each;
+use TinyBlocks\Collection\Internal\Operations\Transform\GroupBy;
 use TinyBlocks\Collection\Internal\Operations\Transform\Map;
 use TinyBlocks\Collection\Internal\Operations\Transform\MapToArray;
 use TinyBlocks\Collection\Internal\Operations\Transform\MapToJson;
@@ -31,9 +32,6 @@ use Traversable;
  * Represents a collection that provides a set of utility methods for operations like adding,
  * filtering, mapping, and transforming elements. Internally uses iterators to apply operations
  * lazily and efficiently.
- *
- * @template Element of mixed
- * @implements Collectible<Element>
  */
 class Collection implements Collectible
 {
@@ -106,6 +104,11 @@ class Collection implements Collectible
     public function getIterator(): Traversable
     {
         yield from $this->iterator->getIterator();
+    }
+
+    public function groupBy(Closure $grouping): Collectible
+    {
+        return new static(iterator: $this->iterator->add(operation: GroupBy::from(grouping: $grouping)));
     }
 
     public function isEmpty(): bool

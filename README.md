@@ -259,15 +259,6 @@ combining elements.
 
 These methods allow the Collection's elements to be transformed or converted into different formats.
 
-#### Mapping elements
-
-- `map`: Applies transformations to each element in the Collection and returns a new collection with the transformed
-  elements.
-
-  ```php
-  $collection->map(transformations: fn(int $value): int => $value * 2);
-  ```
-
 #### Applying actions without modifying elements
 
 - `each`: Executes actions on each element in the Collection without modification.
@@ -275,6 +266,23 @@ These methods allow the Collection's elements to be transformed or converted int
 
   ```php
   $collection->each(actions: fn(Invoice $invoice): void => $collectionB->add(elements: new InvoiceSummary(amount: $invoice->amount, customer: $invoice->customer)));
+  ```
+  
+#### Grouping elements
+
+- `groupBy`: Groups the elements in the Collection based on the provided grouping criterion.
+
+  ```php
+  $collection->groupBy(grouping: fn(Amount $amount): string => $amount->currency->name);
+  ```
+
+#### Mapping elements
+
+- `map`: Applies transformations to each element in the Collection and returns a new collection with the transformed
+  elements.
+
+  ```php
+  $collection->map(transformations: fn(int $value): int => $value * 2);
   ```
 
 #### Convert to array
