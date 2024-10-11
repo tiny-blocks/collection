@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace TinyBlocks\Collection;
 
 use Closure;
-use TinyBlocks\Collection\Internal\Iterators\InternalIterator;
+use TinyBlocks\Collection\Internal\Iterators\LazyIterator;
 use TinyBlocks\Collection\Internal\Operations\Aggregate\Reduce;
 use TinyBlocks\Collection\Internal\Operations\Compare\Contains;
 use TinyBlocks\Collection\Internal\Operations\Compare\Equals;
@@ -16,6 +16,7 @@ use TinyBlocks\Collection\Internal\Operations\Retrieve\Find;
 use TinyBlocks\Collection\Internal\Operations\Retrieve\First;
 use TinyBlocks\Collection\Internal\Operations\Retrieve\Get;
 use TinyBlocks\Collection\Internal\Operations\Retrieve\Last;
+use TinyBlocks\Collection\Internal\Operations\Retrieve\Slice;
 use TinyBlocks\Collection\Internal\Operations\Transform\Each;
 use TinyBlocks\Collection\Internal\Operations\Transform\GroupBy;
 use TinyBlocks\Collection\Internal\Operations\Transform\Map;
@@ -35,16 +36,16 @@ use Traversable;
  */
 class Collection implements Collectible
 {
-    private InternalIterator $iterator;
+    private LazyIterator $iterator;
 
-    private function __construct(InternalIterator $iterator)
+    private function __construct(LazyIterator $iterator)
     {
         $this->iterator = $iterator;
     }
 
     public static function createFrom(iterable $elements): static
     {
-        return new static(iterator: InternalIterator::from(elements: $elements, operation: Create::fromEmpty()));
+        return new static(iterator: LazyIterator::from(elements: $elements, operation: Create::fromEmpty()));
     }
 
     public static function createFromEmpty(): static
@@ -146,6 +147,15 @@ class Collection implements Collectible
         return new static(
             iterator: $this->iterator->add(
                 operation: Sort::from(order: $order, predicate: $predicate)
+            )
+        );
+    }
+
+    public function slice(int $index, int $length = -1): static
+    {
+        return new static(
+            iterator: $this->iterator->add(
+                operation: Slice::from(index: $index, length: $length)
             )
         );
     }

@@ -15,10 +15,22 @@ use IteratorAggregate;
  * @template Value
  * @implements IteratorAggregate<Key, Value>
  */
-final readonly class IterableIteratorAggregate implements IteratorAggregate
+final readonly class LazyIteratorAggregate implements IteratorAggregate
 {
-    public function __construct(private iterable $elements)
+    /**
+     * @param iterable<Key, Value> $elements
+     */
+    private function __construct(private iterable $elements)
     {
+    }
+
+    /**
+     * @param iterable $elements
+     * @return LazyIteratorAggregate
+     */
+    public static function from(iterable $elements): LazyIteratorAggregate
+    {
+        return new LazyIteratorAggregate(elements: $elements);
     }
 
     /**

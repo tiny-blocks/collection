@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace TinyBlocks\Collection\Internal\Operations\Compare;
 
 use TinyBlocks\Collection\Collectible;
-use TinyBlocks\Collection\Internal\Iterators\IterableIteratorAggregate;
+use TinyBlocks\Collection\Internal\Iterators\LazyIteratorAggregate;
 use TinyBlocks\Collection\Internal\Operations\ImmediateOperation;
 
 final readonly class Equals implements ImmediateOperation
@@ -26,8 +26,8 @@ final readonly class Equals implements ImmediateOperation
 
     public function compareAll(Collectible $other): bool
     {
-        $currentIterator = (new IterableIteratorAggregate(elements: $other))->getIterator();
-        $targetIterator = (new IterableIteratorAggregate(elements: $this->elements))->getIterator();
+        $currentIterator = LazyIteratorAggregate::from(elements: $other)->getIterator();
+        $targetIterator = LazyIteratorAggregate::from(elements: $this->elements)->getIterator();
 
         while ($currentIterator->valid() || $targetIterator->valid()) {
             if (!$currentIterator->valid() || !$targetIterator->valid()) {

@@ -194,6 +194,20 @@ interface Collectible extends Countable, IteratorAggregate
     public function sort(Order $order = Order::ASCENDING_KEY, ?Closure $predicate = null): Collectible;
 
     /**
+     * Returns a subset of the collection starting at the specified index and containing the specified number of
+     * elements.
+     *
+     * If the `length` is negative, it will exclude that many elements from the end of the collection.
+     * If the `length` is not provided or set to `-1`, it returns all elements starting from the index until the end.
+     *
+     * @param int $index The zero-based index at which to start the slice.
+     * @param int $length The number of elements to include in the slice. If negative, removes that many from the end.
+     *                    Default is `-1`, meaning all elements from the index onward will be included.
+     * @return Collectible<Element> A new collection containing the sliced elements.
+     */
+    public function slice(int $index, int $length = -1): Collectible;
+
+    /**
      * Converts the collection to an array.
      *
      * The key preservation behavior should be provided from the `PreserveKeys` enum:

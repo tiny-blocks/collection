@@ -188,6 +188,16 @@ elements, or finding elements that match a specific condition.
   $collection->count();
   ```
 
+#### Retrieve by condition
+
+- `findBy`: Finds the first element that matches one or more predicates.
+
+  ```php
+  $collection->findBy(predicates: fn(CryptoCurrency $crypto): bool => $crypto->symbol === 'ETH');
+  ```
+
+<div id='comparing'></div>
+
 #### Retrieve single elements
 
 - `first`: Retrieves the first element from the Collection or returns a default value if the Collection is empty.
@@ -208,15 +218,16 @@ elements, or finding elements that match a specific condition.
   $collection->last(defaultValueIfNotFound: 'default');
   ```
 
-#### Retrieve by condition
+#### Retrieve collection elements
 
-- `findBy`: Finds the first element that matches one or more predicates.
+- `slice`: Extracts a portion of the collection, starting at the specified index and retrieving the specified number of
+  elements.
+  If length is negative, it excludes many elements from the end of the collection.
+  If length is not provided or set to -1, it returns all elements from the specified index to the end of the collection.
 
   ```php
-  $collection->findBy(predicates: fn(CryptoCurrency $crypto): bool => $crypto->symbol === 'ETH');
+  $collection->slice(index: 1, length: 2);
   ```
-
-<div id='comparing'></div>
 
 ### Comparing
 
@@ -267,7 +278,7 @@ These methods allow the Collection's elements to be transformed or converted int
   ```php
   $collection->each(actions: fn(Invoice $invoice): void => $collectionB->add(elements: new InvoiceSummary(amount: $invoice->amount, customer: $invoice->customer)));
   ```
-  
+
 #### Grouping elements
 
 - `groupBy`: Groups the elements in the Collection based on the provided grouping criterion.
