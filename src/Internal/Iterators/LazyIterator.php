@@ -16,7 +16,7 @@ use TinyBlocks\Collection\Internal\Operations\LazyOperation;
  * @template Value of mixed
  * @implements IteratorAggregate<Key, Value>
  */
-final class InternalIterator implements IteratorAggregate
+final class LazyIterator implements IteratorAggregate
 {
     /**
      * @var LazyOperation[]
@@ -35,18 +35,18 @@ final class InternalIterator implements IteratorAggregate
     /**
      * @param iterable $elements
      * @param LazyOperation $operation
-     * @return InternalIterator
+     * @return LazyIterator
      */
-    public static function from(iterable $elements, LazyOperation $operation): InternalIterator
+    public static function from(iterable $elements, LazyOperation $operation): LazyIterator
     {
-        return new InternalIterator(elements: $elements, operation: $operation);
+        return new LazyIterator(elements: $elements, operation: $operation);
     }
 
     /**
      * @param LazyOperation $operation
-     * @return InternalIterator
+     * @return LazyIterator
      */
-    public function add(LazyOperation $operation): InternalIterator
+    public function add(LazyOperation $operation): LazyIterator
     {
         $this->operations[] = $operation;
         return $this;

@@ -23,7 +23,7 @@ final readonly class Each implements ImmediateOperation
 
     public function execute(iterable $elements): void
     {
-        $runActions = static function ($actions) use ($elements): void {
+        $runActions = static function (iterable $actions) use ($elements): void {
             foreach ($elements as $key => $value) {
                 foreach ($actions as $action) {
                     $action($value, $key);
