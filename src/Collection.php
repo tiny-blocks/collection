@@ -19,6 +19,7 @@ use TinyBlocks\Collection\Internal\Operations\Retrieve\Last;
 use TinyBlocks\Collection\Internal\Operations\Retrieve\Slice;
 use TinyBlocks\Collection\Internal\Operations\Transform\Each;
 use TinyBlocks\Collection\Internal\Operations\Transform\GroupBy;
+use TinyBlocks\Collection\Internal\Operations\Transform\JoinToString;
 use TinyBlocks\Collection\Internal\Operations\Transform\Map;
 use TinyBlocks\Collection\Internal\Operations\Transform\MapToArray;
 use TinyBlocks\Collection\Internal\Operations\Transform\MapToJson;
@@ -115,6 +116,11 @@ class Collection implements Collectible
     public function isEmpty(): bool
     {
         return !$this->iterator->getIterator()->valid();
+    }
+
+    public function joinToString(string $separator): string
+    {
+        return JoinToString::from(elements: $this->iterator)->joinTo(separator: $separator);
     }
 
     public function last(mixed $defaultValueIfNotFound = null): mixed

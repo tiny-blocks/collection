@@ -133,6 +133,14 @@ interface Collectible extends Countable, IteratorAggregate
     public function isEmpty(): bool;
 
     /**
+     * Joins the elements of the collection into a string, separated by a given separator.
+     *
+     * @param string $separator The string used to separate the elements.
+     * @return string The concatenated string of all elements in the collection.
+     */
+    public function joinToString(string $separator): string;
+
+    /**
      * Retrieves the last element in the collection, or a default value if not found.
      *
      * @param Element|null $defaultValueIfNotFound The default value to return if no element is found.
