@@ -10,7 +10,6 @@ use TinyBlocks\Collection\Internal\Operations\Aggregate\Reduce;
 use TinyBlocks\Collection\Internal\Operations\Compare\Contains;
 use TinyBlocks\Collection\Internal\Operations\Compare\Equals;
 use TinyBlocks\Collection\Internal\Operations\Filter\Filter;
-use TinyBlocks\Collection\Internal\Operations\Order\Order;
 use TinyBlocks\Collection\Internal\Operations\Order\Sort;
 use TinyBlocks\Collection\Internal\Operations\Retrieve\Find;
 use TinyBlocks\Collection\Internal\Operations\Retrieve\First;
@@ -18,12 +17,12 @@ use TinyBlocks\Collection\Internal\Operations\Retrieve\Get;
 use TinyBlocks\Collection\Internal\Operations\Retrieve\Last;
 use TinyBlocks\Collection\Internal\Operations\Retrieve\Slice;
 use TinyBlocks\Collection\Internal\Operations\Transform\Each;
+use TinyBlocks\Collection\Internal\Operations\Transform\Flatten;
 use TinyBlocks\Collection\Internal\Operations\Transform\GroupBy;
 use TinyBlocks\Collection\Internal\Operations\Transform\JoinToString;
 use TinyBlocks\Collection\Internal\Operations\Transform\Map;
 use TinyBlocks\Collection\Internal\Operations\Transform\MapToArray;
 use TinyBlocks\Collection\Internal\Operations\Transform\MapToJson;
-use TinyBlocks\Collection\Internal\Operations\Transform\PreserveKeys;
 use TinyBlocks\Collection\Internal\Operations\Write\Add;
 use TinyBlocks\Collection\Internal\Operations\Write\Create;
 use TinyBlocks\Collection\Internal\Operations\Write\Remove;
@@ -93,6 +92,11 @@ class Collection implements Collectible
     public function first(mixed $defaultValueIfNotFound = null): mixed
     {
         return First::from(elements: $this->iterator)->element(defaultValueIfNotFound: $defaultValueIfNotFound);
+    }
+
+    public function flatten(): static
+    {
+        return new static(iterator: $this->iterator->add(operation: Flatten::instance()));
     }
 
     public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed

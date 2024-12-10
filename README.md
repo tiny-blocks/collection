@@ -63,8 +63,8 @@ declare(strict_types=1);
 namespace Example;
 
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Internal\Operations\Order\Order;
-use TinyBlocks\Collection\Internal\Operations\Transform\PreserveKeys;
+use TinyBlocks\Collection\Order;
+use TinyBlocks\Collection\PreserveKeys;
 
 $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5])
     ->add(elements: [6, 7]) 
@@ -159,7 +159,7 @@ These methods enable sorting elements in the Collection based on the specified o
   By default, `Order::ASCENDING_KEY` is used.
 
   ```php
-  use TinyBlocks\Collection\Internal\Operations\Order\Order;
+  use TinyBlocks\Collection\Order;
         
   $collection->sort(order: Order::DESCENDING_VALUE);
   ```
@@ -168,7 +168,7 @@ These methods enable sorting elements in the Collection based on the specified o
   compared.
 
   ```php
-  use TinyBlocks\Collection\Internal\Operations\Order\Order;
+  use TinyBlocks\Collection\Order;
         
   $collection->sort(order: Order::ASCENDING_VALUE, predicate: fn(Amount $amount): float => $amount->value);
   ``` 
@@ -296,6 +296,18 @@ These methods allow the Collection's elements to be transformed or converted int
   $collection->map(transformations: fn(int $value): int => $value * 2);
   ```
 
+#### Flattening elements
+
+- `flatten`: Flattens a collection by removing any nested collections and returning a single collection with all
+  elements in a single level.
+
+  This method recursively flattens any iterable elements, combining them into one collection, regardless of their
+  nesting depth.
+
+  ```php
+  $collection->flatten();
+  ```
+
 #### Convert to array
 
 - `toArray`: Converts the Collection into an array.
@@ -308,7 +320,7 @@ These methods allow the Collection's elements to be transformed or converted int
   By default, `PreserveKeys::PRESERVE` is used.
 
   ```php
-  use TinyBlocks\Collection\Internal\Operations\Transform\PreserveKeys;
+  use TinyBlocks\Collection\PreserveKeys;
   
   $collection->toArray(preserveKeys: PreserveKeys::DISCARD);
   ```
@@ -325,7 +337,7 @@ These methods allow the Collection's elements to be transformed or converted int
   By default, `PreserveKeys::PRESERVE` is used.
 
   ```php
-  use TinyBlocks\Collection\Internal\Operations\Transform\PreserveKeys;
+  use TinyBlocks\Collection\PreserveKeys;
   
   $collection->toJson(preserveKeys: PreserveKeys::DISCARD);
   ```
@@ -352,8 +364,8 @@ Lazy evaluation, enabled by [PHP's Generators](https://www.php.net/manual/en/lan
 This results in significant memory savings when working with large datasets or performing complex
 chained operations.
 
-However, this also means that some operations will entirely consume the generator, and you won't be
-able to reaccess the elements unless you recreate the `Collection`.
+However, this also means that some operations will consume the generator, and you cannot access the elements unless you
+recreate the `Collection`.
 
 <div id='license'></div>
 
