@@ -7,9 +7,9 @@ namespace TinyBlocks\Collection\Operations\Order;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Internal\Operations\Order\Order;
 use TinyBlocks\Collection\Models\Amount;
 use TinyBlocks\Collection\Models\Currency;
+use TinyBlocks\Collection\Order;
 
 final class CollectionSortOperationTest extends TestCase
 {

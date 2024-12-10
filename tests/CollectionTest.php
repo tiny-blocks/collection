@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TinyBlocks\Collection;
 
 use PHPUnit\Framework\TestCase;
-use TinyBlocks\Collection\Internal\Operations\Order\Order;
 use TinyBlocks\Collection\Models\Amount;
 use TinyBlocks\Collection\Models\Currency;
 

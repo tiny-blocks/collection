@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TinyBlocks\Collection\Internal\Operations\Transform;
 
 use TinyBlocks\Collection\Internal\Operations\ImmediateOperation;
+use TinyBlocks\Collection\PreserveKeys;
 use TinyBlocks\Serializer\IterableSerializer;
 
 final readonly class MapToArray implements ImmediateOperation

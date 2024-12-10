@@ -7,6 +7,7 @@ namespace TinyBlocks\Collection\Internal\Operations\Order;
 use Closure;
 use Generator;
 use TinyBlocks\Collection\Internal\Operations\LazyOperation;
+use TinyBlocks\Collection\Order;
 
 final readonly class Sort implements LazyOperation
 {
