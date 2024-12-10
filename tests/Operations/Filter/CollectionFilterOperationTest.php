@@ -7,8 +7,8 @@ namespace TinyBlocks\Collection\Operations\Filter;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Internal\Operations\Transform\PreserveKeys;
 use TinyBlocks\Collection\Models\CryptoCurrency;
+use TinyBlocks\Collection\PreserveKeys;
 
 final class CollectionFilterOperationTest extends TestCase
 {

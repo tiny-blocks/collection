@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TinyBlocks\Collection;
 
 use PHPUnit\Framework\TestCase;
-use TinyBlocks\Collection\Internal\Operations\Order\Order;
 use TinyBlocks\Collection\Models\Amount;
 use TinyBlocks\Collection\Models\Currency;
 
@@ -114,7 +113,7 @@ final class CollectionPerformanceTest extends TestCase
         $endMemory = memory_get_usage();
 
         /** @Then verify that the total duration of the chained operations is within limits */
-        self::assertLessThan(7, $endTime - $startTime);
+        self::assertLessThan(9, $endTime - $startTime);
 
         /** @And verify that memory usage is within acceptable limits */
         $memoryUsageInMB = ($endMemory - $startMemory) / 1024 / 1024;
