@@ -43,11 +43,8 @@ jobs:
         with:
           php-version: ${{ env.PHP_VERSION }}
 
-      - name: Configure PHP memory limit
-        run: echo "memory_limit=2G" >> $HOME/.phpenv/versions/$(php -r 'echo PHP_VERSION;')/etc/php.ini
-
       - name: Install dependencies
         run: composer update --no-progress --optimize-autoloader
 
       - name: Run tests
-        run: composer tests
+        run: php -d memory_limit=2G -r "composer tests"
