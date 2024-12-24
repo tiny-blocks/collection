@@ -21,12 +21,12 @@ use TinyBlocks\Collection\Internal\Operations\Transform\Flatten;
 use TinyBlocks\Collection\Internal\Operations\Transform\GroupBy;
 use TinyBlocks\Collection\Internal\Operations\Transform\JoinToString;
 use TinyBlocks\Collection\Internal\Operations\Transform\Map;
-use TinyBlocks\Collection\Internal\Operations\Transform\MapToArray;
-use TinyBlocks\Collection\Internal\Operations\Transform\MapToJson;
 use TinyBlocks\Collection\Internal\Operations\Write\Add;
 use TinyBlocks\Collection\Internal\Operations\Write\Create;
 use TinyBlocks\Collection\Internal\Operations\Write\Remove;
 use TinyBlocks\Collection\Internal\Operations\Write\RemoveAll;
+use TinyBlocks\Mapper\IterableMappability;
+use TinyBlocks\Mapper\IterableMapper;
 use Traversable;
 
 /**
@@ -34,8 +34,10 @@ use Traversable;
  * filtering, mapping, and transforming elements. Internally uses iterators to apply operations
  * lazily and efficiently.
  */
-class Collection implements Collectible
+class Collection implements Collectible, IterableMapper
 {
+    use IterableMappability;
+
     private LazyIterator $iterator;
 
     private function __construct(LazyIterator $iterator)
@@ -168,15 +170,5 @@ class Collection implements Collectible
                 operation: Slice::from(index: $index, length: $length)
             )
         );
-    }
-
-    public function toArray(PreserveKeys $preserveKeys = PreserveKeys::PRESERVE): array
-    {
-        return MapToArray::from(elements: $this->iterator->getIterator(), preserveKeys: $preserveKeys)->toArray();
-    }
-
-    public function toJson(PreserveKeys $preserveKeys = PreserveKeys::PRESERVE): string
-    {
-        return MapToJson::from(elements: $this->iterator->getIterator(), preserveKeys: $preserveKeys)->toJson();
     }
 }
