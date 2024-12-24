@@ -64,14 +64,14 @@ namespace Example;
 
 use TinyBlocks\Collection\Collection;
 use TinyBlocks\Collection\Order;
-use TinyBlocks\Collection\PreserveKeys;
+use TinyBlocks\Mapper\KeyPreservation;
 
 $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5])
     ->add(elements: [6, 7]) 
     ->filter(predicates: fn(int $value): bool => $value > 3) 
     ->sort(order: Order::ASCENDING_VALUE) 
     ->map(transformations: fn(int $value): int => $value * 2) 
-    ->toArray(preserveKeys: PreserveKeys::DISCARD); 
+    ->toArray(keyPreservation: KeyPreservation::DISCARD); 
 
 # Output: [8, 10, 12, 14]
 ```
@@ -320,9 +320,9 @@ These methods allow the Collection's elements to be transformed or converted int
   By default, `PreserveKeys::PRESERVE` is used.
 
   ```php
-  use TinyBlocks\Collection\PreserveKeys;
+  use TinyBlocks\Mapper\KeyPreservation;
   
-  $collection->toArray(preserveKeys: PreserveKeys::DISCARD);
+  $collection->toArray(preserveKeys: KeyPreservation::DISCARD);
   ```
 
 #### Convert to JSON
@@ -337,9 +337,9 @@ These methods allow the Collection's elements to be transformed or converted int
   By default, `PreserveKeys::PRESERVE` is used.
 
   ```php
-  use TinyBlocks\Collection\PreserveKeys;
+  use TinyBlocks\Mapper\KeyPreservation;
   
-  $collection->toJson(preserveKeys: PreserveKeys::DISCARD);
+  $collection->toJson(preserveKeys: KeyPreservation::DISCARD);
   ```
 
 <div id='faq'></div> 

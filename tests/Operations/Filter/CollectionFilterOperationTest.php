@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use TinyBlocks\Collection\Collection;
 use TinyBlocks\Collection\Models\CryptoCurrency;
-use TinyBlocks\Collection\PreserveKeys;
+use TinyBlocks\Mapper\KeyPreservation;
 
 final class CollectionFilterOperationTest extends TestCase
 {
@@ -30,7 +30,7 @@ final class CollectionFilterOperationTest extends TestCase
         );
 
         /** @Then the filtered collection should discard the keys and return the expected values */
-        self::assertSame([4], $actual->toArray(preserveKeys: PreserveKeys::DISCARD));
+        self::assertSame([4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
     #[DataProvider('elementsDataProvider')]
@@ -43,7 +43,7 @@ final class CollectionFilterOperationTest extends TestCase
         $actual = $collection->filter();
 
         /** @Then the filtered collection should contain only truthy elements */
-        self::assertSame(array_values((array)$expected), $actual->toArray(preserveKeys: PreserveKeys::DISCARD));
+        self::assertSame(array_values((array)$expected), $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
     #[DataProvider('elementsDataProviderWithKeys')]
@@ -70,12 +70,12 @@ final class CollectionFilterOperationTest extends TestCase
 
         yield 'Array with boolean values' => [
             'elements' => [false, true, false, true],
-            'expected' => [1 => true, 3 => true]
+            'expected' => [true, true]
         ];
 
         yield 'Array with null and numbers' => [
             'elements' => [null, 1, 2, 0],
-            'expected' => [1 => 1, 2 => 2]
+            'expected' => [1, 2]
         ];
 
         yield 'Array with only falsy values' => [
@@ -85,7 +85,7 @@ final class CollectionFilterOperationTest extends TestCase
 
         yield 'Array with objects and truthy values' => [
             'elements' => [$bitcoin, 1, 'valid string'],
-            'expected' => [$bitcoin->toArray(), 1, 'valid string']
+            'expected' => [$bitcoin->toArray(keyPreservation: KeyPreservation::DISCARD), 1, 'valid string']
         ];
     }
 

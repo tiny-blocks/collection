@@ -7,6 +7,7 @@ namespace TinyBlocks\Collection;
 use Closure;
 use Countable;
 use IteratorAggregate;
+use TinyBlocks\Mapper\KeyPreservation;
 use Traversable;
 
 /**
@@ -224,27 +225,27 @@ interface Collectible extends Countable, IteratorAggregate
      * Converts the Collection to an array.
      *
      * The key preservation behavior should be provided from the `PreserveKeys` enum:
-     *  - {@see PreserveKeys::PRESERVE}: Preserves the array keys.
-     *  - {@see PreserveKeys::DISCARD}: Discards the array keys.
+     *  - {@see KeyPreservation::PRESERVE}: Preserves the array keys.
+     *  - {@see KeyPreservation::DISCARD}: Discards the array keys.
      *
      * By default, `PreserveKeys::PRESERVE` is used.
      *
-     * @param PreserveKeys $preserveKeys The option to preserve or discard array keys.
+     * @param KeyPreservation $keyPreservation The option to preserve or discard array keys.
      * @return array<Key, Value> The resulting array.
      */
-    public function toArray(PreserveKeys $preserveKeys = PreserveKeys::PRESERVE): array;
+    public function toArray(KeyPreservation $keyPreservation = KeyPreservation::PRESERVE): array;
 
     /**
      * Converts the Collection to a JSON string.
      *
      * The key preservation behavior should be provided from the `PreserveKeys` enum:
-     *  - {@see PreserveKeys::PRESERVE}: Preserves the array keys.
-     *  - {@see PreserveKeys::DISCARD}: Discards the array keys.
+     *  - {@see KeyPreservation::PRESERVE}: Preserves the array keys.
+     *  - {@see KeyPreservation::DISCARD}: Discards the array keys.
      *
      * By default, `PreserveKeys::PRESERVE` is used.
      *
-     * @param PreserveKeys $preserveKeys The option to preserve or discard array keys.
+     * @param KeyPreservation $keyPreservation The option to preserve or discard array keys.
      * @return string The resulting JSON string.
      */
-    public function toJson(PreserveKeys $preserveKeys = PreserveKeys::PRESERVE): string;
+    public function toJson(KeyPreservation $keyPreservation = KeyPreservation::PRESERVE): string;
 }
