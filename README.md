@@ -313,11 +313,11 @@ These methods allow the Collection's elements to be transformed or converted int
 - `toArray`: Converts the Collection into an array.
 
   ```
-  PreserveKeys::DISCARD: Converts while discarding the keys.
-  PreserveKeys::PRESERVE: Converts while preserving the original keys.
+  KeyPreservation::DISCARD: Converts while discarding the keys.
+  KeyPreservation::PRESERVE: Converts while preserving the original keys.
   ```
 
-  By default, `PreserveKeys::PRESERVE` is used.
+  By default, `KeyPreservation::PRESERVE` is used.
 
   ```php
   use TinyBlocks\Mapper\KeyPreservation;
@@ -330,11 +330,11 @@ These methods allow the Collection's elements to be transformed or converted int
 - `toJson`: Converts the Collection into a JSON string.
 
   ```
-  PreserveKeys::DISCARD: Converts while discarding the keys.
-  PreserveKeys::PRESERVE: Converts while preserving the original keys.
+  KeyPreservation::DISCARD: Converts while discarding the keys.
+  KeyPreservation::PRESERVE: Converts while preserving the original keys.
   ```
 
-  By default, `PreserveKeys::PRESERVE` is used.
+  By default, `KeyPreservation::PRESERVE` is used.
 
   ```php
   use TinyBlocks\Mapper\KeyPreservation;
