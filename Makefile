@@ -16,7 +16,7 @@ DOCKER_RUN = docker run ${PLATFORM} --rm -it --net=host -v ${PWD}:/app -w /app g
 .PHONY: configure test test-file test-no-coverage review show-reports clean
 
 configure:
-	@${DOCKER_RUN} composer update --no-cache --optimize-autoloader
+	@${DOCKER_RUN} composer update --optimize-autoloader
 
 test:
 	@${DOCKER_RUN} composer tests
