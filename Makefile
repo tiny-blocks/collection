@@ -1,4 +1,17 @@
-DOCKER_RUN = docker run --rm -it --net=host -v ${PWD}:/app -w /app gustavofreze/php:8.3
+ifeq ($(OS),Windows_NT)
+    PWD := $(shell cd)
+else
+    PWD := $(shell pwd -L)
+endif
+
+ARCH := $(shell uname -m)
+PLATFORM :=
+
+ifeq ($(ARCH),arm64)
+    PLATFORM := --platform=linux/amd64
+endif
+
+DOCKER_RUN = docker run ${PLATFORM} --rm -it --net=host -v ${PWD}:/app -w /app gustavofreze/php:8.3
 
 .PHONY: configure test test-file test-no-coverage review show-reports clean
 

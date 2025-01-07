@@ -4,6 +4,7 @@
     "license": "MIT",
     "version": "1.9.1",
     "homepage": "https://github.com/tiny-blocks/collection",
+    "version": "1.9.2",
     "description": "Provides a flexible and efficient API to manipulate, iterate, and manage collections in a structured and type-safe manner.",
     "prefer-stable": true,
     "minimum-stability": "stable",
