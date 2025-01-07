@@ -45,7 +45,7 @@
     },
     "require": {
         "php": "^8.3",
-        "tiny-blocks/mapper": "^1.1"
+        "tiny-blocks/mapper": "dev-main"
     },
     "require-dev": {
         "phpmd/phpmd": "^2.15",
