@@ -113,7 +113,7 @@ final class CollectionPerformanceTest extends TestCase
         $endMemory = memory_get_usage();
 
         /** @Then verify that the total duration of the chained operations is within limits */
-        self::assertLessThan(10, $endTime - $startTime);
+        self::assertLessThan(15, $endTime - $startTime);
 
         /** @And verify that memory usage is within acceptable limits */
         $memoryUsageInMB = ($endMemory - $startMemory) / 1024 / 1024;

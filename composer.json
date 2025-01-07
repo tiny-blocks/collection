@@ -3,6 +3,7 @@
     "type": "library",
     "license": "MIT",
     "homepage": "https://github.com/tiny-blocks/collection",
+    "version": "1.9.2",
     "description": "Provides a flexible and efficient API to manipulate, iterate, and manage collections in a structured and type-safe manner.",
     "prefer-stable": true,
     "minimum-stability": "stable",
@@ -45,7 +46,7 @@
     },
     "require": {
         "php": "^8.3",
-        "tiny-blocks/mapper": "^1.0"
+        "tiny-blocks/mapper": "^1"
     },
     "require-dev": {
         "phpmd/phpmd": "^2.15",
