@@ -33,6 +33,42 @@ final class CollectionFilterOperationTest extends TestCase
         self::assertSame([4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
+    public function testFilterFailsIfPredicatesAreNotReindex(): void
+    {
+        /** @Given a collection with elements */
+        $collection = Collection::createFrom(elements: [10, 20, 30]);
+
+        /** @When filtering with a null predicate in the first position. */
+        $actual = $collection->filter(
+            null,
+            static fn(int $value): bool => $value > 15
+        );
+
+        /** @Then the filter should still work correctly. */
+        $elements = iterator_to_array($actual);
+
+        self::assertCount(2, $elements);
+        self::assertContains(20, $elements);
+        self::assertContains(30, $elements);
+    }
+
+    public function testFilterIgnoresNullPredicatesAndReindexesWeights(): void
+    {
+        /** @Given a collection with elements */
+        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
+
+        /** @When filtering using null values interspersed with valid predicates. */
+        $actual = $collection->filter(
+            null,
+            static fn(int $value): bool => $value > 2,
+            null,
+            static fn(int $value): bool => $value < 5
+        );
+
+        /** @Then it should only apply the valid predicates (result should be 3 and 4) */
+        self::assertSame([3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
     #[DataProvider('elementsDataProvider')]
     public function testFilterAppliesDefaultArrayFilter(iterable $elements, iterable $expected): void
     {

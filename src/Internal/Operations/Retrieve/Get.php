@@ -19,18 +19,10 @@ final readonly class Get implements ImmediateOperation
 
     public function elementAtIndex(int $index, mixed $defaultValueIfNotFound): mixed
     {
-        if ($index < 0) {
-            return $defaultValueIfNotFound;
-        }
-
-        $currentIndex = 0;
-
-        foreach ($this->elements as $value) {
+        foreach ($this->elements as $currentIndex => $value) {
             if ($currentIndex === $index) {
                 return $value;
             }
-
-            $currentIndex++;
         }
 
         return $defaultValueIfNotFound;
