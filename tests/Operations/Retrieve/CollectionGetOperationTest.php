@@ -61,6 +61,25 @@ final class CollectionGetOperationTest extends TestCase
         self::assertNull($actual);
     }
 
+    public function testGetByIndexReturnsDefaultValueWhenIndexIsNegative(): void
+    {
+        /** @Given a collection with elements */
+        $collection = Collection::createFrom(elements: [
+            new CryptoCurrency(name: 'Bitcoin', price: 60000.0, symbol: 'BTC'),
+            new CryptoCurrency(name: 'Ethereum', price: 40000.0, symbol: 'ETH'),
+            new CryptoCurrency(name: 'Binance Coin', price: 1500.0, symbol: 'BNB')
+        ]);
+
+        /** @And a default value when the element is not found */
+        $defaultValue = 'not-found';
+
+        /** @When attempting to get an element at a negative index */
+        $actual = $collection->getBy(index: -1, defaultValueIfNotFound: $defaultValue);
+
+        /** @Then the default value should be returned */
+        self::assertSame($defaultValue, $actual);
+    }
+
     public function testGetByIndexReturnsNullForEmptyCollection(): void
     {
         /** @Given an empty collection */
