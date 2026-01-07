@@ -14,7 +14,7 @@ final readonly class Filter implements LazyOperation
 
     private function __construct(?Closure ...$predicates)
     {
-        $this->predicates = $predicates;
+        $this->predicates = array_filter($predicates);
     }
 
     public static function from(?Closure ...$predicates): Filter
