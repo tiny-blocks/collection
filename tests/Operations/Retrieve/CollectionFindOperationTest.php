@@ -16,7 +16,7 @@ final class CollectionFindOperationTest extends TestCase
         $collection = Collection::createFromEmpty();
 
         /** @When attempting to find any element */
-        $actual = $collection->findBy(predicates: fn(mixed $element): bool => true);
+        $actual = $collection->findBy(predicates: static fn(mixed $element): bool => true);
 
         /** @Then the result should be null */
         self::assertNull($actual);
@@ -32,7 +32,8 @@ final class CollectionFindOperationTest extends TestCase
         ]);
 
         /** @When attempting to find an element that doesn't match any condition */
-        $actual = $collection->findBy(predicates: fn(CryptoCurrency $element): bool => $element->symbol === 'XRP');
+        $actual = $collection->findBy(predicates: static fn(CryptoCurrency $element): bool => $element->symbol === 'XRP'
+        );
 
         /** @Then the result should be null */
         self::assertNull($actual);
@@ -50,8 +51,8 @@ final class CollectionFindOperationTest extends TestCase
 
         /** @When attempting to find the first element matching multiple predicates */
         $actual = $collection->findBy(
-            fn(CryptoCurrency $element): bool => $element->symbol === 'BNB',
-            fn(CryptoCurrency $element): bool => $element->price < 2000.0
+            static fn(CryptoCurrency $element): bool => $element->symbol === 'BNB',
+            static fn(CryptoCurrency $element): bool => $element->price < 2000.0
         );
 
         /** @Then the result should be the expected element */
@@ -69,7 +70,8 @@ final class CollectionFindOperationTest extends TestCase
         $collection = Collection::createFrom(elements: $elements);
 
         /** @When attempting to find the first matching element */
-        $actual = $collection->findBy(predicates: fn(CryptoCurrency $element): bool => $element->symbol === 'ETH');
+        $actual = $collection->findBy(predicates: static fn(CryptoCurrency $element): bool => $element->symbol === 'ETH'
+        );
 
         /** @Then the result should be the expected element */
         self::assertSame($elements[1], $actual);
@@ -86,8 +88,8 @@ final class CollectionFindOperationTest extends TestCase
 
         /** @When attempting to find an element matching multiple predicates that do not match */
         $actual = $collection->findBy(
-            fn(CryptoCurrency $element): bool => $element->symbol === 'XRP',
-            fn(CryptoCurrency $element): bool => $element->price < 1000.0
+            static fn(CryptoCurrency $element): bool => $element->symbol === 'XRP',
+            static fn(CryptoCurrency $element): bool => $element->price < 1000.0
         );
 
         /** @Then the result should be null */

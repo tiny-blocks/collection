@@ -7,4 +7,5 @@ parameters:
     - '#Unsafe usage of new static#'
     - '#does not specify its types#'
     - '#type specified in iterable type#'
+    - '#Generator expects key type#'
   reportUnmatchedIgnoredErrors: false

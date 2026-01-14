@@ -33,7 +33,7 @@ final class CollectionReduceOperationTest extends TestCase
 
         /** @When reducing the collection to a sum */
         $actual = $numbers->reduce(
-            aggregator: fn(int $carry, int $number): int => $carry + $number,
+            aggregator: static fn(int $carry, int $number): int => $carry + $number,
             initial: 0
         );
 
@@ -48,7 +48,7 @@ final class CollectionReduceOperationTest extends TestCase
 
         /** @When reducing the collection to a product */
         $actual = $numbers->reduce(
-            aggregator: fn(int $carry, int $number): int => $carry * $number,
+            aggregator: static fn(int $carry, int $number): int => $carry * $number,
             initial: 1
         );
 
@@ -67,8 +67,8 @@ final class CollectionReduceOperationTest extends TestCase
 
         /** @When reducing the collection for a customer with no match */
         $actual = $summaries
-            ->filter(predicates: fn(InvoiceSummary $summary): bool => $summary->customer === 'Customer C')
-            ->reduce(aggregator: fn(float $carry, InvoiceSummary $summary): float => $carry + $summary->amount,
+            ->filter(predicates: static fn(InvoiceSummary $summary): bool => $summary->customer === 'Customer C')
+            ->reduce(aggregator: static fn(float $carry, InvoiceSummary $summary): float => $carry + $summary->amount,
                 initial: 0.0);
 
         /** @Then the total amount for 'Customer C' should be zero */
@@ -82,7 +82,7 @@ final class CollectionReduceOperationTest extends TestCase
 
         /** @When reducing the collection by concatenating values as strings */
         $actual = $mixedData->reduce(
-            aggregator: fn(string $carry, mixed $value): string => $carry . $value,
+            aggregator: static fn(string $carry, mixed $value): string => $carry . $value,
             initial: ''
         );
 
@@ -97,7 +97,7 @@ final class CollectionReduceOperationTest extends TestCase
 
         /** @When reducing an empty collection */
         $actual = $summaries->reduce(
-            aggregator: fn(float $carry, InvoiceSummary $summary): float => $carry + $summary->amount,
+            aggregator: static fn(float $carry, InvoiceSummary $summary): float => $carry + $summary->amount,
             initial: 0.0
         );
 
@@ -116,8 +116,8 @@ final class CollectionReduceOperationTest extends TestCase
 
         /** @When summing the amounts for customer 'Customer A' with an initial value of 50 */
         $actual = $summaries
-            ->filter(predicates: fn(InvoiceSummary $summary): bool => $summary->customer === 'Customer A')
-            ->reduce(aggregator: fn(float $carry, InvoiceSummary $summary): float => $carry + $summary->amount,
+            ->filter(predicates: static fn(InvoiceSummary $summary): bool => $summary->customer === 'Customer A')
+            ->reduce(aggregator: static fn(float $carry, InvoiceSummary $summary): float => $carry + $summary->amount,
                 initial: 50.0);
 
         /** @Then the total amount for 'Customer A' should be 300.5 */
