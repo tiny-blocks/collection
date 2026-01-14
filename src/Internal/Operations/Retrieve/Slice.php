@@ -20,6 +20,34 @@ final readonly class Slice implements LazyOperation
 
     public function apply(iterable $elements): Generator
     {
+        if ($this->length === 0) {
+            return;
+        }
+
+        if ($this->length < -1) {
+            yield from $this->applyWithBufferedSlice(elements: $elements);
+            return;
+        }
+
+        $currentIndex = 0;
+        $yieldedCount = 0;
+
+        foreach ($elements as $key => $value) {
+            if ($currentIndex++ < $this->index) {
+                continue;
+            }
+
+            yield $key => $value;
+            $yieldedCount++;
+
+            if ($this->length !== -1 && $yieldedCount >= $this->length) {
+                return;
+            }
+        }
+    }
+
+    private function applyWithBufferedSlice(iterable $elements): Generator
+    {
         $collected = [];
         $currentIndex = 0;
 
@@ -31,9 +59,7 @@ final readonly class Slice implements LazyOperation
             $collected[] = [$key, $value];
         }
 
-        if ($this->length !== -1) {
-            $collected = array_slice($collected, 0, $this->length);
-        }
+        $collected = array_slice($collected, 0, $this->length);
 
         foreach ($collected as [$key, $value]) {
             yield $key => $value;

@@ -12,9 +12,24 @@ final readonly class Filter implements LazyOperation
 {
     private array $predicates;
 
+    private Closure $compiledPredicate;
+
     private function __construct(?Closure ...$predicates)
     {
         $this->predicates = array_filter($predicates);
+
+        $buildCompositePredicate = static fn(array $predicates): Closure => static fn(
+            mixed $value,
+            mixed $key
+        ): bool => array_all(
+            $predicates,
+            static fn(Closure $predicate): bool => $predicate($value, $key)
+        );
+
+        $this->compiledPredicate = match (count($this->predicates)) {
+            0 => static fn(mixed $value, mixed $key): bool => (bool)$value,
+            default => $buildCompositePredicate($this->predicates)
+        };
     }
 
     public static function from(?Closure ...$predicates): Filter
@@ -24,16 +39,7 @@ final readonly class Filter implements LazyOperation
 
     public function apply(iterable $elements): Generator
     {
-        $predicate = $this->predicates
-            ? function (mixed $value, mixed $key): bool {
-                foreach ($this->predicates as $predicate) {
-                    if (!$predicate($value, $key)) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            : static fn(mixed $value): bool => (bool)$value;
+        $predicate = $this->compiledPredicate;
 
         foreach ($elements as $key => $value) {
             if ($predicate($value, $key)) {

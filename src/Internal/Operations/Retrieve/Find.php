@@ -21,10 +21,8 @@ final readonly class Find implements ImmediateOperation
     public function firstMatchingElement(Closure ...$predicates): mixed
     {
         foreach ($this->elements as $element) {
-            foreach ($predicates as $predicate) {
-                if ($predicate($element)) {
-                    return $element;
-                }
+            if (array_any($predicates, static fn(Closure $predicate): bool => $predicate($element))) {
+                return $element;
             }
         }
 

@@ -29,13 +29,13 @@ final class CollectionTest extends TestCase
          *  and use each to accumulate the total discounted value */
         $totalDiscounted = 0;
         $actual = $collection
-            ->filter(predicates: fn(Amount $amount): bool => $amount->value >= 100)
-            ->map(transformations: fn(Amount $amount): Amount => new Amount(
+            ->filter(predicates: static fn(Amount $amount): bool => $amount->value >= 100)
+            ->map(transformations: static fn(Amount $amount): Amount => new Amount(
                 value: $amount->value * 0.9,
                 currency: $amount->currency
             ))
-            ->removeAll(filter: fn(Amount $amount): bool => $amount->value > 300)
-            ->sort(order: Order::ASCENDING_VALUE, predicate: fn(
+            ->removeAll(filter: static fn(Amount $amount): bool => $amount->value > 300)
+            ->sort(order: Order::ASCENDING_VALUE, predicate: static fn(
                 Amount $first,
                 Amount $second
             ): int => $first->value <=> $second->value)
@@ -65,8 +65,8 @@ final class CollectionTest extends TestCase
          *  Then mapping each number to its square,
          *  And sorting the squared numbers in descending order */
         $actual = $collection
-            ->filter(predicates: fn(int $value): bool => $value % 2 === 0)
-            ->map(transformations: fn(int $value): int => $value ** 2)
+            ->filter(predicates: static fn(int $value): bool => $value % 2 === 0)
+            ->map(transformations: static fn(int $value): int => $value ** 2)
             ->sort(order: Order::DESCENDING_VALUE);
 
         /** @Then the first element after sorting should be 10,000 (square of 100) */
@@ -76,7 +76,7 @@ final class CollectionTest extends TestCase
         self::assertSame(4, $actual->last());
 
         /** @When reducing the collection to calculate the sum of all squared even numbers */
-        $sum = $actual->reduce(aggregator: fn(int $carry, int $value): int => $carry + $value, initial: 0);
+        $sum = $actual->reduce(aggregator: static fn(int $carry, int $value): int => $carry + $value, initial: 0);
 
         /** @Then the sum of squared even numbers should be correct (171700) */
         self::assertSame(171700, $sum);

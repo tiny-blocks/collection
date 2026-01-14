@@ -68,9 +68,9 @@ use TinyBlocks\Mapper\KeyPreservation;
 
 $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5])
     ->add(elements: [6, 7]) 
-    ->filter(predicates: fn(int $value): bool => $value > 3) 
+    ->filter(predicates: static fn(int $value): bool => $value > 3) 
     ->sort(order: Order::ASCENDING_VALUE) 
-    ->map(transformations: fn(int $value): int => $value * 2) 
+    ->map(transformations: static fn(int $value): int => $value * 2) 
     ->toArray(keyPreservation: KeyPreservation::DISCARD); 
 
 # Output: [8, 10, 12, 14]
@@ -193,7 +193,7 @@ elements, or finding elements that match a specific condition.
 - `findBy`: Finds the first element that matches one or more predicates.
 
   ```php
-  $collection->findBy(predicates: fn(CryptoCurrency $crypto): bool => $crypto->symbol === 'ETH');
+  $collection->findBy(predicates: static fn(CryptoCurrency $crypto): bool => $crypto->symbol === 'ETH');
   ```
 
 <div id='comparing'></div>
@@ -261,7 +261,7 @@ combining elements.
   This method is helpful for accumulating results, like summing or concatenating values.
 
   ```php
-  $collection->reduce(aggregator: fn(float $carry, float $amount): float => $carry + $amount, initial: 0.0)
+  $collection->reduce(aggregator: static fn(float $carry, float $amount): float => $carry + $amount, initial: 0.0)
   ```
 
 <div id='transforming'></div>
@@ -276,7 +276,7 @@ These methods allow the Collection's elements to be transformed or converted int
   The method is helpful for performing side effects, such as logging or adding elements to another collection.
 
   ```php
-  $collection->each(actions: fn(Invoice $invoice): void => $collectionB->add(elements: new InvoiceSummary(amount: $invoice->amount, customer: $invoice->customer)));
+  $collection->each(actions: static fn(Invoice $invoice): void => $collectionB->add(elements: new InvoiceSummary(amount: $invoice->amount, customer: $invoice->customer)));
   ```
 
 #### Grouping elements
@@ -284,7 +284,7 @@ These methods allow the Collection's elements to be transformed or converted int
 - `groupBy`: Groups the elements in the Collection based on the provided grouping criterion.
 
   ```php
-  $collection->groupBy(grouping: fn(Amount $amount): string => $amount->currency->name);
+  $collection->groupBy(grouping: static fn(Amount $amount): string => $amount->currency->name);
   ```
 
 #### Mapping elements
@@ -293,7 +293,7 @@ These methods allow the Collection's elements to be transformed or converted int
   elements.
 
   ```php
-  $collection->map(transformations: fn(int $value): int => $value * 2);
+  $collection->map(transformations: static fn(int $value): int => $value * 2);
   ```
 
 #### Flattening elements

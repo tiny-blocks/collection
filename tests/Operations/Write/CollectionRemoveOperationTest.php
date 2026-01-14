@@ -60,7 +60,7 @@ final class CollectionRemoveOperationTest extends TestCase
         $collection = Collection::createFrom(elements: [$bitcoin, $ethereum]);
 
         /** @When removing the Bitcoin (BTC) element using a filter */
-        $actual = $collection->removeAll(filter: fn(CryptoCurrency $item) => $item === $bitcoin);
+        $actual = $collection->removeAll(filter: static fn(CryptoCurrency $item) => $item === $bitcoin);
 
         /** @Then the collection should no longer contain the removed element */
         self::assertSame([$ethereum->toArray()], $actual->toArray());
