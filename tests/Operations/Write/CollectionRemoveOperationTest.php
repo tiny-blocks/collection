@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Write;
+namespace Test\TinyBlocks\Collection\Operations\Write;
 
 use ArrayIterator;
 use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Test\TinyBlocks\Collection\Models\CryptoCurrency;
+use Test\TinyBlocks\Collection\Models\Dragon;
+use Test\TinyBlocks\Collection\Models\Status;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Models\CryptoCurrency;
-use TinyBlocks\Collection\Models\Currency;
-use TinyBlocks\Collection\Models\Dragon;
-use TinyBlocks\Collection\Models\Status;
+use TinyBlocks\Currency\Currency;
 
 final class CollectionRemoveOperationTest extends TestCase
 {

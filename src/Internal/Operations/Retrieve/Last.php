@@ -19,10 +19,6 @@ final readonly class Last implements ImmediateOperation
 
     public function element(mixed $defaultValueIfNotFound = null): mixed
     {
-        if (is_array($this->elements)) {
-            return array_last($this->elements) ?? $defaultValueIfNotFound;
-        }
-
         $lastElement = $defaultValueIfNotFound;
 
         foreach ($this->elements as $element) {

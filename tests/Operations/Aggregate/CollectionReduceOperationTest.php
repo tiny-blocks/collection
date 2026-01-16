@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Aggregate;
+namespace Test\TinyBlocks\Collection\Operations\Aggregate;
 
 use PHPUnit\Framework\TestCase;
-use TinyBlocks\Collection\Models\InvoiceSummaries;
-use TinyBlocks\Collection\Models\InvoiceSummary;
+use Test\TinyBlocks\Collection\Models\InvoiceSummaries;
+use Test\TinyBlocks\Collection\Models\InvoiceSummary;
 
 final class CollectionReduceOperationTest extends TestCase
 {

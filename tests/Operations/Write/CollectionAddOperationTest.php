@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Write;
+namespace Test\TinyBlocks\Collection\Operations\Write;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Test\TinyBlocks\Collection\Models\Amount;
+use Test\TinyBlocks\Collection\Models\CryptoCurrency;
+use Test\TinyBlocks\Collection\Models\Dragon;
+use Test\TinyBlocks\Collection\Models\Order;
+use Test\TinyBlocks\Collection\Models\Product;
+use Test\TinyBlocks\Collection\Models\Products;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Models\Amount;
-use TinyBlocks\Collection\Models\CryptoCurrency;
-use TinyBlocks\Collection\Models\Currency;
-use TinyBlocks\Collection\Models\Dragon;
-use TinyBlocks\Collection\Models\Order;
-use TinyBlocks\Collection\Models\Product;
-use TinyBlocks\Collection\Models\Products;
+use TinyBlocks\Currency\Currency;
+
 
 final class CollectionAddOperationTest extends TestCase
 {

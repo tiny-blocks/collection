@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Transform;
+namespace Test\TinyBlocks\Collection\Operations\Transform;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Test\TinyBlocks\Collection\Models\Amount;
+use Test\TinyBlocks\Collection\Models\Status;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Models\Amount;
-use TinyBlocks\Collection\Models\Currency;
-use TinyBlocks\Collection\Models\Status;
+use TinyBlocks\Currency\Currency;
 
 final class CollectionMapToArrayOperationTest extends TestCase
 {
@@ -24,7 +24,7 @@ final class CollectionMapToArrayOperationTest extends TestCase
 
         /** @Then the array representation should match the expected format */
         self::assertSame($expected, $actual);
-        self::assertSame(count($expected), $collection->count());
+        self::assertSame(count((array)$expected), $collection->count());
     }
 
     public static function elementsDataProvider(): iterable

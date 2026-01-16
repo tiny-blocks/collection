@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Transform;
+namespace Test\TinyBlocks\Collection\Operations\Transform;
 
 use PHPUnit\Framework\TestCase;
+use Test\TinyBlocks\Collection\Models\Invoice;
+use Test\TinyBlocks\Collection\Models\Invoices;
+use Test\TinyBlocks\Collection\Models\InvoiceSummaries;
+use Test\TinyBlocks\Collection\Models\InvoiceSummary;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Models\Invoice;
-use TinyBlocks\Collection\Models\Invoices;
-use TinyBlocks\Collection\Models\InvoiceSummaries;
-use TinyBlocks\Collection\Models\InvoiceSummary;
+
 
 final class CollectionEachOperationTest extends TestCase
 {

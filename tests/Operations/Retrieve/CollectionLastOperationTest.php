@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Retrieve;
+namespace Test\TinyBlocks\Collection\Operations\Retrieve;
 
+use ArrayIterator;
 use PHPUnit\Framework\TestCase;
+use SplDoublyLinkedList;
+use Test\TinyBlocks\Collection\Models\CryptoCurrency;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Models\CryptoCurrency;
 
 final class CollectionLastOperationTest extends TestCase
 {
@@ -27,6 +29,18 @@ final class CollectionLastOperationTest extends TestCase
         self::assertSame($elements[2], $actual);
     }
 
+    public function testLastReturnsNullWhenLastElementIsNull(): void
+    {
+        /** @Given a collection whose last element is null */
+        $collection = Collection::createFrom(elements: ['value', null]);
+
+        /** @When retrieving the last element with a default value */
+        $actual = $collection->last(defaultValueIfNotFound: 'default');
+
+        /** @Then the last element should be null */
+        self::assertNull($actual);
+    }
+
     public function testLastReturnsDefaultValueWhenCollectionIsEmpty(): void
     {
         /** @Given an empty collection */
@@ -37,6 +51,34 @@ final class CollectionLastOperationTest extends TestCase
 
         /** @Then the result should be the default value */
         self::assertSame('default', $actual);
+    }
+
+    public function testLastReturnsLastElementFromSplDoublyLinkedList(): void
+    {
+        /** @Given a collection created from a SplDoublyLinkedList */
+        $elements = new SplDoublyLinkedList();
+        $elements->push('first');
+        $elements->push('second');
+        $elements->push('third');
+        $collection = Collection::createFrom(elements: $elements);
+
+        /** @When retrieving the last element */
+        $actual = $collection->last();
+
+        /** @Then the result should be the last value */
+        self::assertSame('third', $actual);
+    }
+
+    public function testLastReturnsLastElementFromArrayAccessCountableIterable(): void
+    {
+        /** @Given a collection created from an ArrayIterator */
+        $collection = Collection::createFrom(elements: new ArrayIterator(['alpha', 'beta', 'gamma']));
+
+        /** @When retrieving the last element */
+        $actual = $collection->last();
+
+        /** @Then the result should be the last value */
+        self::assertSame('gamma', $actual);
     }
 
     public function testLastReturnsNullWhenCollectionIsEmptyWithoutDefaultValue(): void

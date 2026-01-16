@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Models;
+namespace Test\TinyBlocks\Collection\Models;
+
+use TinyBlocks\Currency\Currency;
 
 final class Amount
 {

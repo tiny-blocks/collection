@@ -107,7 +107,7 @@ These methods enable adding, removing, and modifying elements in the Collection.
     - **With a filter**: Removes only the elements that match the provided filter.
 
       ```php
-      $collection->removeAll(filter: fn(Amount $amount): bool => $amount->value > 10.0);
+      $collection->removeAll(filter: static fn(Amount $amount): bool => $amount->value > 10.0);
       ```
 
     - **Without a filter**: Removes all elements from the Collection.
@@ -130,7 +130,7 @@ These methods enable filtering elements in the Collection based on specific cond
     - **With predicates**: Filter elements are based on the provided predicates.
 
       ```php
-      $collection->filter(predicates: fn(Amount $amount): bool => $amount->value > 100);
+      $collection->filter(predicates: static fn(Amount $amount): bool => $amount->value > 100);
       ```
 
     - **Without predicates**: Removes all empty or false values (e.g., `null`, `false`, empty arrays).
@@ -170,7 +170,7 @@ These methods enable sorting elements in the Collection based on the specified o
   ```php
   use TinyBlocks\Collection\Order;
         
-  $collection->sort(order: Order::ASCENDING_VALUE, predicate: fn(Amount $amount): float => $amount->value);
+  $collection->sort(order: Order::ASCENDING_VALUE, predicate: static fn(Amount $amount): float => $amount->value);
   ``` 
 
 <div id='retrieving'></div>

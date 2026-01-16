@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Retrieve;
+namespace Test\TinyBlocks\Collection\Operations\Retrieve;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Test\TinyBlocks\Collection\Models\CryptoCurrency;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Models\CryptoCurrency;
 
 final class CollectionGetOperationTest extends TestCase
 {

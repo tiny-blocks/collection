@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection;
+namespace Test\TinyBlocks\Collection;
 
 use PHPUnit\Framework\TestCase;
+use TinyBlocks\Collection\Collection;
 
 final class CollectionIteratorTest extends TestCase
 {

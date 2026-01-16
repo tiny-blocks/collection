@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Write;
+namespace Test\TinyBlocks\Collection\Operations\Write;
 
 use PHPUnit\Framework\TestCase;
+use Test\TinyBlocks\Collection\Models\CryptoCurrency;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Models\CryptoCurrency;
 
 final class CollectionCreateOperationTest extends TestCase
 {

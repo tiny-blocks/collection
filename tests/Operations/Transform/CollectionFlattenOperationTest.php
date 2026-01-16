@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Transform;
+namespace Test\TinyBlocks\Collection\Operations\Transform;
 
 use PHPUnit\Framework\TestCase;
 use TinyBlocks\Collection\Collection;
