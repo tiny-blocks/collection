@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Compare;
+namespace Test\TinyBlocks\Collection\Operations\Compare;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
+use Test\TinyBlocks\Collection\Models\CryptoCurrency;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Models\CryptoCurrency;
 
 final class CollectionEqualsOperationTest extends TestCase
 {

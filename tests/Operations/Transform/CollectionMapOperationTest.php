@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Transform;
+namespace Test\TinyBlocks\Collection\Operations\Transform;
 
 use PHPUnit\Framework\TestCase;
+use Test\TinyBlocks\Collection\Models\Dragon;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Models\Dragon;
 
 final class CollectionMapOperationTest extends TestCase
 {

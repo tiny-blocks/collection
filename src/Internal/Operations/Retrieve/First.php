@@ -19,10 +19,6 @@ final readonly class First implements ImmediateOperation
 
     public function element(mixed $defaultValueIfNotFound = null): mixed
     {
-        if (is_array($this->elements)) {
-            return array_first($this->elements) ?? $defaultValueIfNotFound;
-        }
-
         foreach ($this->elements as $element) {
             return $element;
         }

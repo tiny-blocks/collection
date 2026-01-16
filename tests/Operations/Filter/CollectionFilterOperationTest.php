@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Filter;
+namespace Test\TinyBlocks\Collection\Operations\Filter;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Test\TinyBlocks\Collection\Models\CryptoCurrency;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Models\CryptoCurrency;
 use TinyBlocks\Mapper\KeyPreservation;
 
 final class CollectionFilterOperationTest extends TestCase

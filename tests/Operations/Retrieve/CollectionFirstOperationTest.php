@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Retrieve;
+namespace Test\TinyBlocks\Collection\Operations\Retrieve;
 
 use PHPUnit\Framework\TestCase;
+use Test\TinyBlocks\Collection\Models\CryptoCurrency;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Models\CryptoCurrency;
 
 final class CollectionFirstOperationTest extends TestCase
 {
@@ -25,6 +25,18 @@ final class CollectionFirstOperationTest extends TestCase
 
         /** @Then the result should be the first CryptoCurrency object */
         self::assertSame($elements[0], $actual);
+    }
+
+    public function testFirstReturnsNullWhenFirstElementIsNull(): void
+    {
+        /** @Given a collection whose first element is null */
+        $collection = Collection::createFrom(elements: [null, 'value']);
+
+        /** @When retrieving the first element with a default value */
+        $actual = $collection->first(defaultValueIfNotFound: 'default');
+
+        /** @Then the first element should be null */
+        self::assertNull($actual);
     }
 
     public function testFirstReturnsDefaultValueWhenCollectionIsEmpty(): void

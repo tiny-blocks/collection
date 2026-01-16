@@ -22,10 +22,12 @@ final readonly class Sort implements LazyOperation
 
     public function apply(iterable $elements): Generator
     {
-        $temporaryElements = [];
+        $temporaryElements = is_array($elements) ? $elements : [];
 
-        foreach ($elements as $key => $value) {
-            $temporaryElements[$key] = $value;
+        if (!is_array($elements)) {
+            foreach ($elements as $key => $value) {
+                $temporaryElements[$key] = $value;
+            }
         }
 
         $predicate = is_null($this->predicate)

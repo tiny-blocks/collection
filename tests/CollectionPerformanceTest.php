@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection;
+namespace Test\TinyBlocks\Collection;
 
 use Generator;
 use PHPUnit\Framework\TestCase;
-use TinyBlocks\Collection\Models\Amount;
-use TinyBlocks\Collection\Models\Currency;
+use Test\TinyBlocks\Collection\Models\Amount;
+use TinyBlocks\Collection\Collection;
+use TinyBlocks\Collection\Order;
+use TinyBlocks\Currency\Currency;
 
 final class CollectionPerformanceTest extends TestCase
 {

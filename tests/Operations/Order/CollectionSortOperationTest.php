@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Order;
+namespace Test\TinyBlocks\Collection\Operations\Order;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Test\TinyBlocks\Collection\Models\Amount;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Models\Amount;
-use TinyBlocks\Collection\Models\Currency;
 use TinyBlocks\Collection\Order;
+use TinyBlocks\Currency\Currency;
 
 final class CollectionSortOperationTest extends TestCase
 {

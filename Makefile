@@ -23,7 +23,7 @@ test: ## Run all tests with coverage
 	@${DOCKER_RUN} composer tests
 
 .PHONY: test-file
-test-file: ## Run tests for a specific file (usage: make test-file FILE=path/to/file)
+test-file: ## Run tests for a specific file (usage: make test-file FILE=ClassNameTest)
 	@${DOCKER_RUN} composer test-file ${FILE}
 
 .PHONY: test-no-coverage

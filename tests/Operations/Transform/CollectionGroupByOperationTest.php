@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace TinyBlocks\Collection\Operations\Transform;
+namespace Test\TinyBlocks\Collection\Operations\Transform;
 
 use PHPUnit\Framework\TestCase;
+use Test\TinyBlocks\Collection\Models\Amount;
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Collection\Models\Amount;
-use TinyBlocks\Collection\Models\Currency;
+use TinyBlocks\Currency\Currency;
 
 final class CollectionGroupByOperationTest extends TestCase
 {
