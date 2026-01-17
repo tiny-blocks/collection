@@ -91,7 +91,7 @@ These methods enable adding, removing, and modifying elements in the Collection.
   ```
 
   ```php
-  $collection ->add('X', 'Y', 'Z');
+  $collection->add('X', 'Y', 'Z');
   ```
 
 #### Removing elements

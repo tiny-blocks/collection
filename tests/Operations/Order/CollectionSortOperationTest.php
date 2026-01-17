@@ -77,6 +77,29 @@ final class CollectionSortOperationTest extends TestCase
         self::assertSame($expected, $actual->toArray());
     }
 
+    public function testSortDescendingByValueWithPredicate(): void
+    {
+        /** @Given a collection with unordered Amount objects */
+        $collection = Collection::createFrom(elements: [
+            new Amount(value: 100.50, currency: Currency::USD),
+            new Amount(value: 150.75, currency: Currency::EUR),
+            new Amount(value: 200.00, currency: Currency::USD)
+        ]);
+
+        /** @When sorting the collection in descending order by value with a custom predicate */
+        $actual = $collection->sort(
+            order: Order::DESCENDING_VALUE,
+            predicate: static fn(Amount $first, Amount $second): int => $first->value <=> $second->value
+        );
+
+        /** @Then the collection should be sorted by value in descending order */
+        self::assertSame([
+            2 => ['value' => 200.00, 'currency' => Currency::USD->name],
+            1 => ['value' => 150.75, 'currency' => Currency::EUR->name],
+            0 => ['value' => 100.50, 'currency' => Currency::USD->name]
+        ], $actual->toArray());
+    }
+
     public static function ascendingKeySortDataProvider(): iterable
     {
         yield 'Floats ascending by key' => [

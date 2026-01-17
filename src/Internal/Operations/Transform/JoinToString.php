@@ -19,6 +19,19 @@ final readonly class JoinToString implements ImmediateOperation
 
     public function joinTo(string $separator): string
     {
-        return implode($separator, iterator_to_array($this->elements));
+        $result = '';
+        $first = true;
+
+        foreach ($this->elements as $element) {
+            if ($first) {
+                $result = $element;
+                $first = false;
+                continue;
+            }
+
+            $result .= sprintf('%s%s', $separator, $element);
+        }
+
+        return $result;
     }
 }

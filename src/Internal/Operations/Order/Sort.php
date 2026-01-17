@@ -35,9 +35,7 @@ final readonly class Sort implements LazyOperation
             : $this->predicate;
 
         $ascendingPredicate = static fn(mixed $first, mixed $second): int => $predicate($first, $second);
-        $descendingPredicate = is_null($this->predicate)
-            ? static fn(mixed $first, mixed $second): int => $predicate($second, $first)
-            : $predicate;
+        $descendingPredicate = static fn(mixed $first, mixed $second): int => $predicate($second, $first);
 
         match ($this->order) {
             Order::ASCENDING_KEY    => ksort($temporaryElements),
