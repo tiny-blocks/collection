@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Test\TinyBlocks\Collection\Operations\Retrieve;
+namespace Test\TinyBlocks\Collection\Internal\Operations\Retrieve;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

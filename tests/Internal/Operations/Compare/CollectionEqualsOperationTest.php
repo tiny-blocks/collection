@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Test\TinyBlocks\Collection\Operations\Compare;
+namespace Test\TinyBlocks\Collection\Internal\Operations\Compare;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -42,6 +42,11 @@ final class CollectionEqualsOperationTest extends TestCase
 
     public static function collectionsEqualDataProvider(): iterable
     {
+        yield 'Empty collections are equal' => [
+            'elementsA' => [],
+            'elementsB' => []
+        ];
+
         yield 'Collections are equal' => [
             'elementsA' => [
                 new CryptoCurrency(name: 'Bitcoin', price: 60000.0, symbol: 'BTC'),
@@ -70,6 +75,11 @@ final class CollectionEqualsOperationTest extends TestCase
             ]
         ];
 
+        yield 'Collections with different sizes' => [
+            'elementsA' => [],
+            'elementsB' => [1]
+        ];
+
         yield 'Scalar and non-scalar comparison' => [
             'elementsA' => [1],
             'elementsB' => [new stdClass()]
@@ -78,6 +88,11 @@ final class CollectionEqualsOperationTest extends TestCase
         yield 'Collections with different null handling' => [
             'elementsA' => [null],
             'elementsB' => []
+        ];
+
+        yield 'Collections with different sizes and null' => [
+            'elementsA' => [1, 2],
+            'elementsB' => [1, 2, null]
         ];
 
         yield 'Same elements in different order are not equal' => [
