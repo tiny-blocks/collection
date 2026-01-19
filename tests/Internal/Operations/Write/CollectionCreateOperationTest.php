@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Test\TinyBlocks\Collection\Operations\Write;
+namespace Test\TinyBlocks\Collection\Internal\Operations\Write;
 
 use PHPUnit\Framework\TestCase;
 use Test\TinyBlocks\Collection\Models\CryptoCurrency;

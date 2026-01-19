@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Test\TinyBlocks\Collection\Operations\Transform;
+namespace Test\TinyBlocks\Collection\Internal\Operations\Transform;
 
 use PHPUnit\Framework\TestCase;
 use Test\TinyBlocks\Collection\Models\Amount;

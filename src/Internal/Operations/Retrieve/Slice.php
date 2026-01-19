@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TinyBlocks\Collection\Internal\Operations\Retrieve;
 
 use Generator;
+use SplQueue;
 use TinyBlocks\Collection\Internal\Operations\LazyOperation;
 
 final readonly class Slice implements LazyOperation
@@ -48,7 +49,8 @@ final readonly class Slice implements LazyOperation
 
     private function applyWithBufferedSlice(iterable $elements): Generator
     {
-        $collected = [];
+        $buffer = new SplQueue();
+        $skipFromEnd = abs($this->length);
         $currentIndex = 0;
 
         foreach ($elements as $key => $value) {
@@ -56,13 +58,18 @@ final readonly class Slice implements LazyOperation
                 continue;
             }
 
-            $collected[] = [$key, $value];
-        }
+            $buffer->enqueue([$key, $value]);
 
-        $collected = array_slice($collected, 0, $this->length);
+            if ($buffer->count() <= $skipFromEnd) {
+                continue;
+            }
 
-        foreach ($collected as [$key, $value]) {
-            yield $key => $value;
+            $dequeued = $buffer->dequeue();
+
+            if (is_array($dequeued)) {
+                [$yieldKey, $yieldValue] = $dequeued;
+                yield $yieldKey => $yieldValue;
+            }
         }
     }
 }
