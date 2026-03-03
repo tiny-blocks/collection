@@ -214,6 +214,21 @@ interface Collectible extends Countable, IteratorAggregate
     public function map(Closure ...$transformations): Collectible;
 
     /**
+     * Merges the elements of another Collectible into the current Collection.
+     *
+     * Unlike {@see add()}, which accepts individual elements via variadic parameters,
+     * this method accepts an entire Collectible and concatenates its elements lazily
+     * without materializing either collection.
+     *
+     * Complexity (when consumed): O(n + m) time and O(1) additional space,
+     * where `m` is the number of elements in the other Collectible.
+     *
+     * @param Collectible<Element> $other The Collectible whose elements will be appended.
+     * @return Collectible<Element> A new Collection containing elements from both collections.
+     */
+    public function merge(Collectible $other): Collectible;
+
+    /**
      * Removes a specific element from the Collection.
      *
      * Complexity (when consumed): O(n) time and O(1) additional space.

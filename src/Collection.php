@@ -23,6 +23,7 @@ use TinyBlocks\Collection\Internal\Operations\Transform\JoinToString;
 use TinyBlocks\Collection\Internal\Operations\Transform\Map;
 use TinyBlocks\Collection\Internal\Operations\Write\Add;
 use TinyBlocks\Collection\Internal\Operations\Write\Create;
+use TinyBlocks\Collection\Internal\Operations\Write\Merge;
 use TinyBlocks\Collection\Internal\Operations\Write\Remove;
 use TinyBlocks\Collection\Internal\Operations\Write\RemoveAll;
 use TinyBlocks\Mapper\IterableMappability;
@@ -137,6 +138,11 @@ class Collection implements Collectible, IterableMapper
     public function map(Closure ...$transformations): static
     {
         return new static(iterator: $this->iterator->add(operation: Map::from(...$transformations)));
+    }
+
+    public function merge(Collectible $other): static
+    {
+        return new static(iterator: $this->iterator->add(operation: Merge::from(otherElements: $other)));
     }
 
     public function remove(mixed $element): static
