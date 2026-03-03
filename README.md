@@ -94,6 +94,15 @@ These methods enable adding, removing, and modifying elements in the Collection.
   $collection->add('X', 'Y', 'Z');
   ```
 
+#### Merging collections
+
+- `merge`: Merges the elements of another Collectible into the current Collection lazily, without materializing either
+  collection.
+
+  ```php
+  $collectionA->merge(other: $collectionB);
+  ```
+
 #### Removing elements
 
 - `remove`: Removes a specific element from the Collection.
