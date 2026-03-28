@@ -5,176 +5,182 @@ declare(strict_types=1);
 namespace TinyBlocks\Collection;
 
 use Closure;
-use TinyBlocks\Collection\Internal\Iterators\LazyIterator;
-use TinyBlocks\Collection\Internal\Operations\Aggregate\Reduce;
-use TinyBlocks\Collection\Internal\Operations\Compare\Contains;
-use TinyBlocks\Collection\Internal\Operations\Compare\Equals;
-use TinyBlocks\Collection\Internal\Operations\Filter\Filter;
-use TinyBlocks\Collection\Internal\Operations\Order\Sort;
-use TinyBlocks\Collection\Internal\Operations\Retrieve\Find;
-use TinyBlocks\Collection\Internal\Operations\Retrieve\First;
-use TinyBlocks\Collection\Internal\Operations\Retrieve\Get;
-use TinyBlocks\Collection\Internal\Operations\Retrieve\Last;
-use TinyBlocks\Collection\Internal\Operations\Retrieve\Slice;
-use TinyBlocks\Collection\Internal\Operations\Transform\Each;
-use TinyBlocks\Collection\Internal\Operations\Transform\Flatten;
-use TinyBlocks\Collection\Internal\Operations\Transform\GroupBy;
-use TinyBlocks\Collection\Internal\Operations\Transform\JoinToString;
-use TinyBlocks\Collection\Internal\Operations\Transform\Map;
-use TinyBlocks\Collection\Internal\Operations\Write\Add;
-use TinyBlocks\Collection\Internal\Operations\Write\Create;
-use TinyBlocks\Collection\Internal\Operations\Write\Merge;
-use TinyBlocks\Collection\Internal\Operations\Write\Remove;
-use TinyBlocks\Collection\Internal\Operations\Write\RemoveAll;
+use TinyBlocks\Collection\Internal\EagerPipeline;
+use TinyBlocks\Collection\Internal\LazyPipeline;
+use TinyBlocks\Collection\Internal\Operations\Operation;
+use TinyBlocks\Collection\Internal\Operations\Resolving\Each;
+use TinyBlocks\Collection\Internal\Operations\Resolving\Equality;
+use TinyBlocks\Collection\Internal\Operations\Resolving\Find;
+use TinyBlocks\Collection\Internal\Operations\Resolving\First;
+use TinyBlocks\Collection\Internal\Operations\Resolving\Get;
+use TinyBlocks\Collection\Internal\Operations\Resolving\Join;
+use TinyBlocks\Collection\Internal\Operations\Resolving\Last;
+use TinyBlocks\Collection\Internal\Operations\Resolving\Reduce;
+use TinyBlocks\Collection\Internal\Operations\Transforming\Add;
+use TinyBlocks\Collection\Internal\Operations\Transforming\Filter;
+use TinyBlocks\Collection\Internal\Operations\Transforming\FlatMap;
+use TinyBlocks\Collection\Internal\Operations\Transforming\GroupInto;
+use TinyBlocks\Collection\Internal\Operations\Transforming\Map;
+use TinyBlocks\Collection\Internal\Operations\Transforming\Merge;
+use TinyBlocks\Collection\Internal\Operations\Transforming\Rearrange;
+use TinyBlocks\Collection\Internal\Operations\Transforming\Remove;
+use TinyBlocks\Collection\Internal\Operations\Transforming\RemoveAll;
+use TinyBlocks\Collection\Internal\Operations\Transforming\Segment;
+use TinyBlocks\Collection\Internal\Pipeline;
 use TinyBlocks\Mapper\IterableMappability;
 use TinyBlocks\Mapper\IterableMapper;
 use Traversable;
 
 /**
- * Represents a collection that provides a set of utility methods for operations like adding,
- * filtering, mapping, and transforming elements. Internally uses iterators to apply operations
- * lazily and efficiently.
+ * Extensible, type-safe collection with a fluent API.
+ *
+ * Designed as the primary extension point — domain collections should
+ * extend this class to inherit all collection behavior:
+ *
+ *     final class Orders extends Collection { }
  */
 class Collection implements Collectible, IterableMapper
 {
     use IterableMappability;
 
-    private LazyIterator $iterator;
-
-    private function __construct(LazyIterator $iterator)
+    private function __construct(private readonly Pipeline $pipeline)
     {
-        $this->iterator = $iterator;
     }
 
     public static function createFrom(iterable $elements): static
     {
-        return new static(iterator: LazyIterator::from(elements: $elements, operation: Create::fromEmpty()));
+        return new static(pipeline: EagerPipeline::from(source: $elements));
     }
 
     public static function createFromEmpty(): static
     {
-        return self::createFrom(elements: []);
+        return static::createFrom(elements: []);
+    }
+
+    public static function createLazyFrom(iterable $elements): static
+    {
+        return new static(pipeline: LazyPipeline::from(source: $elements));
+    }
+
+    public static function createLazyFromEmpty(): static
+    {
+        return static::createLazyFrom(elements: []);
+    }
+
+    public function getIterator(): Traversable
+    {
+        yield from $this->pipeline->process();
     }
 
     public function add(mixed ...$elements): static
     {
-        return new static(iterator: $this->iterator->add(operation: Add::from(newElements: $elements)));
+        return $this->pipeTo(operation: Add::these(newElements: $elements));
+    }
+
+    public function merge(Collectible $other): static
+    {
+        return $this->pipeTo(operation: Merge::with(other: $other));
     }
 
     public function contains(mixed $element): bool
     {
-        return Contains::from(elements: $this->iterator)->exists(element: $element);
+        return Equality::exists(elements: $this, element: $element);
     }
 
     public function count(): int
     {
-        return iterator_count($this->iterator);
+        return iterator_count($this->getIterator());
+    }
+
+    public function findBy(Closure ...$predicates): mixed
+    {
+        return Find::firstMatch(elements: $this, predicates: $predicates);
     }
 
     public function each(Closure ...$actions): static
     {
-        Each::from(...$actions)->execute(elements: $this->iterator);
+        Each::execute(elements: $this, actions: $actions);
+
         return $this;
     }
 
     public function equals(Collectible $other): bool
     {
-        return Equals::from(elements: $this->iterator)->compareAll(other: $other);
-    }
-
-    public function filter(?Closure ...$predicates): static
-    {
-        return new static(iterator: $this->iterator->add(operation: Filter::from(...$predicates)));
-    }
-
-    public function findBy(Closure ...$predicates): mixed
-    {
-        return Find::from(elements: $this->iterator)->firstMatchingElement(...$predicates);
-    }
-
-    public function first(mixed $defaultValueIfNotFound = null): mixed
-    {
-        return First::from(elements: $this->iterator)->element(defaultValueIfNotFound: $defaultValueIfNotFound);
-    }
-
-    public function flatten(): static
-    {
-        return new static(iterator: $this->iterator->add(operation: Flatten::instance()));
-    }
-
-    public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed
-    {
-        return Get::from(elements: $this->iterator)->elementAtIndex(
-            index: $index,
-            defaultValueIfNotFound: $defaultValueIfNotFound
-        );
-    }
-
-    public function getIterator(): Traversable
-    {
-        yield from $this->iterator->getIterator();
-    }
-
-    public function groupBy(Closure $grouping): Collectible
-    {
-        return new static(iterator: $this->iterator->add(operation: GroupBy::from(grouping: $grouping)));
-    }
-
-    public function isEmpty(): bool
-    {
-        return !$this->iterator->getIterator()->valid();
-    }
-
-    public function joinToString(string $separator): string
-    {
-        return JoinToString::from(elements: $this->iterator)->joinTo(separator: $separator);
-    }
-
-    public function last(mixed $defaultValueIfNotFound = null): mixed
-    {
-        return Last::from(elements: $this->iterator)->element(defaultValueIfNotFound: $defaultValueIfNotFound);
-    }
-
-    public function map(Closure ...$transformations): static
-    {
-        return new static(iterator: $this->iterator->add(operation: Map::from(...$transformations)));
-    }
-
-    public function merge(Collectible $other): static
-    {
-        return new static(iterator: $this->iterator->add(operation: Merge::from(otherElements: $other)));
+        return Equality::compareAll(elements: $this, other: $other);
     }
 
     public function remove(mixed $element): static
     {
-        return new static(iterator: $this->iterator->add(operation: Remove::from(element: $element)));
+        return $this->pipeTo(operation: Remove::element(element: $element));
     }
 
-    public function removeAll(?Closure $filter = null): static
+    public function removeAll(?Closure $predicate = null): static
     {
-        return new static(iterator: $this->iterator->add(operation: RemoveAll::from(filter: $filter)));
+        return $this->pipeTo(operation: RemoveAll::matching(predicate: $predicate));
     }
 
-    public function reduce(Closure $aggregator, mixed $initial): mixed
+    public function filter(?Closure ...$predicates): static
     {
-        return Reduce::from(elements: $this->iterator)->execute(aggregator: $aggregator, initial: $initial);
+        return $this->pipeTo(operation: Filter::matching(...$predicates));
     }
 
-    public function sort(Order $order = Order::ASCENDING_KEY, ?Closure $predicate = null): static
+    public function first(mixed $defaultValueIfNotFound = null): mixed
     {
-        return new static(
-            iterator: $this->iterator->add(
-                operation: Sort::from(order: $order, predicate: $predicate)
-            )
-        );
+        return First::from(elements: $this, defaultValueIfNotFound: $defaultValueIfNotFound);
     }
 
-    public function slice(int $index, int $length = -1): static
+    public function flatten(): static
     {
-        return new static(
-            iterator: $this->iterator->add(
-                operation: Slice::from(index: $index, length: $length)
-            )
-        );
+        return $this->pipeTo(operation: FlatMap::oneLevel());
+    }
+
+    public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed
+    {
+        return Get::byIndex(elements: $this, index: $index, defaultValueIfNotFound: $defaultValueIfNotFound);
+    }
+
+    public function groupBy(Closure $classifier): static
+    {
+        return $this->pipeTo(operation: GroupInto::by(classifier: $classifier));
+    }
+
+    public function isEmpty(): bool
+    {
+        return First::isAbsent(elements: $this);
+    }
+
+    public function joinToString(string $separator): string
+    {
+        return Join::elements(elements: $this, separator: $separator);
+    }
+
+    public function last(mixed $defaultValueIfNotFound = null): mixed
+    {
+        return Last::from(elements: $this, defaultValueIfNotFound: $defaultValueIfNotFound);
+    }
+
+    public function map(Closure ...$transformations): static
+    {
+        return $this->pipeTo(operation: Map::using(...$transformations));
+    }
+
+    public function reduce(Closure $accumulator, mixed $initial): mixed
+    {
+        return Reduce::from(elements: $this, accumulator: $accumulator, initial: $initial);
+    }
+
+    public function sort(Order $order = Order::ASCENDING_KEY, ?Closure $comparator = null): static
+    {
+        return $this->pipeTo(operation: Rearrange::by(order: $order, comparator: $comparator));
+    }
+
+    public function slice(int $offset, int $length = -1): static
+    {
+        return $this->pipeTo(operation: Segment::from(offset: $offset, length: $length));
+    }
+
+    private function pipeTo(Operation $operation): static
+    {
+        return new static(pipeline: $this->pipeline->pipe(operation: $operation));
     }
 }

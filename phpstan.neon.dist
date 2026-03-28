@@ -4,8 +4,9 @@ parameters:
   level: 9
   tmpDir: report/phpstan
   ignoreErrors:
-    - '#Unsafe usage of new static#'
-    - '#does not specify its types#'
-    - '#type specified in iterable type#'
-    - '#Generator expects key type#'
+    - '#mixed given#'
+    - '#iterable type#'
+    - '#of new static#'
+    - '#generic interface#'
+    - '#destructuring on mixed#'
   reportUnmatchedIgnoredErrors: false

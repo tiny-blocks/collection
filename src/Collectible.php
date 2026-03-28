@@ -8,298 +8,243 @@ use Closure;
 use Countable;
 use IteratorAggregate;
 use TinyBlocks\Mapper\KeyPreservation;
-use Traversable;
 
 /**
- * Represents a collection that can be manipulated, iterated, and counted.
+ * Immutable, type-safe collection contract with a fluent API.
  *
- * Complexity notes (Big O):
- * - Unless stated otherwise, complexities refer to consuming the collection **once**.
- * - `n`: number of elements produced when consuming the collection once.
- * - Callback cost is not included (assumed O(1) per callback invocation).
+ * Every mutating method returns a new instance, preserving immutability.
  *
- * @template Key of int|string
- * @template Value of mixed
- * @template Element of mixed
- * @extends IteratorAggregate<Key, Value>
+ * Two evaluation strategies are available:
+ *
+ *  - createFrom / createFromEmpty — eager evaluation, materialized immediately.
+ *  - createLazyFrom / createLazyFromEmpty — lazy evaluation via generators, on-demand.
  */
 interface Collectible extends Countable, IteratorAggregate
 {
     /**
-     * Creates a new Collectible instance from the given elements.
+     * Creates a collection populated with the given elements using eager evaluation.
      *
-     * Complexity: O(1) time and O(1) space to create the collection.
-     * Consuming the collection is O(n) time and O(1) additional space.
+     * Elements are materialized immediately into an array, enabling
+     * constant-time access by index, count, and repeated iteration.
      *
-     * @param iterable<Element> $elements The elements to initialize the Collection with.
-     * @return Collectible<Element> A new Collectible instance.
+     * @param iterable $elements The elements to populate the collection with.
+     * @return static A new collection containing the given elements.
      */
-    public static function createFrom(iterable $elements): Collectible;
+    public static function createFrom(iterable $elements): static;
 
     /**
-     * Creates an empty Collectible instance.
+     * Creates an empty collection using eager evaluation.
      *
-     * Complexity: O(1) time and O(1) space.
-     *
-     * @return Collectible<Element> An empty Collectible instance.
+     * @return static An empty collection.
      */
-    public static function createFromEmpty(): Collectible;
+    public static function createFromEmpty(): static;
 
     /**
-     * Adds one or more elements to the Collection.
+     * Creates a collection populated with the given elements using lazy evaluation.
      *
-     * Complexity (when consumed): O(n + k) time and O(1) additional space,
-     * where `k` is the number of elements passed to this method.
+     * Elements are processed on-demand through generators, consuming
+     * memory only as each element is yielded.
      *
-     * @param Element ...$elements The elements to be added to the Collection.
-     * @return Collectible<Element> The updated Collection.
+     * @param iterable $elements The elements to populate the collection with.
+     * @return static A new collection containing the given elements.
      */
-    public function add(mixed ...$elements): Collectible;
+    public static function createLazyFrom(iterable $elements): static;
 
     /**
-     * Checks if the Collection contains a specific element.
+     * Creates an empty collection using lazy evaluation.
      *
-     * Complexity: best-case O(1), worst-case O(n) time (early termination), O(1) space.
-     *
-     * @param Element $element The element to check for.
-     * @return bool True if the element is found, false otherwise.
+     * @return static An empty collection.
      */
-    public function contains(mixed $element): bool;
+    public static function createLazyFromEmpty(): static;
 
     /**
-     * Returns the total number of elements in the Collection.
+     * Returns a new collection with the specified elements appended.
      *
-     * Complexity: O(n) time and O(1) additional space.
-     *
-     * @return int The number of elements in the Collection.
+     * @param mixed ...$elements The elements to append.
+     * @return static A new collection with the additional elements.
      */
-    public function count(): int;
-
-    /**
-     * Executes actions on each element in the Collection without modifying it.
-     *
-     * Complexity: O(n · a) time and O(1) additional space,
-     * where `a` is the number of actions passed to this method.
-     *
-     * @param Closure(Element): void ...$actions The actions to perform on each element.
-     * @return Collectible<Element> The original Collection for chaining.
-     */
-    public function each(Closure ...$actions): Collectible;
-
-    /**
-     * Compares the Collection with another Collection for equality.
-     *
-     * Complexity: best-case O(1), worst-case O(min(n, m)) time (early termination), O(1) space,
-     * where `m` is the size of the other collection.
-     *
-     * @param Collectible<Element> $other The Collection to compare with.
-     * @return bool True if the collections are equal, false otherwise.
-     */
-    public function equals(Collectible $other): bool;
-
-    /**
-     * Filters elements in the Collection based on the provided predicates.
-     * If no predicates are provided, all empty or falsy values (e.g., null, false, empty arrays) will be removed.
-     *
-     * Complexity (when consumed): O(n · p) time and O(1) additional space,
-     * where `p` is the number of predicates.
-     *
-     * @param Closure(Element): bool|null ...$predicates
-     * @return Collectible<Element> The updated Collection.
-     */
-    public function filter(?Closure ...$predicates): Collectible;
-
-    /**
-     * Finds the first element that matches any of the provided predicates.
-     *
-     * Complexity: best-case O(1), worst-case O(n · q) time (early termination), O(1) space,
-     * where `q` is the number of predicates.
-     *
-     * @param Closure(Element): bool ...$predicates The predicates to match (evaluated as a logical OR).
-     * @return Element|null The first matching element, or null if none is found.
-     */
-    public function findBy(Closure ...$predicates): mixed;
-
-    /**
-     * Retrieves the first element in the Collection or a default value if not found.
-     *
-     * Complexity: best-case O(1), worst-case O(n) time (early termination), O(1) space.
-     *
-     * @param Element|null $defaultValueIfNotFound The default value returns if no element is found.
-     * @return Element|null The first element or the default value.
-     */
-    public function first(mixed $defaultValueIfNotFound = null): mixed;
-
-    /**
-     * Flattens the collection by expanding iterable elements by one level (shallow flatten).
-     *
-     * Complexity (when consumed): O(n + s) time and O(1) additional space, where `s` is the total number of elements
-     * inside nested iterables that are expanded.
-     *
-     * @return Collectible<Element> A new Collectible instance with elements flattened by one level.
-     */
-    public function flatten(): Collectible;
-
-    /**
-     * Retrieves an element by its index or a default value if not found.
-     *
-     * Complexity: O(n) time and O(1) additional space.
-     *
-     * @param int $index The index of the element to retrieve.
-     * @param Element|null $defaultValueIfNotFound The default value returns if no element is found.
-     * @return Element|null The element at the specified index or the default value.
-     */
-    public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed;
-
-    /**
-     * Returns an iterator for traversing the Collection.
-     *
-     * Complexity: O(1) time and O(1) space to obtain the iterator.
-     *
-     * @return Traversable<Key, Value> An iterator for the Collection.
-     */
-    public function getIterator(): Traversable;
-
-    /**
-     * Groups the elements in the Collection based on the provided criteria.
-     *
-     * Complexity (when consumed): O(n) time and O(n) additional space (materializes all groups).
-     *
-     * @param Closure(Element): Key $grouping The function to define the group key for each element.
-     * @return Collectible<Key, list<Element>, Element> A Collection where each value is a list of elements,
-     *                                                 grouped by the key returned by the closure.
-     */
-    public function groupBy(Closure $grouping): Collectible;
-
-    /**
-     * Determines if the Collection is empty.
-     *
-     * Complexity: best-case O(1), worst-case O(n) time (may need to advance until the first element is produced),
-     * O(1) space.
-     *
-     * @return bool True if the Collection is empty, false otherwise.
-     */
-    public function isEmpty(): bool;
-
-    /**
-     * Joins the elements of the Collection into a string, separated by a given separator.
-     *
-     * Complexity: O(n + L) time and O(L) space, where `L` is the length of the resulting string.
-     *
-     * @param string $separator The string used to separate the elements.
-     * @return string The concatenated string of all elements in the Collection.
-     */
-    public function joinToString(string $separator): string;
-
-    /**
-     * Retrieves the last element in the Collection or a default value if not found.
-     *
-     * Complexity: O(n) time and O(1) space.
-     *
-     * @param Element|null $defaultValueIfNotFound The default value returns if no element is found.
-     * @return Element|null The last element or the default value.
-     */
-    public function last(mixed $defaultValueIfNotFound = null): mixed;
-
-    /**
-     * Applies transformations to each element in the Collection and returns a new Collection with the transformed
-     * elements.
-     *
-     * Complexity (when consumed): O(n · t) time and O(1) additional space,
-     * where `t` is the number of transformations.
-     *
-     * @param Closure(Element): Element ...$transformations The transformations to apply.
-     * @return Collectible<Element> A new Collection with the applied transformations.
-     */
-    public function map(Closure ...$transformations): Collectible;
+    public function add(mixed ...$elements): static;
 
     /**
      * Merges the elements of another Collectible into the current Collection.
      *
-     * Unlike {@see add()}, which accepts individual elements via variadic parameters,
-     * this method accepts an entire Collectible and concatenates its elements lazily
-     * without materializing either collection.
-     *
-     * Complexity (when consumed): O(n + m) time and O(1) additional space,
-     * where `m` is the number of elements in the other Collectible.
-     *
-     * @param Collectible<Element> $other The Collectible whose elements will be appended.
-     * @return Collectible<Element> A new Collection containing elements from both collections.
+     * @param Collectible $other The collection to merge with.
+     * @return static A new collection containing elements from both collections.
      */
-    public function merge(Collectible $other): Collectible;
+    public function merge(Collectible $other): static;
 
     /**
-     * Removes a specific element from the Collection.
+     * Determines whether the collection contains the specified element.
      *
-     * Complexity (when consumed): O(n) time and O(1) additional space.
+     * Uses strict equality for scalars and loose equality for objects.
      *
-     * @param Element $element The element to remove.
-     * @return Collectible<Element> The updated Collection.
+     * @param mixed $element The element to search for.
+     * @return bool True if the element exists, false otherwise.
      */
-    public function remove(mixed $element): Collectible;
+    public function contains(mixed $element): bool;
 
     /**
-     * Removes elements from the Collection based on the provided filter.
-     * If no filter is passed, all elements in the Collection will be removed.
+     * Returns the total number of elements.
      *
-     * Complexity (when consumed): O(n) time and O(1) additional space.
-     *
-     * @param Closure(Element): bool|null $filter The filter to determine which elements to remove.
-     * @return Collectible<Element> The updated Collection.
+     * @return int The element count.
      */
-    public function removeAll(?Closure $filter = null): Collectible;
+    public function count(): int;
 
     /**
-     * Reduces the elements in the Collection to a single value by applying an aggregator function.
+     * Finds the first element that satisfies all given predicates.
+     * Without predicates, returns the first truthy element.
      *
-     * Complexity: O(n) time and O(1) additional space.
-     *
-     * @param Closure(mixed, Element): mixed $aggregator The function that aggregates the elements.
-     *        It receives the current accumulated value and the current element.
-     * @param mixed $initial The initial value to start the aggregation.
-     * @return mixed The final aggregated result.
+     * @param Closure ...$predicates
+     * @return mixed The first matching element or null if no match is found.
      */
-    public function reduce(Closure $aggregator, mixed $initial): mixed;
+    public function findBy(Closure ...$predicates): mixed;
 
     /**
-     * Sorts the Collection based on the provided order and predicate.
+     * Executes side effect actions on every element without modifying the collection.
      *
-     * The order should be provided from the `Order` enum:
-     *  - {@see Order::ASCENDING_KEY}: Sorts in ascending order by key.
-     *  - {@see Order::DESCENDING_KEY}: Sorts in descending order by key.
-     *  - {@see Order::ASCENDING_VALUE}: Sorts in ascending order by value.
-     *  - {@see Order::DESCENDING_VALUE}: Sorts in descending order by value.
-     *
-     * By default, `Order::ASCENDING_KEY` is used.
-     *
-     * Complexity (when consumed): O(n log n) time and O(n) additional space (materializes elements to sort).
-     *
-     * @param Order $order The order in which to sort the Collection.
-     * @param Closure(Element, Element): int|null $predicate The predicate to use for sorting.
-     * @return Collectible<Element> The updated Collection.
+     * @param Closure ...$actions Actions to perform on each element.
+     * @return static The same instance, enabling further chaining.
      */
-    public function sort(Order $order = Order::ASCENDING_KEY, ?Closure $predicate = null): Collectible;
+    public function each(Closure ...$actions): static;
 
     /**
-     * Returns a subset of the Collection starting at the specified index and containing the specified number of
-     * elements.
+     * Compares this collection with another for element-wise equality.
      *
-     * If the `length` is negative, it will exclude that many elements from the end of the Collection.
-     * If the `length` is not provided or set to `-1`, it returns all elements starting from the index until the end.
+     * Two collections are equal when they have the same size and every
+     * pair at the same position satisfies the equality comparison.
      *
-     * @param int $index The zero-based index at which to start the slice.
-     * @param int $length The number of elements to include in the slice. If negative, remove that many from the end.
-     *                    Default is `-1`, meaning all elements from the index onward will be included.
-     *
-     * Complexity (when consumed):
-     * - If `length === 0`: O(1) time and O(1) additional space.
-     * - If `length === -1`: O(n) time and O(1) additional space.
-     * - If `length >= 0`: O(min(n, index + length)) time and O(1) additional space (may stop early).
-     * - If `length < -1`: O(n) time and O(|length|) additional space (uses a buffer).
-     *
-     * @return Collectible<Element> A new Collection containing the sliced elements.
+     * @param Collectible $other The collection to compare against.
+     * @return bool True if both collections are element-wise equal.
      */
-    public function slice(int $index, int $length = -1): Collectible;
+    public function equals(Collectible $other): bool;
+
+    /**
+     * Returns a new collection with the specified element removed.
+     *
+     * All occurrences of the element are removed.
+     *
+     * @param mixed $element The element to remove.
+     * @return static A new collection without the specified element.
+     */
+    public function remove(mixed $element): static;
+
+    /**
+     * Returns a new collection with all elements removed that satisfy the given predicate.
+     * Without a predicate, all falsy values are removed.
+     *
+     * @param Closure|null $predicate Condition to determine which elements to remove.
+     * @return static A new collection with the matching elements removed.
+     */
+    public function removeAll(?Closure $predicate = null): static;
+
+    /**
+     * Retains only elements satisfying all given predicates.
+     *
+     * Without predicates, falsy values are removed.
+     *
+     * @param Closure|null ...$predicates Conditions each element must meet.
+     * @return static A new collection with only the matching elements.
+     */
+    public function filter(?Closure ...$predicates): static;
+
+    /**
+     * Returns the first element, or a default if the collection is empty.
+     *
+     * @param mixed $defaultValueIfNotFound Value returned when the collection is empty.
+     * @return mixed The first element or the default.
+     */
+    public function first(mixed $defaultValueIfNotFound = null): mixed;
+
+    /**
+     * Flattens nested iterables by exactly one level. Non-iterable elements are yielded as-is.
+     *
+     * @return static A new collection with elements flattened by one level.
+     */
+    public function flatten(): static;
+
+    /**
+     * Returns the element at the given zero-based index.
+     *
+     * @param int $index The zero-based position.
+     * @param mixed $defaultValueIfNotFound Value returned when the index is out of bounds.
+     * @return mixed The element at the index or the default.
+     */
+    public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed;
+
+    /**
+     * Groups elements by a key derived from each element.
+     *
+     * The classifier receives each element and must return the group key.
+     * The resulting collection contains key to element-list pairs.
+     *
+     * @param Closure $classifier Maps each element to its group key.
+     * @return static A new collection of grouped elements.
+     */
+    public function groupBy(Closure $classifier): static;
+
+    /**
+     * Determines whether the collection has no elements.
+     *
+     * @return bool True if the collection is empty.
+     */
+    public function isEmpty(): bool;
+
+    /**
+     * Joins all elements into a string with the given separator.
+     *
+     * @param string $separator The delimiter placed between each element.
+     * @return string The concatenated result.
+     */
+    public function joinToString(string $separator): string;
+
+    /**
+     * Returns the last element, or a default if the collection is empty.
+     *
+     * @param mixed $defaultValueIfNotFound Value returned when the collection is empty.
+     * @return mixed The last element or the default.
+     */
+    public function last(mixed $defaultValueIfNotFound = null): mixed;
+
+    /**
+     * Applies one or more transformation functions to each element.
+     *
+     * Transformations are applied in order. Each receives the current value and key.
+     *
+     * @param Closure ...$transformations Functions applied to each element.
+     * @return static A new collection with the transformed elements.
+     */
+    public function map(Closure ...$transformations): static;
+
+    /**
+     * Reduces the collection to a single accumulated value.
+     *
+     * The accumulator receives the carry and the current element.
+     *
+     * @param Closure $accumulator Combines the carry with each element.
+     * @param mixed $initial The starting value for the accumulation.
+     * @return mixed The final accumulated result.
+     */
+    public function reduce(Closure $accumulator, mixed $initial): mixed;
+
+    /**
+     * Returns a new collection sorted by the given order and optional comparator.
+     *
+     * Without a comparator, the spaceship operator is used.
+     *
+     * @param Order $order The sorting direction.
+     * @param Closure|null $comparator Custom comparison function.
+     * @return static A new sorted collection.
+     */
+    public function sort(Order $order = Order::ASCENDING_KEY, ?Closure $comparator = null): static;
+
+    /**
+     * Extracts a contiguous segment of the collection.
+     *
+     * @param int $offset Zero-based starting position.
+     * @param int $length Number of elements to include. Use -1 for "until the end".
+     * @return static A new collection with the extracted segment.
+     */
+    public function slice(int $offset, int $length = -1): static;
 
     /**
      * Converts the Collection to an array.
@@ -310,10 +255,8 @@ interface Collectible extends Countable, IteratorAggregate
      *
      * By default, `KeyPreservation::PRESERVE` is used.
      *
-     * Complexity: O(n) time and O(n) space.
-     *
      * @param KeyPreservation $keyPreservation The option to preserve or discard array keys.
-     * @return array<Key, Value> The resulting array.
+     * @return array The resulting array.
      */
     public function toArray(KeyPreservation $keyPreservation = KeyPreservation::PRESERVE): array;
 
@@ -325,8 +268,6 @@ interface Collectible extends Countable, IteratorAggregate
      *  - {@see KeyPreservation::DISCARD}: Discards the array keys.
      *
      * By default, `KeyPreservation::PRESERVE` is used.
-     *
-     * Complexity: O(n + L) time and O(n + L) space, where `L` is the length of the resulting JSON.
      *
      * @param KeyPreservation $keyPreservation The option to preserve or discard array keys.
      * @return string The resulting JSON string.
