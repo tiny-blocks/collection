@@ -67,13 +67,38 @@ use TinyBlocks\Collection\Order;
 use TinyBlocks\Mapper\KeyPreservation;
 
 $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5])
-    ->add(elements: [6, 7]) 
+    ->add(6, 7) 
     ->filter(predicates: static fn(int $value): bool => $value > 3) 
     ->sort(order: Order::ASCENDING_VALUE) 
     ->map(transformations: static fn(int $value): int => $value * 2) 
     ->toArray(keyPreservation: KeyPreservation::DISCARD); 
 
 # Output: [8, 10, 12, 14]
+```
+
+### Extending Collection
+
+Domain collections should extend the `Collection` class to inherit all collection behavior:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Example;
+
+use TinyBlocks\Collection\Collection;
+
+final class Invoices extends Collection
+{
+    public function totalAmount(): float
+    {
+        return $this->reduce(
+            accumulator: static fn(float $carry, Invoice $invoice): float => $carry + $invoice->amount,
+            initial: 0.0
+        );
+    }
+}
 ```
 
 <div id='writing'></div>
@@ -84,10 +109,10 @@ These methods enable adding, removing, and modifying elements in the Collection.
 
 #### Adding elements
 
-- `add`: Adds one or more elements to the Collection.
+- `add`: Returns a new collection with the specified elements appended.
 
   ```php
-  $collection->add(elements: [1, 2, 3]);
+  $collection->add(1, 2, 3);
   ```
 
   ```php
@@ -96,8 +121,7 @@ These methods enable adding, removing, and modifying elements in the Collection.
 
 #### Merging collections
 
-- `merge`: Merges the elements of another Collectible into the current Collection lazily, without materializing either
-  collection.
+- `merge`: Merges the elements of another Collectible into the current Collection.
 
   ```php
   $collectionA->merge(other: $collectionB);
@@ -105,27 +129,27 @@ These methods enable adding, removing, and modifying elements in the Collection.
 
 #### Removing elements
 
-- `remove`: Removes a specific element from the Collection.
+- `remove`: Returns a new collection with all occurrences of the specified element removed.
 
   ```php
   $collection->remove(element: 1);
   ```
 
-- `removeAll`: Removes elements from the Collection.
+- `removeAll`: Returns a new collection with elements removed.
   </br></br>
-    - **With a filter**: Removes only the elements that match the provided filter.
+    - **With a predicate**: Removes only the elements that satisfy the given predicate.
 
       ```php
-      $collection->removeAll(filter: static fn(Amount $amount): bool => $amount->value > 10.0);
+      $collection->removeAll(predicate: static fn(Amount $amount): bool => $amount->value > 10.0);
       ```
 
-    - **Without a filter**: Removes all elements from the Collection.
+    - **Without a predicate**: Removes all elements from the Collection.
 
       ```php
       $collection->removeAll();
       ```
 
-<div id='ordering'></div>
+<div id='filtering'></div>
 
 ### Filtering
 
@@ -133,16 +157,16 @@ These methods enable filtering elements in the Collection based on specific cond
 
 #### Filter by predicate
 
-- `filter`: Filters elements in the Collection.
+- `filter`: Retains only elements satisfying all given predicates.
   </br></br>
 
-    - **With predicates**: Filter elements are based on the provided predicates.
+    - **With predicates**: Retains elements that satisfy the provided predicates.
 
       ```php
       $collection->filter(predicates: static fn(Amount $amount): bool => $amount->value > 100);
       ```
 
-    - **Without predicates**: Removes all empty or false values (e.g., `null`, `false`, empty arrays).
+    - **Without predicates**: Removes all falsy values (e.g., `null`, `false`, `0`, `''`, empty arrays).
 
       ```php
       $collection->filter();
@@ -152,11 +176,11 @@ These methods enable filtering elements in the Collection based on specific cond
 
 ### Ordering
 
-These methods enable sorting elements in the Collection based on the specified order and optional predicates.
+These methods enable sorting elements in the Collection based on the specified order and optional comparator.
 
-#### Sort by order and custom predicate
+#### Sort by order and custom comparator
 
-- `sort`: Sorts the Collection.
+- `sort`: Returns a new sorted collection.
 
   ```
   Order::ASCENDING_KEY: Sorts the collection in ascending order by key.
@@ -173,13 +197,15 @@ These methods enable sorting elements in the Collection based on the specified o
   $collection->sort(order: Order::DESCENDING_VALUE);
   ```
 
-  Sort the Collection using a custom predicate to determine how elements should be
-  compared.
+  Sort the Collection using a custom comparator to determine how elements should be compared.
 
   ```php
   use TinyBlocks\Collection\Order;
         
-  $collection->sort(order: Order::ASCENDING_VALUE, predicate: static fn(Amount $amount): float => $amount->value);
+  $collection->sort(
+      order: Order::ASCENDING_VALUE,
+      comparator: static fn(Amount $first, Amount $second): int => $first->value <=> $second->value
+  );
   ``` 
 
 <div id='retrieving'></div>
@@ -197,54 +223,63 @@ elements, or finding elements that match a specific condition.
   $collection->count();
   ```
 
+#### Check if empty
+
+- `isEmpty`: Determines whether the collection has no elements.
+
+  ```php
+  $collection->isEmpty();
+  ```
+
 #### Retrieve by condition
 
-- `findBy`: Finds the first element that matches one or more predicates.
+- `findBy`: Finds the first element that satisfies any given predicate, or returns `null` if no predicate matches.
+  When called without predicates, it returns `null`.
 
   ```php
   $collection->findBy(predicates: static fn(CryptoCurrency $crypto): bool => $crypto->symbol === 'ETH');
   ```
-
-<div id='comparing'></div>
 
 #### Retrieve single elements
 
 - `first`: Retrieves the first element from the Collection or returns a default value if the Collection is empty.
 
   ```php
-  $collection->first(defaultValueIfNotFound: 'default');
+  $collection->first(defaultValueIfNotFound: 'fallback');
   ```
 
-- `getBy`: Retrieves an element by its index or returns a default value if the index is out of range.
+- `getBy`: Retrieves an element by its zero-based index or returns a default value if the index is out of bounds.
 
   ```php
-  $collection->getBy(index: 0, defaultValueIfNotFound: 'default');
+  $collection->getBy(index: 0, defaultValueIfNotFound: 'fallback');
   ```
 
 - `last`: Retrieves the last element from the Collection or returns a default value if the Collection is empty.
 
   ```php
-  $collection->last(defaultValueIfNotFound: 'default');
+  $collection->last(defaultValueIfNotFound: 'fallback');
   ```
 
-#### Retrieve collection elements
+#### Retrieve collection segments
 
-- `slice`: Extracts a portion of the collection, starting at the specified index and retrieving the specified number of
-  elements.
-  If length is negative, it excludes many elements from the end of the collection.
-  If length is not provided or set to -1, it returns all elements from the specified index to the end of the collection.
+- `slice`: Extracts a contiguous segment of the collection, starting at the specified offset.
+  If length is negative, it excludes that many elements from the end.
+  If length is not provided or set to -1, it returns all elements from the specified offset to the end.
 
   ```php
-  $collection->slice(index: 1, length: 2);
+  $collection->slice(offset: 1, length: 2);
   ```
+
+<div id='comparing'></div>
 
 ### Comparing
 
-These methods enable comparing collections to check for equality or to apply other comparison logic.
+These methods enable comparing collections to check for equality or to verify element membership.
 
 #### Check if collection contains element
 
-- `contains`: Checks if the Collection contains a specific element.
+- `contains`: Checks if the Collection contains a specific element. Uses strict equality for scalars and loose equality
+  for objects.
 
   ```php
   $collection->contains(element: 5);
@@ -252,7 +287,7 @@ These methods enable comparing collections to check for equality or to apply oth
 
 #### Compare collections for equality
 
-- `equals`: Compares the current Collection with another collection to check if they are equal.
+- `equals`: Compares the current Collection with another collection for element-wise equality.
 
   ```php
   $collectionA->equals(other: $collectionB);
@@ -265,12 +300,20 @@ These methods enable comparing collections to check for equality or to apply oth
 These methods perform operations that return a single value based on the Collection's content, such as summing or
 combining elements.
 
-- `reduce`: Combines all elements in the Collection into a single value using the provided aggregator function and an
-  initial value.
-  This method is helpful for accumulating results, like summing or concatenating values.
+- `reduce`: Combines all elements in the Collection into a single value using the provided accumulator function and an
+  initial value. This method is helpful for accumulating results, like summing or concatenating values.
 
   ```php
-  $collection->reduce(aggregator: static fn(float $carry, float $amount): float => $carry + $amount, initial: 0.0)
+  $collection->reduce(
+      accumulator: static fn(float $carry, float $amount): float => $carry + $amount,
+      initial: 0.0
+  );
+  ```
+
+- `joinToString`: Joins all elements into a string with the given separator.
+
+  ```php
+  $collection->joinToString(separator: ', ');
   ```
 
 <div id='transforming'></div>
@@ -282,18 +325,18 @@ These methods allow the Collection's elements to be transformed or converted int
 #### Applying actions without modifying elements
 
 - `each`: Executes actions on each element in the Collection without modification.
-  The method is helpful for performing side effects, such as logging or adding elements to another collection.
+  The method is helpful for performing side effects, such as logging or accumulating values.
 
   ```php
-  $collection->each(actions: static fn(Invoice $invoice): void => $collectionB->add(elements: new InvoiceSummary(amount: $invoice->amount, customer: $invoice->customer)));
+  $collection->each(actions: static fn(Amount $amount): void => $total += $amount->value);
   ```
 
 #### Grouping elements
 
-- `groupBy`: Groups the elements in the Collection based on the provided grouping criterion.
+- `groupBy`: Groups the elements in the Collection based on the provided classifier.
 
   ```php
-  $collection->groupBy(grouping: static fn(Amount $amount): string => $amount->currency->name);
+  $collection->groupBy(classifier: static fn(Amount $amount): string => $amount->currency->name);
   ```
 
 #### Mapping elements
@@ -307,11 +350,7 @@ These methods allow the Collection's elements to be transformed or converted int
 
 #### Flattening elements
 
-- `flatten`: Flattens a collection by removing any nested collections and returning a single collection with all
-  elements in a single level.
-
-  This method recursively flattens any iterable elements, combining them into one collection, regardless of their
-  nesting depth.
+- `flatten`: Flattens nested iterables by exactly one level. Non-iterable elements are yielded as-is.
 
   ```php
   $collection->flatten();
@@ -322,16 +361,16 @@ These methods allow the Collection's elements to be transformed or converted int
 - `toArray`: Converts the Collection into an array.
 
   ```
-  PreserveKeys::DISCARD: Converts while discarding the keys.
-  PreserveKeys::PRESERVE: Converts while preserving the original keys.
+  KeyPreservation::DISCARD: Converts while discarding the keys.
+  KeyPreservation::PRESERVE: Converts while preserving the original keys.
   ```
 
-  By default, `PreserveKeys::PRESERVE` is used.
+  By default, `KeyPreservation::PRESERVE` is used.
 
   ```php
   use TinyBlocks\Mapper\KeyPreservation;
   
-  $collection->toArray(preserveKeys: KeyPreservation::DISCARD);
+  $collection->toArray(keyPreservation: KeyPreservation::DISCARD);
   ```
 
 #### Convert to JSON
@@ -339,16 +378,16 @@ These methods allow the Collection's elements to be transformed or converted int
 - `toJson`: Converts the Collection into a JSON string.
 
   ```
-  PreserveKeys::DISCARD: Converts while discarding the keys.
-  PreserveKeys::PRESERVE: Converts while preserving the original keys.
+  KeyPreservation::DISCARD: Converts while discarding the keys.
+  KeyPreservation::PRESERVE: Converts while preserving the original keys.
   ```
 
-  By default, `PreserveKeys::PRESERVE` is used.
+  By default, `KeyPreservation::PRESERVE` is used.
 
   ```php
   use TinyBlocks\Mapper\KeyPreservation;
   
-  $collection->toJson(preserveKeys: KeyPreservation::DISCARD);
+  $collection->toJson(keyPreservation: KeyPreservation::DISCARD);
   ```
 
 <div id='faq'></div> 
@@ -375,6 +414,15 @@ chained operations.
 
 However, this also means that some operations will consume the generator, and you cannot access the elements unless you
 recreate the `Collection`.
+
+### 03. What is the difference between eager and lazy evaluation?
+
+- **Eager evaluation** (`createFrom` / `createFromEmpty`): Elements are materialized immediately into an array, enabling
+  constant-time access by index, count, and repeated iteration.
+
+- **Lazy evaluation** (`createLazyFrom` / `createLazyFromEmpty`): Elements are processed on-demand through generators,
+  consuming memory only as each element is yielded. Ideal for large datasets or pipelines where not all elements need to
+  be materialized.
 
 <div id='license'></div>
 

@@ -5,27 +5,31 @@ declare(strict_types=1);
 namespace TinyBlocks\Collection;
 
 /**
- * Defines the possible sorting orders for a Collection.
+ * Defines the sorting strategy applied to a collection.
+ *
+ * Key-based strategies sort by the element's key (index).
+ * Value-based strategies sort by the element's value using
+ * a comparator or the spaceship operator as default.
  */
 enum Order
 {
     /**
-     * Sorts the Collection by the keys in ascending order.
+     * Sorts elements by key in ascending order.
      */
     case ASCENDING_KEY;
 
     /**
-     * Sorts the Collection by the keys in descending order.
+     * Sorts elements by key in descending order.
      */
     case DESCENDING_KEY;
 
     /**
-     * Sorts the Collection by the values in ascending order.
+     * Sorts elements by value in ascending order.
      */
     case ASCENDING_VALUE;
 
     /**
-     * Sorts the Collection by the values in descending order.
+     * Sorts elements by value in descending order.
      */
     case DESCENDING_VALUE;
 }
