@@ -91,10 +91,10 @@ interface Collectible extends Countable, IteratorAggregate
     public function count(): int;
 
     /**
-     * Finds the first element that satisfies all given predicates.
-     * Without predicates, returns the first truthy element.
+     * Finds the first element that satisfies any given predicate.
+     * Without predicates, returns null.
      *
-     * @param Closure ...$predicates
+     * @param Closure ...$predicates Conditions to test each element against.
      * @return mixed The first matching element or null if no match is found.
      */
     public function findBy(Closure ...$predicates): mixed;
@@ -130,7 +130,7 @@ interface Collectible extends Countable, IteratorAggregate
 
     /**
      * Returns a new collection with all elements removed that satisfy the given predicate.
-     * Without a predicate, all falsy values are removed.
+     * When no predicate is provided (i.e., $predicate is null), all elements are removed.
      *
      * @param Closure|null $predicate Condition to determine which elements to remove.
      * @return static A new collection with the matching elements removed.

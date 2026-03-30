@@ -185,6 +185,33 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(4, $actual);
     }
 
+    public function testFindFirstMatchAcrossMultiplePredicates(): void
+    {
+        /** @Given a lazy collection of integers */
+        $collection = Collection::createLazyFrom(elements: [1, 2, 3, 4, 5]);
+
+        /** @When finding by multiple predicates (OR semantics) */
+        $matchTen = static fn(int $value): bool => $value === 10;
+        $matchThree = static fn(int $value): bool => $value === 3;
+
+        $actual = $collection->findBy($matchTen, $matchThree);
+
+        /** @Then it should return the first element matching any predicate */
+        self::assertSame(3, $actual);
+    }
+
+    public function testFindReturnsNullWithoutPredicates(): void
+    {
+        /** @Given a lazy collection with truthy and falsy values */
+        $collection = Collection::createLazyFrom(elements: [0, 1, 2]);
+
+        /** @When finding without predicates */
+        $actual = $collection->findBy();
+
+        /** @Then it should return null */
+        self::assertNull($actual);
+    }
+
     public function testFindReturnsNullWhenNoMatch(): void
     {
         /** @Given a lazy collection of integers */

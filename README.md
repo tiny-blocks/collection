@@ -233,7 +233,8 @@ elements, or finding elements that match a specific condition.
 
 #### Retrieve by condition
 
-- `findBy`: Finds the first element that satisfies all given predicates, or returns null if no match is found.
+- `findBy`: Finds the first element that satisfies any given predicate, or returns `null` if no predicate matches.
+  When called without predicates, it returns `null`.
 
   ```php
   $collection->findBy(predicates: static fn(CryptoCurrency $crypto): bool => $crypto->symbol === 'ETH');
