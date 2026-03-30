@@ -12,7 +12,6 @@ use TinyBlocks\Collection\Internal\Operations\Resolving\Each;
 use TinyBlocks\Collection\Internal\Operations\Resolving\Equality;
 use TinyBlocks\Collection\Internal\Operations\Resolving\Find;
 use TinyBlocks\Collection\Internal\Operations\Resolving\First;
-use TinyBlocks\Collection\Internal\Operations\Resolving\Get;
 use TinyBlocks\Collection\Internal\Operations\Resolving\Join;
 use TinyBlocks\Collection\Internal\Operations\Resolving\Last;
 use TinyBlocks\Collection\Internal\Operations\Resolving\Reduce;
@@ -89,7 +88,7 @@ class Collection implements Collectible, IterableMapper
 
     public function count(): int
     {
-        return iterator_count($this->getIterator());
+        return $this->pipeline->count();
     }
 
     public function findBy(Closure ...$predicates): mixed
@@ -136,7 +135,7 @@ class Collection implements Collectible, IterableMapper
 
     public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed
     {
-        return Get::byIndex(elements: $this, index: $index, defaultValueIfNotFound: $defaultValueIfNotFound);
+        return $this->pipeline->getBy(index: $index, defaultValueIfNotFound: $defaultValueIfNotFound);
     }
 
     public function groupBy(Closure $classifier): static

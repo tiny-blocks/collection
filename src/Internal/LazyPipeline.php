@@ -39,6 +39,22 @@ final readonly class LazyPipeline implements Pipeline
         return new LazyPipeline(source: $this->source, stages: $stages);
     }
 
+    public function count(): int
+    {
+        return iterator_count($this->process());
+    }
+
+    public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed
+    {
+        foreach ($this->process() as $currentIndex => $value) {
+            if ($currentIndex === $index) {
+                return $value;
+            }
+        }
+
+        return $defaultValueIfNotFound;
+    }
+
     public function process(): Generator
     {
         $elements = $this->source;

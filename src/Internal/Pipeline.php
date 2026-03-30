@@ -28,6 +28,26 @@ interface Pipeline
     public function pipe(Operation $operation): Pipeline;
 
     /**
+     * Returns the total number of elements in the pipeline.
+     *
+     * Eager pipelines provide this in O(1), lazy pipelines must iterate.
+     *
+     * @return int The element count.
+     */
+    public function count(): int;
+
+    /**
+     * Returns the element at the given zero-based index.
+     *
+     * Eager pipelines provide this in O(1), lazy pipelines must iterate.
+     *
+     * @param int $index The zero-based position.
+     * @param mixed $defaultValueIfNotFound Value returned when the index is out of bounds.
+     * @return mixed The element at the index or the default.
+     */
+    public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed;
+
+    /**
      * Executes all accumulated stages and yields the resulting elements.
      *
      * @return Generator A generator producing the processed elements.

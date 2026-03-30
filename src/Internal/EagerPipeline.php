@@ -34,6 +34,18 @@ final readonly class EagerPipeline implements Pipeline
         return new EagerPipeline(elements: $elements);
     }
 
+    public function count(): int
+    {
+        return count($this->elements);
+    }
+
+    public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed
+    {
+        return array_key_exists($index, $this->elements)
+            ? $this->elements[$index]
+            : $defaultValueIfNotFound;
+    }
+
     public function process(): Generator
     {
         yield from $this->elements;
