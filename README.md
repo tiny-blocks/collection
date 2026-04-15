@@ -1,10 +1,6 @@
 # Collection
 
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![CI](https://github.com/tiny-blocks/collection/actions/workflows/ci.yml/badge.svg)](https://github.com/tiny-blocks/collection/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/tiny-blocks/collection/branch/main/graph/badge.svg)](https://codecov.io/gh/tiny-blocks/collection)
-[![Latest Version](https://img.shields.io/packagist/v/tiny-blocks/collection)](https://packagist.org/packages/tiny-blocks/collection)
-[![PHP Version](https://img.shields.io/packagist/dependency-v/tiny-blocks/collection/php)](https://packagist.org/packages/tiny-blocks/collection)
 
 * [Overview](#overview)
 * [Installation](#installation)
@@ -345,7 +341,8 @@ These methods allow the Collection's elements to be transformed or converted int
 #### Applying actions without modifying elements
 
 - `each`: Executes actions on each element in the Collection without modification.
-  This is a terminal operation that does not return the collection. It is useful for performing side effects, such as logging or accumulating values.
+  This is a terminal operation that does not return the collection. It is useful for performing side effects, such as
+  logging or accumulating values.
 
   ```php
   $collection->each(actions: static fn(Amount $amount): void => $total += $amount->value);
@@ -440,7 +437,8 @@ recreate the `Collection`.
 - **Eager evaluation** (`createFrom` / `createFromEmpty`): Elements are materialized immediately into an array, enabling
   constant-time access by index, count, and repeated iteration.
 
-- **Lazy evaluation** (`createLazyFrom` / `createLazyFromEmpty` / `createLazyFromClosure`): Elements are processed on-demand through generators,
+- **Lazy evaluation** (`createLazyFrom` / `createLazyFromEmpty` / `createLazyFromClosure`): Elements are processed
+  on-demand through generators,
   consuming memory only as each element is yielded. Ideal for large datasets or pipelines where not all elements need to
   be materialized.
 

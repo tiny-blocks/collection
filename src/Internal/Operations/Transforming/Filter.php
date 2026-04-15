@@ -19,8 +19,8 @@ final readonly class Filter implements Operation
         $this->compiledPredicate = match (count($filtered)) {
             0 => static fn(mixed $value, mixed $key): bool => (bool)$value,
             default => static fn(mixed $value, mixed $key): bool => array_all(
-                array: $filtered,
-                callback: static fn(Closure $predicate): bool => $predicate($value, $key)
+                $filtered,
+                static fn(Closure $predicate): bool => $predicate($value, $key)
             ),
         };
     }

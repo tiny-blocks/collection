@@ -22,7 +22,7 @@ final readonly class Rearrange implements Operation
 
     public function apply(iterable $elements): Generator
     {
-        $materialized = is_array($elements) ? $elements : iterator_to_array($elements, true);
+        $materialized = is_array($elements) ? $elements : iterator_to_array($elements);
 
         $comparator = $this->comparator
             ?? static fn(mixed $first, mixed $second): int => $first <=> $second;
