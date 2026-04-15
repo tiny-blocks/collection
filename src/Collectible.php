@@ -58,6 +58,17 @@ interface Collectible extends Countable, IteratorAggregate
     public static function createLazyFromEmpty(): static;
 
     /**
+     * Creates a collection using lazy evaluation from a closure that produces an iterable.
+     *
+     * The closure is invoked each time the collection is iterated, enabling
+     * safe re-iteration over generators or other single-use iterables.
+     *
+     * @param Closure $factory A closure returning an iterable of elements.
+     * @return static A new collection backed by the given factory.
+     */
+    public static function createLazyFromClosure(Closure $factory): static;
+
+    /**
      * Returns a new collection with the specified elements appended.
      *
      * @param mixed ...$elements The elements to append.
@@ -102,10 +113,11 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Executes side effect actions on every element without modifying the collection.
      *
+     * This is a terminal operation. The collection is not returned.
+     *
      * @param Closure ...$actions Actions to perform on each element.
-     * @return static The same instance, enabling further chaining.
      */
-    public function each(Closure ...$actions): static;
+    public function each(Closure ...$actions): void;
 
     /**
      * Compares this collection with another for element-wise equality.

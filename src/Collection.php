@@ -7,7 +7,6 @@ namespace TinyBlocks\Collection;
 use Closure;
 use TinyBlocks\Collection\Internal\EagerPipeline;
 use TinyBlocks\Collection\Internal\LazyPipeline;
-use TinyBlocks\Collection\Internal\Operations\Operation;
 use TinyBlocks\Collection\Internal\Operations\Resolving\Each;
 use TinyBlocks\Collection\Internal\Operations\Resolving\Equality;
 use TinyBlocks\Collection\Internal\Operations\Resolving\Find;
@@ -30,14 +29,6 @@ use TinyBlocks\Mapper\IterableMappability;
 use TinyBlocks\Mapper\IterableMapper;
 use Traversable;
 
-/**
- * Extensible, type-safe collection with a fluent API.
- *
- * Designed as the primary extension point — domain collections should
- * extend this class to inherit all collection behavior:
- *
- *     final class Orders extends Collection { }
- */
 class Collection implements Collectible, IterableMapper
 {
     use IterableMappability;
@@ -66,6 +57,11 @@ class Collection implements Collectible, IterableMapper
         return static::createLazyFrom(elements: []);
     }
 
+    public static function createLazyFromClosure(Closure $factory): static
+    {
+        return new static(pipeline: LazyPipeline::fromClosure(factory: $factory));
+    }
+
     public function getIterator(): Traversable
     {
         yield from $this->pipeline->process();
@@ -73,12 +69,12 @@ class Collection implements Collectible, IterableMapper
 
     public function add(mixed ...$elements): static
     {
-        return $this->pipeTo(operation: Add::these(newElements: $elements));
+        return new static(pipeline: $this->pipeline->pipe(operation: Add::these(newElements: $elements)));
     }
 
     public function merge(Collectible $other): static
     {
-        return $this->pipeTo(operation: Merge::with(other: $other));
+        return new static(pipeline: $this->pipeline->pipe(operation: Merge::with(other: $other)));
     }
 
     public function contains(mixed $element): bool
@@ -96,11 +92,9 @@ class Collection implements Collectible, IterableMapper
         return Find::firstMatch(elements: $this, predicates: $predicates);
     }
 
-    public function each(Closure ...$actions): static
+    public function each(Closure ...$actions): void
     {
         Each::execute(elements: $this, actions: $actions);
-
-        return $this;
     }
 
     public function equals(Collectible $other): bool
@@ -110,17 +104,17 @@ class Collection implements Collectible, IterableMapper
 
     public function remove(mixed $element): static
     {
-        return $this->pipeTo(operation: Remove::element(element: $element));
+        return new static(pipeline: $this->pipeline->pipe(operation: Remove::element(element: $element)));
     }
 
     public function removeAll(?Closure $predicate = null): static
     {
-        return $this->pipeTo(operation: RemoveAll::matching(predicate: $predicate));
+        return new static(pipeline: $this->pipeline->pipe(operation: RemoveAll::matching(predicate: $predicate)));
     }
 
     public function filter(?Closure ...$predicates): static
     {
-        return $this->pipeTo(operation: Filter::matching(...$predicates));
+        return new static(pipeline: $this->pipeline->pipe(operation: Filter::matching(...$predicates)));
     }
 
     public function first(mixed $defaultValueIfNotFound = null): mixed
@@ -130,7 +124,7 @@ class Collection implements Collectible, IterableMapper
 
     public function flatten(): static
     {
-        return $this->pipeTo(operation: FlatMap::oneLevel());
+        return new static(pipeline: $this->pipeline->pipe(operation: FlatMap::oneLevel()));
     }
 
     public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed
@@ -140,7 +134,7 @@ class Collection implements Collectible, IterableMapper
 
     public function groupBy(Closure $classifier): static
     {
-        return $this->pipeTo(operation: GroupInto::by(classifier: $classifier));
+        return new static(pipeline: $this->pipeline->pipe(operation: GroupInto::by(classifier: $classifier)));
     }
 
     public function isEmpty(): bool
@@ -160,7 +154,7 @@ class Collection implements Collectible, IterableMapper
 
     public function map(Closure ...$transformations): static
     {
-        return $this->pipeTo(operation: Map::using(...$transformations));
+        return new static(pipeline: $this->pipeline->pipe(operation: Map::using(...$transformations)));
     }
 
     public function reduce(Closure $accumulator, mixed $initial): mixed
@@ -170,16 +164,13 @@ class Collection implements Collectible, IterableMapper
 
     public function sort(Order $order = Order::ASCENDING_KEY, ?Closure $comparator = null): static
     {
-        return $this->pipeTo(operation: Rearrange::by(order: $order, comparator: $comparator));
+        $operation = Rearrange::by(order: $order, comparator: $comparator);
+
+        return new static(pipeline: $this->pipeline->pipe(operation: $operation));
     }
 
     public function slice(int $offset, int $length = -1): static
     {
-        return $this->pipeTo(operation: Segment::from(offset: $offset, length: $length));
-    }
-
-    private function pipeTo(Operation $operation): static
-    {
-        return new static(pipeline: $this->pipeline->pipe(operation: $operation));
+        return new static(pipeline: $this->pipeline->pipe(operation: Segment::from(offset: $offset, length: $length)));
     }
 }

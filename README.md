@@ -103,7 +103,23 @@ final class Invoices extends Collection
 
 <div id='writing'></div>
 
-### Writing
+#### Creating from a closure
+
+The `createLazyFromClosure` method creates a lazy collection backed by a closure that produces an iterable. The
+closure is invoked each time the collection is iterated, enabling safe re-iteration over generators or other single-use
+iterables.
+
+```php
+use TinyBlocks\Collection\Collection;
+
+$collection = Collection::createLazyFromClosure(factory: static function (): iterable {
+    yield 1;
+    yield 2;
+    yield 3;
+});
+```
+
+## Writing
 
 These methods enable adding, removing, and modifying elements in the Collection.
 
@@ -325,7 +341,8 @@ These methods allow the Collection's elements to be transformed or converted int
 #### Applying actions without modifying elements
 
 - `each`: Executes actions on each element in the Collection without modification.
-  The method is helpful for performing side effects, such as logging or accumulating values.
+  This is a terminal operation that does not return the collection. It is useful for performing side effects, such as
+  logging or accumulating values.
 
   ```php
   $collection->each(actions: static fn(Amount $amount): void => $total += $amount->value);
@@ -420,7 +437,8 @@ recreate the `Collection`.
 - **Eager evaluation** (`createFrom` / `createFromEmpty`): Elements are materialized immediately into an array, enabling
   constant-time access by index, count, and repeated iteration.
 
-- **Lazy evaluation** (`createLazyFrom` / `createLazyFromEmpty`): Elements are processed on-demand through generators,
+- **Lazy evaluation** (`createLazyFrom` / `createLazyFromEmpty` / `createLazyFromClosure`): Elements are processed
+  on-demand through generators,
   consuming memory only as each element is yielded. Ideal for large datasets or pipelines where not all elements need to
   be materialized.
 

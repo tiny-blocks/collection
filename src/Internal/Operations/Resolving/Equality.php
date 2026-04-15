@@ -33,8 +33,13 @@ final readonly class Equality
 
     public static function compareAll(iterable $elements, Collectible $other): bool
     {
-        $iteratorA = Equality::toGenerator(iterable: $elements);
-        $iteratorB = Equality::toGenerator(iterable: $other);
+        $iteratorA = (static function () use ($elements): Generator {
+            yield from $elements;
+        })();
+
+        $iteratorB = (static function () use ($other): Generator {
+            yield from $other;
+        })();
 
         while ($iteratorA->valid() && $iteratorB->valid()) {
             if (!Equality::areSame(element: $iteratorA->current(), other: $iteratorB->current())) {
@@ -46,10 +51,5 @@ final readonly class Equality
         }
 
         return !$iteratorA->valid() && !$iteratorB->valid();
-    }
-
-    private static function toGenerator(iterable $iterable): Generator
-    {
-        yield from $iterable;
     }
 }
