@@ -1,6 +1,10 @@
 # Collection
 
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![CI](https://github.com/tiny-blocks/collection/actions/workflows/ci.yml/badge.svg)](https://github.com/tiny-blocks/collection/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/tiny-blocks/collection/branch/main/graph/badge.svg)](https://codecov.io/gh/tiny-blocks/collection)
+[![Latest Version](https://img.shields.io/packagist/v/tiny-blocks/collection)](https://packagist.org/packages/tiny-blocks/collection)
+[![PHP Version](https://img.shields.io/packagist/dependency-v/tiny-blocks/collection/php)](https://packagist.org/packages/tiny-blocks/collection)
 
 * [Overview](#overview)
 * [Installation](#installation)
