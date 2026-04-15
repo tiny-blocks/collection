@@ -164,7 +164,9 @@ class Collection implements Collectible, IterableMapper
 
     public function sort(Order $order = Order::ASCENDING_KEY, ?Closure $comparator = null): static
     {
-        return new static(pipeline: $this->pipeline->pipe(operation: Rearrange::by(order: $order, comparator: $comparator)));
+        $operation = Rearrange::by(order: $order, comparator: $comparator);
+
+        return new static(pipeline: $this->pipeline->pipe(operation: $operation));
     }
 
     public function slice(int $offset, int $length = -1): static
