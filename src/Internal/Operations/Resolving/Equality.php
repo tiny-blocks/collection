@@ -8,48 +8,48 @@ use Generator;
 use TinyBlocks\Collection\Collectible;
 
 final readonly class Equality
+{
+    public static function areSame(mixed $element, mixed $other): bool
     {
-            public static function areSame(mixed $element, mixed $other): bool
-        {
-                    if (is_object($element) !== is_object($other)) {
-                                    return false;
-                    }
-
-                return is_object($element)
-                                ? $element == $other
-                                : $element === $other;
+        if (is_object($element) !== is_object($other)) {
+            return false;
         }
+
+        return is_object($element)
+            ? $element == $other
+            : $element === $other;
+    }
 
     public static function exists(iterable $elements, mixed $element): bool
-        {
-                    foreach ($elements as $current) {
-                                    if (Equality::areSame(element: $current, other: $element)) {
-                                                        return true;
-                                    }
-                    }
-
-                return false;
+    {
+        foreach ($elements as $current) {
+            if (Equality::areSame(element: $current, other: $element)) {
+                return true;
+            }
         }
+
+        return false;
+    }
 
     public static function compareAll(iterable $elements, Collectible $other): bool
-        {
-                    $iteratorA = (static function () use ($elements): Generator {
-                                    yield from $elements;
-                    })();
+    {
+        $iteratorA = (static function () use ($elements): Generator {
+            yield from $elements;
+        })();
 
-                $iteratorB = (static function () use ($other): Generator {
-                                yield from $other;
-                })();
+        $iteratorB = (static function () use ($other): Generator {
+            yield from $other;
+        })();
 
-                while ($iteratorA->valid() && $iteratorB->valid()) {
-                                if (!Equality::areSame(element: $iteratorA->current(), other: $iteratorB->current())) {
-                                                    return false;
-                                }
+        while ($iteratorA->valid() && $iteratorB->valid()) {
+            if (!Equality::areSame(element: $iteratorA->current(), other: $iteratorB->current())) {
+                return false;
+            }
 
-                        $iteratorA->next();
-                                $iteratorB->next();
-                }
-
-                return !$iteratorA->valid() && !$iteratorB->valid();
+            $iteratorA->next();
+            $iteratorB->next();
         }
+
+        return !$iteratorA->valid() && !$iteratorB->valid();
     }
+}
