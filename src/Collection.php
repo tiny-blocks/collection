@@ -30,14 +30,6 @@ use TinyBlocks\Mapper\IterableMappability;
 use TinyBlocks\Mapper\IterableMapper;
 use Traversable;
 
-/**
- * Extensible, type-safe collection with a fluent API.
- *
- * Designed as the primary extension point — domain collections should
- * extend this class to inherit all collection behavior:
- *
- *     final class Orders extends Collection { }
- */
 class Collection implements Collectible, IterableMapper
 {
     use IterableMappability;
@@ -64,6 +56,11 @@ class Collection implements Collectible, IterableMapper
     public static function createLazyFromEmpty(): static
     {
         return static::createLazyFrom(elements: []);
+    }
+
+    public static function createLazyFromClosure(Closure $factory): static
+    {
+        return new static(pipeline: LazyPipeline::fromClosure(factory: $factory));
     }
 
     public function getIterator(): Traversable
@@ -96,11 +93,9 @@ class Collection implements Collectible, IterableMapper
         return Find::firstMatch(elements: $this, predicates: $predicates);
     }
 
-    public function each(Closure ...$actions): static
+    public function each(Closure ...$actions): void
     {
         Each::execute(elements: $this, actions: $actions);
-
-        return $this;
     }
 
     public function equals(Collectible $other): bool

@@ -4,24 +4,16 @@ declare(strict_types=1);
 
 namespace TinyBlocks\Collection\Internal;
 
+use Closure;
 use Generator;
 use TinyBlocks\Collection\Internal\Operations\Operation;
 
-/**
- * Generator-based pipeline with deferred evaluation.
- *
- * Operations are accumulated as stages and executed only when
- * the pipeline is consumed. Ideal for large or unbounded datasets.
- */
 final readonly class LazyPipeline implements Pipeline
 {
     /** @var Operation[] */
     private array $stages;
 
-    /**
-     * @param Operation[] $stages
-     */
-    private function __construct(private iterable $source, array $stages = [])
+    private function __construct(private iterable|Closure $source, array $stages = [])
     {
         $this->stages = $stages;
     }
@@ -29,6 +21,11 @@ final readonly class LazyPipeline implements Pipeline
     public static function from(iterable $source): LazyPipeline
     {
         return new LazyPipeline(source: $source);
+    }
+
+    public static function fromClosure(Closure $factory): LazyPipeline
+    {
+        return new LazyPipeline(source: $factory);
     }
 
     public function pipe(Operation $operation): Pipeline
@@ -57,7 +54,9 @@ final readonly class LazyPipeline implements Pipeline
 
     public function process(): Generator
     {
-        $elements = $this->source;
+        $elements = $this->source instanceof Closure
+            ? ($this->source)()
+            : $this->source;
 
         foreach ($this->stages as $stage) {
             $elements = $stage->apply(elements: $elements);

@@ -233,15 +233,12 @@ final class LazyCollectionTest extends TestCase
         $sum = 0;
 
         /** @When using each to accumulate the sum */
-        $actual = $collection->each(actions: function (int $value) use (&$sum): void {
+        $collection->each(actions: function (int $value) use (&$sum): void {
             $sum += $value;
         });
 
         /** @Then the sum should be 6 */
         self::assertSame(6, $sum);
-
-        /** @And the returned collection should be the same instance */
-        self::assertSame($collection, $actual);
     }
 
     public function testEqualsWithIdenticalCollections(): void
@@ -985,7 +982,7 @@ final class LazyCollectionTest extends TestCase
         /** @And a variable to accumulate the total discounted value */
         $totalDiscounted = 0.0;
 
-        /** @When chaining filter, map, removeAll, sort and each */
+        /** @When chaining filter, map, removeAll and sort */
         $actual = $collection
             ->filter(predicates: static fn(Amount $amount): bool => $amount->value >= 100)
             ->map(transformations: static fn(Amount $amount): Amount => new Amount(
@@ -996,10 +993,12 @@ final class LazyCollectionTest extends TestCase
             ->sort(
                 order: Order::ASCENDING_VALUE,
                 comparator: static fn(Amount $first, Amount $second): int => $first->value <=> $second->value
-            )
-            ->each(actions: function (Amount $amount) use (&$totalDiscounted): void {
-                $totalDiscounted += $amount->value;
-            });
+            );
+
+        /** @And accumulating the total discounted value via each */
+        $actual->each(actions: function (Amount $amount) use (&$totalDiscounted): void {
+            $totalDiscounted += $amount->value;
+        });
 
         /** @Then the final collection should contain exactly three elements */
         self::assertCount(3, $actual);
@@ -1039,5 +1038,170 @@ final class LazyCollectionTest extends TestCase
 
         /** @Then the sum should be 171700 */
         self::assertSame(171700, $sum);
+    }
+
+    public function testFromClosure(): void
+    {
+        /** @Given a closure that yields three elements */
+        $factory = static function (): Generator {
+            yield 1;
+            yield 2;
+            yield 3;
+        };
+
+        /** @When creating a lazy collection from the closure */
+        $collection = Collection::createLazyFromClosure(factory: $factory);
+
+        /** @Then the collection should contain all three elements */
+        self::assertSame(3, $collection->count());
+
+        /** @And the array should match the expected elements */
+        self::assertSame([1, 2, 3], $collection->toArray());
+    }
+
+    public function testFromClosureReiteratesSuccessfully(): void
+    {
+        /** @Given a closure that yields elements */
+        $collection = Collection::createLazyFromClosure(factory: static function (): Generator {
+            yield 10;
+            yield 20;
+            yield 30;
+        });
+
+        /** @When consuming the collection via count */
+        $count = $collection->count();
+
+        /** @Then the count should be 3 */
+        self::assertSame(3, $count);
+
+        /** @And a subsequent toArray should still return all elements */
+        self::assertSame([10, 20, 30], $collection->toArray());
+
+        /** @And first should return the first element */
+        self::assertSame(10, $collection->first());
+
+        /** @And last should return the last element */
+        self::assertSame(30, $collection->last());
+    }
+
+    public function testFromClosureWithEmptyClosure(): void
+    {
+        /** @Given a closure that yields nothing */
+        $collection = Collection::createLazyFromClosure(factory: static function (): Generator {
+            yield from [];
+        });
+
+        /** @When checking the collection */
+        $isEmpty = $collection->isEmpty();
+
+        /** @Then the collection should be empty */
+        self::assertTrue($isEmpty);
+
+        /** @And the count should be zero */
+        self::assertSame(0, $collection->count());
+    }
+
+    public function testFromClosureWithChainedOperations(): void
+    {
+        /** @Given a closure-backed collection with integers */
+        $collection = Collection::createLazyFromClosure(factory: static function (): Generator {
+            yield from [5, 3, 1, 4, 2];
+        });
+
+        /** @When chaining filter, map and sort */
+        $actual = $collection
+            ->filter(predicates: static fn(int $value): bool => $value > 2)
+            ->map(transformations: static fn(int $value): int => $value * 10)
+            ->sort(order: Order::ASCENDING_VALUE);
+
+        /** @Then the result should contain the filtered, mapped and sorted values */
+        self::assertSame([30, 40, 50], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testFromClosureWithObjects(): void
+    {
+        /** @Given a closure that yields Amount objects */
+        $collection = Collection::createLazyFromClosure(factory: static function (): Generator {
+            yield new Amount(value: 100.00, currency: Currency::USD);
+            yield new Amount(value: 200.00, currency: Currency::USD);
+            yield new Amount(value: 300.00, currency: Currency::USD);
+        });
+
+        /** @When reducing to sum all amounts */
+        $total = $collection->reduce(
+            accumulator: static fn(float $carry, Amount $amount): float => $carry + $amount->value,
+            initial: 0.0
+        );
+
+        /** @Then the total should be 600 */
+        self::assertSame(600.00, $total);
+    }
+
+    public function testFromClosureGetByIndex(): void
+    {
+        /** @Given a closure-backed collection */
+        $collection = Collection::createLazyFromClosure(factory: static function (): Generator {
+            yield 'alpha';
+            yield 'beta';
+            yield 'gamma';
+        });
+
+        /** @When retrieving element at index 1 */
+        $actual = $collection->getBy(index: 1);
+
+        /** @Then it should return the second element */
+        self::assertSame('beta', $actual);
+    }
+
+    public function testFromClosureContainsElement(): void
+    {
+        /** @Given a closure-backed collection */
+        $collection = Collection::createLazyFromClosure(factory: static function (): Generator {
+            yield 'alpha';
+            yield 'beta';
+            yield 'gamma';
+        });
+
+        /** @When checking if the collection contains an existing element */
+        $containsBeta = $collection->contains(element: 'beta');
+
+        /** @Then it should return true */
+        self::assertTrue($containsBeta);
+
+        /** @And checking for a non-existing element should return false */
+        self::assertFalse($collection->contains(element: 'delta'));
+    }
+
+    public function testFromClosureAdd(): void
+    {
+        /** @Given a closure-backed collection */
+        $collection = Collection::createLazyFromClosure(factory: static function (): Generator {
+            yield 1;
+            yield 2;
+        });
+
+        /** @When adding elements */
+        $actual = $collection->add(3, 4);
+
+        /** @Then all elements should be present */
+        self::assertSame([1, 2, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testFromClosureMerge(): void
+    {
+        /** @Given a closure-backed collection */
+        $closureCollection = Collection::createLazyFromClosure(factory: static function (): Generator {
+            yield 1;
+            yield 2;
+        });
+
+        /** @And an eager collection */
+        $eagerCollection = Collection::createFrom(elements: [3, 4]);
+
+        /** @When merging them */
+        $actual = $closureCollection->merge(other: $eagerCollection);
+
+        /** @Then the result should contain all elements */
+        self::assertSame([1, 2, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 }

@@ -7,47 +7,64 @@ namespace TinyBlocks\Collection\Internal;
 use Generator;
 use TinyBlocks\Collection\Internal\Operations\Operation;
 
-/**
- * Array-backed pipeline with immediate evaluation.
- *
- * Each operation materializes results into an array immediately,
- * enabling constant-time access, count, and repeated iteration.
- * Ideal for small to medium datasets and random access scenarios.
- */
-final readonly class EagerPipeline implements Pipeline
+final class EagerPipeline implements Pipeline
 {
-    private function __construct(private array $elements)
+    private ?array $materialized = null;
+
+    /** @var Operation[] */
+    private readonly array $stages;
+
+    private function __construct(private readonly iterable $source, array $stages = [])
     {
+        $this->stages = $stages;
     }
 
     public static function from(iterable $source): EagerPipeline
     {
-        $elements = is_array($source) ? $source : iterator_to_array(iterator: $source);
-
-        return new EagerPipeline(elements: $elements);
+        return new EagerPipeline(source: $source);
     }
 
     public function pipe(Operation $operation): Pipeline
     {
-        $elements = iterator_to_array(iterator: $operation->apply(elements: $this->elements));
+        $stages = $this->stages;
+        $stages[] = $operation;
 
-        return new EagerPipeline(elements: $elements);
+        return new EagerPipeline(source: $this->source, stages: $stages);
     }
 
     public function count(): int
     {
-        return count($this->elements);
+        return count($this->elements());
     }
 
     public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed
     {
-        return array_key_exists($index, $this->elements)
-            ? $this->elements[$index]
+        $elements = $this->elements();
+
+        return array_key_exists($index, $elements)
+            ? $elements[$index]
             : $defaultValueIfNotFound;
     }
 
     public function process(): Generator
     {
-        yield from $this->elements;
+        yield from $this->elements();
+    }
+
+    private function elements(): array
+    {
+        if (!is_null($this->materialized)) {
+            return $this->materialized;
+        }
+
+        $elements = $this->source;
+
+        foreach ($this->stages as $stage) {
+            $elements = $stage->apply(elements: $elements);
+        }
+
+        $this->materialized = is_array($elements) ? $elements : iterator_to_array($elements);
+
+        return $this->materialized;
     }
 }

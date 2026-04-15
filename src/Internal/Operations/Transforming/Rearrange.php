@@ -29,7 +29,7 @@ final readonly class Rearrange implements Operation
 
         match ($this->order) {
             Order::ASCENDING_KEY    => ksort($materialized),
-            Order::DESCENDING_KEY   => krsort($materialized),
+            Order::DESCENDING_KEY => krsort($materialized),
             Order::ASCENDING_VALUE  => uasort($materialized, $comparator),
             Order::DESCENDING_VALUE => uasort(
                 $materialized,

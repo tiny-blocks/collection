@@ -58,6 +58,28 @@ final class EagerCollectionTest extends TestCase
         self::assertSame(3, $collection->count());
     }
 
+    public function testFromGeneratorReiteratesSuccessfully(): void
+    {
+        /** @Given a generator that yields three elements */
+        $generator = (static function (): Generator {
+            yield 1;
+            yield 2;
+            yield 3;
+        })();
+
+        /** @When creating an eager collection from the generator */
+        $collection = Collection::createFrom(elements: $generator);
+
+        /** @And consuming the collection via count */
+        $count = $collection->count();
+
+        /** @Then the count should be 3 */
+        self::assertSame(3, $count);
+
+        /** @And a subsequent toArray should still return all elements */
+        self::assertSame([1, 2, 3], $collection->toArray());
+    }
+
     public function testAdd(): void
     {
         /** @Given an eager collection with three elements */
@@ -233,15 +255,12 @@ final class EagerCollectionTest extends TestCase
         $sum = 0;
 
         /** @When using each to accumulate the sum */
-        $actual = $collection->each(actions: function (int $value) use (&$sum): void {
+        $collection->each(actions: function (int $value) use (&$sum): void {
             $sum += $value;
         });
 
         /** @Then the sum should be 6 */
         self::assertSame(6, $sum);
-
-        /** @And the returned collection should be the same instance */
-        self::assertSame($collection, $actual);
     }
 
     public function testEqualsWithIdenticalCollections(): void
@@ -985,7 +1004,7 @@ final class EagerCollectionTest extends TestCase
         /** @And a variable to accumulate the total discounted value */
         $totalDiscounted = 0.0;
 
-        /** @When chaining filter, map, removeAll, sort and each */
+        /** @When chaining filter, map, removeAll and sort */
         $actual = $collection
             ->filter(predicates: static fn(Amount $amount): bool => $amount->value >= 100)
             ->map(transformations: static fn(Amount $amount): Amount => new Amount(
@@ -996,10 +1015,12 @@ final class EagerCollectionTest extends TestCase
             ->sort(
                 order: Order::ASCENDING_VALUE,
                 comparator: static fn(Amount $first, Amount $second): int => $first->value <=> $second->value
-            )
-            ->each(actions: function (Amount $amount) use (&$totalDiscounted): void {
-                $totalDiscounted += $amount->value;
-            });
+            );
+
+        /** @And accumulating the total discounted value via each */
+        $actual->each(actions: function (Amount $amount) use (&$totalDiscounted): void {
+            $totalDiscounted += $amount->value;
+        });
 
         /** @Then the final collection should contain exactly three elements */
         self::assertCount(3, $actual);
