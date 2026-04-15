@@ -15,16 +15,16 @@ final readonly class EagerPipeline implements Pipeline
 
     public static function from(iterable $source): EagerPipeline
     {
-        return new EagerPipeline(elements: is_array($source) ? $source : iterator_to_array($source));
+        $elements = is_array($source) ? $source : iterator_to_array($source);
+
+        return new EagerPipeline(elements: $elements);
     }
 
     public function pipe(Operation $operation): Pipeline
     {
-        $elements = $operation->apply(elements: $this->elements);
+        $elements = iterator_to_array($operation->apply(elements: $this->elements));
 
-        return new EagerPipeline(
-            elements: is_array($elements) ? $elements : iterator_to_array($elements)
-        );
+        return new EagerPipeline(elements: $elements);
     }
 
     public function count(): int
