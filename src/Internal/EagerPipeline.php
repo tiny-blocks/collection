@@ -10,7 +10,7 @@ use TinyBlocks\Collection\Internal\Operations\Operation;
 
 final readonly class EagerPipeline implements Pipeline
 {
-    private function __construct(private array $elements)
+    private function __construct(private Materialization $materialization)
     {
     }
 
@@ -18,56 +18,62 @@ final readonly class EagerPipeline implements Pipeline
     {
         $elements = is_array($source) ? $source : iterator_to_array($source);
 
-        return new EagerPipeline(elements: $elements);
+        return new EagerPipeline(materialization: Materialization::from(source: $elements, stages: []));
     }
 
     public static function fromClosure(Closure $factory): EagerPipeline
     {
         $elements = iterator_to_array($factory());
 
-        return new EagerPipeline(elements: $elements);
+        return new EagerPipeline(materialization: Materialization::from(source: $elements, stages: []));
     }
 
     public function pipe(Operation $operation): Pipeline
     {
-        $elements = iterator_to_array($operation->apply(elements: $this->elements));
+        $elements = $this->materialization->elements();
 
-        return new EagerPipeline(elements: $elements);
+        return new EagerPipeline(materialization: Materialization::from(source: $elements, stages: [$operation]));
     }
 
     public function count(): int
     {
-        return count($this->elements);
-    }
-
-    public function first(mixed $defaultValueIfNotFound = null): mixed
-    {
-        return empty($this->elements)
-            ? $defaultValueIfNotFound
-            : $this->elements[array_key_first($this->elements)];
+        return count($this->materialization->elements());
     }
 
     public function isEmpty(): bool
     {
-        return empty($this->elements);
+        return $this->materialization->elements() === [];
+    }
+
+    public function first(mixed $defaultValueIfNotFound = null): mixed
+    {
+        $elements = $this->materialization->elements();
+
+        return $elements === []
+            ? $defaultValueIfNotFound
+            : $elements[array_key_first($elements)];
     }
 
     public function last(mixed $defaultValueIfNotFound = null): mixed
     {
-        return empty($this->elements)
+        $elements = $this->materialization->elements();
+
+        return $elements === []
             ? $defaultValueIfNotFound
-            : $this->elements[array_key_last($this->elements)];
+            : $elements[array_key_last($elements)];
     }
 
     public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed
     {
-        return array_key_exists($index, $this->elements)
-            ? $this->elements[$index]
+        $elements = $this->materialization->elements();
+
+        return array_key_exists($index, $elements)
+            ? $elements[$index]
             : $defaultValueIfNotFound;
     }
 
     public function process(): Generator
     {
-        yield from $this->elements;
+        yield from $this->materialization->elements();
     }
 }

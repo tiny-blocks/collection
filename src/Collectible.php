@@ -16,16 +16,32 @@ use TinyBlocks\Mapper\KeyPreservation;
  *
  * Two evaluation strategies are available:
  *
- *  - createFrom / createFromEmpty / createFromClosure: eager evaluation, materialized immediately.
- *  - createLazyFrom / createLazyFromEmpty / createLazyFromClosure: lazy evaluation via generators, on-demand.
+ *  - createFrom / createFromEmpty / createFromClosure: eager evaluation. The source is materialized
+ *    into an array immediately at creation time. The first terminal call runs all chained stages
+ *    in a single fused pass and caches the result. Subsequent terminal calls reuse the cache.
+ *  - createLazyFrom / createLazyFromEmpty / createLazyFromClosure: lazy evaluation via generators.
+ *    The source is stored by reference. Every terminal call re-runs the entire pipeline from the source.
+ *
+ * Complexity notation used throughout this interface:
+ *
+ *  - n  = number of source elements at the time of the terminal call.
+ *  - P  = total time cost of running all chained transforming stages over n elements (the "fused pass").
+ *         For a pipeline of pure per-element stages, P is O(n * s) where s is the number of stages.
+ *         Stages with non-linear contributions (e.g., `sort` is O(n log n)) dominate P.
+ *  - "Call site" = cost paid when the method is invoked.
+ *  - "Pass contribution" = cost this stage adds to P when a terminal operation later triggers the pass.
+ *
+ * Streaming-breaking stages: `sort` and `groupBy` must buffer all elements before emitting any output.
+ * Any stage placed after them in the same pipeline cannot stream and will see the full buffered set.
+ * Place these stages last whenever possible.
  */
 interface Collectible extends Countable, IteratorAggregate
 {
     /**
      * Creates a collection populated with the given elements using eager evaluation.
      *
-     * Elements are materialized immediately into an array, enabling
-     * constant-time access by index, count, and repeated iteration.
+     * Elements are materialized immediately into an array, enabling the fused-pass cache on the
+     * first terminal access.
      *
      * O(n) time, O(n) space. Iterates the input once and stores all elements.
      *
@@ -46,9 +62,8 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Creates a collection using eager evaluation from a closure that produces an iterable.
      *
-     * The closure is invoked once at creation time and its result is materialized
-     * immediately into an array, enabling constant-time access by index, count,
-     * and repeated iteration.
+     * The closure is invoked once at creation time and its result is materialized immediately
+     * into an array, enabling the fused-pass cache on the first terminal access.
      *
      * O(n) time, O(n) space. Invokes the closure and stores all yielded elements.
      *
@@ -60,8 +75,7 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Creates a collection populated with the given elements using lazy evaluation.
      *
-     * Elements are processed on-demand through generators, consuming
-     * memory only as each element is yielded.
+     * Elements are processed on-demand through generators, consuming memory only as each element is yielded.
      *
      * O(1) time, O(1) space. Stores a reference to the iterable without iterating.
      *
@@ -82,8 +96,8 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Creates a collection using lazy evaluation from a closure that produces an iterable.
      *
-     * The closure is invoked each time the collection is iterated, enabling
-     * safe re-iteration over generators or other single-use iterables.
+     * The closure is invoked each time the collection is iterated, enabling safe re-iteration over
+     * generators or other single-use iterables.
      *
      * O(1) time, O(1) space. Stores the closure without invoking it.
      *
@@ -95,8 +109,8 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Returns a new collection with the specified elements appended.
      *
-     * Eager: O(n + m) time, O(n + m) space. Materializes all existing and new elements.
-     * Lazy: O(1) time, O(1) space. Appends a pipeline stage without iterating.
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(m) time, O(m) space (m = number of appended elements).
      *
      * @param mixed ...$elements The elements to append.
      * @return static A new collection with the additional elements.
@@ -106,8 +120,8 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Merges the elements of another Collectible into the current Collection.
      *
-     * Eager: O(n + m) time, O(n + m) space. Materializes elements from both collections.
-     * Lazy: O(1) time, O(1) space. Appends a pipeline stage without iterating.
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(m) time, O(m) space (m = number of elements in `other`).
      *
      * @param Collectible $other The collection to merge with.
      * @return static A new collection containing elements from both collections.
@@ -119,7 +133,11 @@ interface Collectible extends Countable, IteratorAggregate
      *
      * Uses strict equality for scalars and loose equality for objects.
      *
-     * O(n) time, O(1) space. Iterates until the element is found or the end is reached.
+     * Eager: O(P + n) on first terminal call (triggers fused pass and scans the result).
+     *        O(n) on subsequent calls (scans the cached result). Short-circuits when found.
+     *        O(n) cached space.
+     * Lazy: O(P) per call. The search is interleaved with the pass and short-circuits when found.
+     *       O(1) intermediate space.
      *
      * @param mixed $element The element to search for.
      * @return bool True if the element exists, false otherwise.
@@ -129,8 +147,9 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Returns the total number of elements.
      *
-     * Eager: O(1) time, O(1) space. Reads the array length directly.
-     * Lazy: O(n) time, O(1) space. Must iterate all elements to count.
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P) per call (must reach the end of the pipeline). O(1) intermediate space.
      *
      * @return int The element count.
      */
@@ -140,7 +159,10 @@ interface Collectible extends Countable, IteratorAggregate
      * Finds the first element that satisfies any given predicate.
      * Without predicates, returns null.
      *
-     * O(n * p) time, O(1) space. Iterates until a match is found. p = number of predicates.
+     * Eager: O(P + n * p) on first terminal call (triggers fused pass and scans the result).
+     *        O(n * p) on subsequent calls. Short-circuits when found. p = number of predicates.
+     *        O(n) cached space.
+     * Lazy: O(P + p) per emitted element. Short-circuits when found. O(1) intermediate space.
      *
      * @param Closure ...$predicates Conditions to test each element against.
      * @return mixed The first matching element or null if no match is found.
@@ -152,7 +174,9 @@ interface Collectible extends Countable, IteratorAggregate
      *
      * This is a terminal operation. The collection is not returned.
      *
-     * O(n * a) time, O(1) space. Iterates all elements. a = number of actions.
+     * Eager: O(P + n * a) on first terminal call. O(n * a) on subsequent calls (over cached result).
+     *        O(n) cached space. a = number of actions.
+     * Lazy: O(P + n * a) per call. O(1) intermediate space.
      *
      * @param Closure ...$actions Actions to perform on each element.
      */
@@ -161,10 +185,12 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Compares this collection with another for element-wise equality.
      *
-     * Two collections are equal when they have the same size and every
-     * pair at the same position satisfies the equality comparison.
+     * Two collections are equal when they have the same size and every pair at the same position
+     * satisfies the equality comparison.
      *
-     * O(n) time, O(1) space. Walks both collections in parallel, comparing element by element.
+     * Eager: O(P + n) on first terminal call. O(n) on subsequent calls (over cached result).
+     *        Short-circuits at the first mismatch. O(n) cached space.
+     * Lazy: O(P + n) per call. Short-circuits at the first mismatch. O(1) intermediate space.
      *
      * @param Collectible $other The collection to compare against.
      * @return bool True if both collections are element-wise equal.
@@ -176,8 +202,8 @@ interface Collectible extends Countable, IteratorAggregate
      *
      * All occurrences of the element are removed.
      *
-     * Eager: O(n) time, O(n) space. Materializes a new array excluding matches.
-     * Lazy: O(1) time, O(1) space. Appends a pipeline stage without iterating.
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(n) time, O(1) space.
      *
      * @param mixed $element The element to remove.
      * @return static A new collection without the specified element.
@@ -188,8 +214,8 @@ interface Collectible extends Countable, IteratorAggregate
      * Returns a new collection with all elements removed that satisfy the given predicate.
      * When no predicate is provided (i.e., $predicate is null), all elements are removed.
      *
-     * Eager: O(n) time, O(n) space. Materializes a new array excluding matches.
-     * Lazy: O(1) time, O(1) space. Appends a pipeline stage without iterating.
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(n) time, O(1) space.
      *
      * @param Closure|null $predicate Condition to determine which elements to remove.
      * @return static A new collection with the matching elements removed.
@@ -201,8 +227,8 @@ interface Collectible extends Countable, IteratorAggregate
      *
      * Without predicates, falsy values are removed.
      *
-     * Eager: O(n) time, O(n) space. Materializes a new array with matching elements.
-     * Lazy: O(1) time, O(1) space. Appends a pipeline stage without iterating.
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(n * p) time, O(1) space (p = number of predicates).
      *
      * @param Closure|null ...$predicates Conditions each element must meet.
      * @return static A new collection with only the matching elements.
@@ -212,8 +238,9 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Returns the first element, or a default if the collection is empty.
      *
-     * Eager: O(1) time, O(1) space. Direct array access via array_key_first.
-     * Lazy: O(1) time, O(1) space. Yields once from the pipeline.
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P_first) per call. Short-circuits at the first emitted element. O(1) intermediate space.
      *
      * @param mixed $defaultValueIfNotFound Value returned when the collection is empty.
      * @return mixed The first element or the default.
@@ -223,8 +250,8 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Flattens nested iterables by exactly one level. Non-iterable elements are yielded as-is.
      *
-     * Eager: O(n + s) time, O(n + s) space. s = total nested elements across all iterables.
-     * Lazy: O(1) time, O(1) space. Appends a pipeline stage without iterating.
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(n + s) time, O(1) space (s = total nested elements across all iterables).
      *
      * @return static A new collection with elements flattened by one level.
      */
@@ -233,8 +260,9 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Returns the element at the given zero-based index.
      *
-     * Eager: O(1) time, O(1) space. Direct array access via array_key_exists.
-     * Lazy: O(n) time, O(1) space. Iterates until the index is reached.
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P_index) per call. Short-circuits at the requested position. O(1) intermediate space.
      *
      * @param int $index The zero-based position.
      * @param mixed $defaultValueIfNotFound Value returned when the index is out of bounds.
@@ -245,11 +273,11 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Groups elements by a key derived from each element.
      *
-     * The classifier receives each element and must return the group key.
-     * The resulting collection contains key to element-list pairs.
+     * The classifier receives each element and must return the group key. The resulting collection
+     * contains key-to-element-list pairs.
      *
-     * Eager: O(n) time, O(n) space. Materializes all groups into an associative array.
-     * Lazy: O(1) time, O(1) space. Appends a pipeline stage without iterating.
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(n) time, O(n) space. Buffers all groups before emitting. Breaks streaming.
      *
      * @param Closure $classifier Maps each element to its group key.
      * @return static A new collection of grouped elements.
@@ -259,8 +287,9 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Determines whether the collection has no elements.
      *
-     * Eager: O(1) time, O(1) space. Checks the first yield from the materialized array.
-     * Lazy: O(1) time, O(1) space. Yields once from the pipeline.
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P_first) per call. Short-circuits at the first emitted element. O(1) intermediate space.
      *
      * @return bool True if the collection is empty.
      */
@@ -269,7 +298,9 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Joins all elements into a string with the given separator.
      *
-     * O(n) time, O(n) space. Accumulates all elements into an intermediate array, then implodes.
+     * Eager: O(P + n) on first terminal call. O(n) on subsequent calls (over cached result).
+     *        O(n) cached space plus O(n) for the resulting string.
+     * Lazy: O(P + n) per call. O(n) for the resulting string.
      *
      * @param string $separator The delimiter placed between each element.
      * @return string The concatenated result.
@@ -279,8 +310,9 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Returns the last element, or a default if the collection is empty.
      *
-     * Eager: O(1) time, O(1) space. Direct array access via array_key_last.
-     * Lazy: O(n) time, O(1) space. Must iterate all elements to find the last.
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P) per call. Must reach the end of the pipeline. O(1) intermediate space.
      *
      * @param mixed $defaultValueIfNotFound Value returned when the collection is empty.
      * @return mixed The last element or the default.
@@ -292,8 +324,8 @@ interface Collectible extends Countable, IteratorAggregate
      *
      * Transformations are applied in order. Each receives the current value and key.
      *
-     * Eager: O(n * t) time, O(n) space. Materializes all transformed elements. t = number of transformations.
-     * Lazy: O(1) time, O(1) space. Appends a pipeline stage without iterating.
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(n * t) time, O(1) space (t = number of transformations).
      *
      * @param Closure ...$transformations Functions applied to each element.
      * @return static A new collection with the transformed elements.
@@ -305,7 +337,9 @@ interface Collectible extends Countable, IteratorAggregate
      *
      * The accumulator receives the carry and the current element.
      *
-     * O(n) time, O(1) space. Iterates all elements, maintaining a single carry value.
+     * Eager: O(P + n) on first terminal call. O(n) on subsequent calls (over cached result).
+     *        O(n) cached space.
+     * Lazy: O(P + n) per call. O(1) intermediate space (single carry value).
      *
      * @param Closure $accumulator Combines the carry with each element.
      * @param mixed $initial The starting value for the accumulation.
@@ -318,8 +352,9 @@ interface Collectible extends Countable, IteratorAggregate
      *
      * Without a comparator, the spaceship operator is used.
      *
-     * Eager: O(n log n) time, O(n) space. Materializes and sorts all elements.
-     * Lazy: O(1) time, O(1) space. Appends a pipeline stage without iterating.
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(n log n) time, O(n) space. Buffers all elements before emitting any output.
+     * breaks streaming for any stage placed after `sort` in the same pipeline.
      *
      * @param Order $order The sorting direction.
      * @param Closure|null $comparator Custom comparison function.
@@ -330,8 +365,10 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Extracts a contiguous segment of the collection.
      *
-     * Eager: O(n) time, O(n) space. Materializes the segment into a new array.
-     * Lazy: O(1) time, O(1) space. Appends a pipeline stage without iterating.
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(min(offset + length, n)) time, O(1) space. Iteration short-circuits once
+     * the segment is fully emitted. An early `slice(0, k)` against a generator source can avoid
+     * touching the rest.
      *
      * @param int $offset Zero-based starting position.
      * @param int $length Number of elements to include. Use -1 for "until the end".
@@ -342,7 +379,9 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Converts the Collection to an array.
      *
-     * O(n) time, O(n) space. Iterates all elements and stores them in an array.
+     * Eager: O(P + n) on first terminal call. O(n) on subsequent calls (over cached result).
+     *        O(n) cached space.
+     * Lazy: O(P + n) per call. O(n) for the resulting array.
      *
      * The key preservation behavior should be provided from the `KeyPreservation` enum:
      *  - {@see KeyPreservation::PRESERVE}: Preserves the array keys.
@@ -358,7 +397,9 @@ interface Collectible extends Countable, IteratorAggregate
     /**
      * Converts the Collection to a JSON string.
      *
-     * O(n) time, O(n) space. Converts to array, then encodes to JSON.
+     * Eager: O(P + n) on first terminal call. O(n) on subsequent calls (over cached result).
+     *        O(n) cached space plus O(n) for the JSON string.
+     * Lazy: O(P + n) per call. O(n) for the JSON string.
      *
      * The key preservation behavior should be provided from the `KeyPreservation` enum:
      *  - {@see KeyPreservation::PRESERVE}: Preserves the array keys.

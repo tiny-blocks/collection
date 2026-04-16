@@ -16,13 +16,12 @@ final readonly class Filter implements Operation
     {
         $filtered = array_filter($predicates);
 
-        $this->compiledPredicate = match (count($filtered)) {
-            0 => static fn(mixed $value, mixed $key): bool => (bool)$value,
-            default => static fn(mixed $value, mixed $key): bool => array_all(
+        $this->compiledPredicate = $filtered === []
+            ? static fn(mixed $value, mixed $key): bool => (bool)$value
+            : static fn(mixed $value, mixed $key): bool => array_all(
                 $filtered,
                 static fn(Closure $predicate): bool => $predicate($value, $key)
-            ),
-        };
+            );
     }
 
     public static function matching(?Closure ...$predicates): Filter
