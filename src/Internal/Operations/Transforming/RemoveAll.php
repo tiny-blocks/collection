@@ -22,7 +22,7 @@ final readonly class RemoveAll implements Operation
     public function apply(iterable $elements): Generator
     {
         foreach ($elements as $key => $value) {
-            if ($this->predicate === null || ($this->predicate)($value)) {
+            if (is_null($this->predicate) || ($this->predicate)($value)) {
                 continue;
             }
 

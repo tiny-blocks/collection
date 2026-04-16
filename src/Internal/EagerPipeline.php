@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TinyBlocks\Collection\Internal;
 
+use Closure;
 use Generator;
 use TinyBlocks\Collection\Internal\Operations\Operation;
 
@@ -20,6 +21,13 @@ final readonly class EagerPipeline implements Pipeline
         return new EagerPipeline(elements: $elements);
     }
 
+    public static function fromClosure(Closure $factory): EagerPipeline
+    {
+        $elements = iterator_to_array($factory());
+
+        return new EagerPipeline(elements: $elements);
+    }
+
     public function pipe(Operation $operation): Pipeline
     {
         $elements = iterator_to_array($operation->apply(elements: $this->elements));
@@ -30,6 +38,25 @@ final readonly class EagerPipeline implements Pipeline
     public function count(): int
     {
         return count($this->elements);
+    }
+
+    public function first(mixed $defaultValueIfNotFound = null): mixed
+    {
+        return empty($this->elements)
+            ? $defaultValueIfNotFound
+            : $this->elements[array_key_first($this->elements)];
+    }
+
+    public function isEmpty(): bool
+    {
+        return empty($this->elements);
+    }
+
+    public function last(mixed $defaultValueIfNotFound = null): mixed
+    {
+        return empty($this->elements)
+            ? $defaultValueIfNotFound
+            : $this->elements[array_key_last($this->elements)];
     }
 
     public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed

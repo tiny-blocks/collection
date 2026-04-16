@@ -8,6 +8,10 @@ use Generator;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Test\TinyBlocks\Collection\Models\Amount;
+use Test\TinyBlocks\Collection\Models\Carriers;
+use Test\TinyBlocks\Collection\Models\Shipment;
+use Test\TinyBlocks\Collection\Models\ShipmentRecord;
+use Test\TinyBlocks\Collection\Models\Shipments;
 use TinyBlocks\Collection\Collection;
 use TinyBlocks\Collection\Order;
 use TinyBlocks\Currency\Currency;
@@ -1060,5 +1064,330 @@ final class EagerCollectionTest extends TestCase
 
         /** @Then the sum should be 171700 */
         self::assertSame(171700, $sum);
+    }
+
+    public function testFromClosure(): void
+    {
+        /** @Given a closure that returns three elements */
+        $factory = static function (): array {
+            return [1, 2, 3];
+        };
+
+        /** @When creating an eager collection from the closure */
+        $collection = Collection::createFromClosure(factory: $factory);
+
+        /** @Then the collection should contain all three elements */
+        self::assertSame(3, $collection->count());
+
+        /** @And the array should match the expected elements */
+        self::assertSame([1, 2, 3], $collection->toArray());
+    }
+
+    public function testFromClosureReiteratesSuccessfully(): void
+    {
+        /** @Given a closure-backed eager collection */
+        $collection = Collection::createFromClosure(factory: static function (): array {
+            return [10, 20, 30];
+        });
+
+        /** @When consuming the collection via count */
+        $count = $collection->count();
+
+        /** @Then the count should be 3 */
+        self::assertSame(3, $count);
+
+        /** @And a subsequent toArray should still return all elements */
+        self::assertSame([10, 20, 30], $collection->toArray());
+
+        /** @And first should return the first element */
+        self::assertSame(10, $collection->first());
+
+        /** @And last should return the last element */
+        self::assertSame(30, $collection->last());
+    }
+
+    public function testFromClosureWithEmptyClosure(): void
+    {
+        /** @Given a closure that returns an empty array */
+        $collection = Collection::createFromClosure(factory: static function (): array {
+            return [];
+        });
+
+        /** @When checking the collection */
+        $isEmpty = $collection->isEmpty();
+
+        /** @Then the collection should be empty */
+        self::assertTrue($isEmpty);
+
+        /** @And the count should be zero */
+        self::assertSame(0, $collection->count());
+    }
+
+    public function testFromClosureWithChainedOperations(): void
+    {
+        /** @Given a closure-backed eager collection with integers */
+        $collection = Collection::createFromClosure(factory: static function (): array {
+            return [5, 3, 1, 4, 2];
+        });
+
+        /** @When chaining filter, map and sort */
+        $actual = $collection
+            ->filter(predicates: static fn(int $value): bool => $value > 2)
+            ->map(transformations: static fn(int $value): int => $value * 10)
+            ->sort(order: Order::ASCENDING_VALUE);
+
+        /** @Then the result should contain the filtered, mapped and sorted values */
+        self::assertSame([30, 40, 50], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testFromClosureWithObjects(): void
+    {
+        /** @Given a closure that returns Amount objects */
+        $collection = Collection::createFromClosure(factory: static function (): array {
+            return [
+                new Amount(value: 100.00, currency: Currency::USD),
+                new Amount(value: 200.00, currency: Currency::USD),
+                new Amount(value: 300.00, currency: Currency::USD),
+            ];
+        });
+
+        /** @When reducing to sum all amounts */
+        $total = $collection->reduce(
+            accumulator: static fn(float $carry, Amount $amount): float => $carry + $amount->value,
+            initial: 0.0
+        );
+
+        /** @Then the total should be 600 */
+        self::assertSame(600.00, $total);
+    }
+
+    public function testFromClosureGetByIndex(): void
+    {
+        /** @Given a closure-backed eager collection */
+        $collection = Collection::createFromClosure(factory: static function (): array {
+            return ['alpha', 'beta', 'gamma'];
+        });
+
+        /** @When retrieving element at index 1 */
+        $actual = $collection->getBy(index: 1);
+
+        /** @Then it should return the second element */
+        self::assertSame('beta', $actual);
+    }
+
+    public function testFromClosureContainsElement(): void
+    {
+        /** @Given a closure-backed eager collection */
+        $collection = Collection::createFromClosure(factory: static function (): array {
+            return ['alpha', 'beta', 'gamma'];
+        });
+
+        /** @When checking if the collection contains an existing element */
+        $containsBeta = $collection->contains(element: 'beta');
+
+        /** @Then it should return true */
+        self::assertTrue($containsBeta);
+
+        /** @And checking for a non-existing element should return false */
+        self::assertFalse($collection->contains(element: 'delta'));
+    }
+
+    public function testFromClosureAdd(): void
+    {
+        /** @Given a closure-backed eager collection */
+        $collection = Collection::createFromClosure(factory: static function (): array {
+            return [1, 2];
+        });
+
+        /** @When adding elements */
+        $actual = $collection->add(3, 4);
+
+        /** @Then all elements should be present */
+        self::assertSame([1, 2, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testFromClosureMerge(): void
+    {
+        /** @Given a closure-backed eager collection */
+        $closureCollection = Collection::createFromClosure(factory: static function (): array {
+            return [1, 2];
+        });
+
+        /** @And an eager collection */
+        $eagerCollection = Collection::createFrom(elements: [3, 4]);
+
+        /** @When merging them */
+        $actual = $closureCollection->merge(other: $eagerCollection);
+
+        /** @Then the result should contain all elements */
+        self::assertSame([1, 2, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testFromClosureRecordMapsToTypedCollection(): void
+    {
+        /** @Given raw shipment records as arrays */
+        $records = [
+            [
+                'id'          => 'SHP-001',
+                'status'      => 'shipped',
+                'carrier'     => 'DHL',
+                'created_at'  => '2026-01-10T08:00:00+00:00',
+                'customer_id' => 'C-100'
+            ],
+            [
+                'id'          => 'SHP-002',
+                'status'      => 'pending',
+                'carrier'     => 'FedEx',
+                'created_at'  => '2026-01-11T09:00:00+00:00',
+                'customer_id' => 'C-200'
+            ],
+            [
+                'id'          => 'SHP-003',
+                'status'      => 'shipped',
+                'carrier'     => 'UPS',
+                'created_at'  => '2026-01-12T10:00:00+00:00',
+                'customer_id' => 'C-100'
+            ],
+        ];
+
+        /** @When mapping records to a typed Shipments collection via ShipmentRecord */
+        $shipments = ShipmentRecord::fromRecords(records: $records)->toShipments();
+
+        /** @Then the collection should contain three shipments */
+        self::assertSame(3, $shipments->count());
+
+        /** @And the collection should be an instance of Shipments */
+        self::assertInstanceOf(Shipments::class, $shipments);
+    }
+
+    public function testFromClosureMapsRecordsToShipments(): void
+    {
+        /** @Given raw shipment records as arrays */
+        $records = [
+            [
+                'id'          => 'SHP-001',
+                'status'      => 'shipped',
+                'carrier'     => 'DHL',
+                'created_at'  => '2026-01-10T08:00:00+00:00',
+                'customer_id' => 'C-100'
+            ],
+            [
+                'id'          => 'SHP-002',
+                'status'      => 'pending',
+                'carrier'     => 'FedEx',
+                'created_at'  => '2026-01-11T09:00:00+00:00',
+                'customer_id' => 'C-200'
+            ],
+        ];
+
+        /** @When creating a Shipments collection from a closure that maps records */
+        $shipments = Shipments::createFromClosure(
+            factory: static function () use ($records): Collection {
+                return Collection::createFrom(elements: $records)
+                    ->map(transformations: static fn(array $record): Shipment => Shipment::from(
+                        id: $record['id'],
+                        status: $record['status'],
+                        carrier: $record['carrier'],
+                        createdAt: $record['created_at'],
+                        customerId: $record['customer_id']
+                    ));
+            }
+        );
+
+        /** @Then the collection should contain two shipments */
+        self::assertSame(2, $shipments->count());
+
+        /** @And the first shipment should have the expected id */
+        self::assertSame('SHP-001', $shipments->first()->id);
+    }
+
+    public function testFromClosureShipmentsSerializesToArray(): void
+    {
+        /** @Given raw shipment records as arrays */
+        $records = [
+            [
+                'id'          => 'SHP-001',
+                'status'      => 'shipped',
+                'carrier'     => 'DHL',
+                'created_at'  => '2026-01-10T08:00:00+00:00',
+                'customer_id' => 'C-100'
+            ],
+        ];
+
+        /** @When mapping records via ShipmentRecord and converting to array */
+        $actual = ShipmentRecord::fromRecords(records: $records)->toShipments()->toArray();
+
+        /** @Then the serialized array should match the original record structure */
+        self::assertSame([
+            [
+                'id'          => 'SHP-001',
+                'status'      => 'shipped',
+                'carrier'     => 'DHL',
+                'created_at'  => '2026-01-10T08:00:00+00:00',
+                'customer_id' => 'C-100',
+            ],
+        ], $actual);
+    }
+
+    public function testFromClosurePreservesTypedCollectionInstance(): void
+    {
+        /** @Given a closure-backed Carriers collection */
+        $carriers = Carriers::createFromClosure(factory: static function (): array {
+            return ['dhl', 'fedex', 'ups'];
+        });
+
+        /** @When mapping to uppercase */
+        $actual = $carriers->map(
+            transformations: static fn(string $name): string => strtoupper($name)
+        );
+
+        /** @Then the result should still be an instance of Carriers */
+        self::assertInstanceOf(Carriers::class, $actual);
+
+        /** @And the carriers should be uppercased */
+        self::assertSame(['DHL', 'FEDEX', 'UPS'], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testCreateFromAndCreateFromClosureProduceSameShipments(): void
+    {
+        /** @Given raw shipment records as arrays */
+        $records = [
+            [
+                'id'          => 'SHP-001',
+                'status'      => 'shipped',
+                'carrier'     => 'DHL',
+                'created_at'  => '2026-01-10T08:00:00+00:00',
+                'customer_id' => 'C-100'
+            ],
+            [
+                'id'          => 'SHP-002',
+                'status'      => 'pending',
+                'carrier'     => 'FedEx',
+                'created_at'  => '2026-01-11T09:00:00+00:00',
+                'customer_id' => 'C-200'
+            ],
+            [
+                'id'          => 'SHP-003',
+                'status'      => 'shipped',
+                'carrier'     => 'UPS',
+                'created_at'  => '2026-01-12T10:00:00+00:00',
+                'customer_id' => 'C-100'
+            ],
+        ];
+
+        /** @And a ShipmentRecord built from those records */
+        $shipmentRecord = ShipmentRecord::fromRecords(records: $records);
+
+        /** @When creating shipments via createFrom */
+        $fromCreateFrom = $shipmentRecord->toShipments();
+
+        /** @And creating shipments via createFromClosure */
+        $fromCreateFromClosure = $shipmentRecord->toShipmentsFromClosure();
+
+        /** @Then both should produce identical arrays */
+        self::assertSame($fromCreateFrom->toArray(), $fromCreateFromClosure->toArray());
+
+        /** @And both should have the same count */
+        self::assertSame($fromCreateFrom->count(), $fromCreateFromClosure->count());
     }
 }

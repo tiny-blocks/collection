@@ -30,16 +30,50 @@ interface Pipeline
     /**
      * Returns the total number of elements in the pipeline.
      *
-     * Eager pipelines provide this in O(1), lazy pipelines must iterate.
+     * Eager: O(1) time, O(1) space. Direct array count.
+     * Lazy: O(n) time, O(1) space. Must iterate all elements.
      *
      * @return int The element count.
      */
     public function count(): int;
 
     /**
+     * Returns the first element, or a default if empty.
+     *
+     * Eager: O(1) time, O(1) space. Direct array access via array_key_first.
+     * Lazy: O(1) time, O(1) space. Yields once from the pipeline.
+     *
+     * @param mixed $defaultValueIfNotFound Value returned when empty.
+     * @return mixed The first element or the default.
+     */
+    public function first(mixed $defaultValueIfNotFound = null): mixed;
+
+    /**
+     * Determines whether the pipeline has no elements.
+     *
+     * Eager: O(1) time, O(1) space. Checks if the array is empty.
+     * Lazy: O(1) time, O(1) space. Checks if the generator produces a value.
+     *
+     * @return bool True if the pipeline is empty.
+     */
+    public function isEmpty(): bool;
+
+    /**
+     * Returns the last element, or a default if empty.
+     *
+     * Eager: O(1) time, O(1) space. Direct array access via array_key_last.
+     * Lazy: O(n) time, O(1) space. Must iterate all elements.
+     *
+     * @param mixed $defaultValueIfNotFound Value returned when empty.
+     * @return mixed The last element or the default.
+     */
+    public function last(mixed $defaultValueIfNotFound = null): mixed;
+
+    /**
      * Returns the element at the given zero-based index.
      *
-     * Eager pipelines provide this in O(1), lazy pipelines must iterate.
+     * Eager: O(1) time, O(1) space. Direct array access via array_key_exists.
+     * Lazy: O(n) time, O(1) space. Must iterate up to the index.
      *
      * @param int $index The zero-based position.
      * @param mixed $defaultValueIfNotFound Value returned when the index is out of bounds.
