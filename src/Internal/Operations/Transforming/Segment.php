@@ -26,7 +26,23 @@ final readonly class Segment implements Operation
         }
 
         if ($this->length < -1) {
-            yield from $this->withTrailingBuffer($elements);
+            $buffer = new SplQueue();
+            $skipFromEnd = abs($this->length);
+            $currentIndex = 0;
+
+            foreach ($elements as $key => $value) {
+                if ($currentIndex++ < $this->offset) {
+                    continue;
+                }
+
+                $buffer->enqueue([$key, $value]);
+
+                if ($buffer->count() > $skipFromEnd) {
+                    [$yieldKey, $yieldValue] = $buffer->dequeue();
+                    yield $yieldKey => $yieldValue;
+                }
+            }
+
             return;
         }
 
@@ -43,26 +59,6 @@ final readonly class Segment implements Operation
 
             if ($this->length !== -1 && $emitted >= $this->length) {
                 return;
-            }
-        }
-    }
-
-    private function withTrailingBuffer(iterable $elements): Generator
-    {
-        $buffer = new SplQueue();
-        $skipFromEnd = abs($this->length);
-        $currentIndex = 0;
-
-        foreach ($elements as $key => $value) {
-            if ($currentIndex++ < $this->offset) {
-                continue;
-            }
-
-            $buffer->enqueue([$key, $value]);
-
-            if ($buffer->count() > $skipFromEnd) {
-                [$yieldKey, $yieldValue] = $buffer->dequeue();
-                yield $yieldKey => $yieldValue;
             }
         }
     }

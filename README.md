@@ -104,10 +104,16 @@ These methods enable adding, removing, and modifying elements in the Collection.
 * `add`: Returns a new collection with the specified elements appended.
 
   ```php
-  $collection->add(1, 2, 3);
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
+  $collection->add(4, 5, 6);
   ```
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFromEmpty();
   $collection->add('X', 'Y', 'Z');
   ```
 
@@ -116,6 +122,10 @@ These methods enable adding, removing, and modifying elements in the Collection.
 * `merge`: Merges the elements of another Collectible into the current Collection.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collectionA = Collection::createFrom(elements: [1, 2]);
+  $collectionB = Collection::createFrom(elements: [3, 4]);
   $collectionA->merge(other: $collectionB);
   ```
 
@@ -124,6 +134,9 @@ These methods enable adding, removing, and modifying elements in the Collection.
 * `remove`: Returns a new collection with all occurrences of the specified element removed.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->remove(element: 1);
   ```
 * `removeAll`: Returns a new collection with elements removed.
@@ -131,11 +144,17 @@ These methods enable adding, removing, and modifying elements in the Collection.
     + **With a predicate**: Removes only the elements that satisfy the given predicate.
 
       ```php
+      use TinyBlocks\Collection\Collection;
+
+      $collection = Collection::createFrom(elements: $amounts);
       $collection->removeAll(predicate: static fn(Amount $amount): bool => $amount->value > 10.0);
       ```
     + **Without a predicate**: Removes all elements from the Collection.
 
       ```php
+      use TinyBlocks\Collection\Collection;
+
+      $collection = Collection::createFrom(elements: [1, 2, 3]);
       $collection->removeAll();
       ```
 
@@ -150,11 +169,17 @@ These methods enable filtering elements in the Collection based on specific cond
     + **With predicates**: Retains elements that satisfy the provided predicates.
 
       ```php
+      use TinyBlocks\Collection\Collection;
+
+      $collection = Collection::createFrom(elements: $amounts);
       $collection->filter(predicates: static fn(Amount $amount): bool => $amount->value > 100);
       ```
     + **Without predicates**: Removes all falsy values (e.g., `null`, `false`, `0`, `''`, empty arrays).
 
       ```php
+      use TinyBlocks\Collection\Collection;
+
+      $collection = Collection::createFrom(elements: [0, 1, null, 2, '', 3]);
       $collection->filter();
       ```
 
@@ -176,16 +201,20 @@ These methods enable sorting elements in the Collection based on the specified o
   By default, `Order::ASCENDING_KEY` is used.
 
   ```php
+  use TinyBlocks\Collection\Collection;
   use TinyBlocks\Collection\Order;
 
+  $collection = Collection::createFrom(elements: [3, 1, 2]);
   $collection->sort(order: Order::DESCENDING_VALUE);
   ```
 
   Sort the Collection using a custom comparator to determine how elements should be compared.
 
   ```php
+  use TinyBlocks\Collection\Collection;
   use TinyBlocks\Collection\Order;
 
+  $collection = Collection::createFrom(elements: $amounts);
   $collection->sort(
       order: Order::ASCENDING_VALUE,
       comparator: static fn(Amount $first, Amount $second): int => $first->value <=> $second->value
@@ -202,6 +231,9 @@ elements, or finding elements that match a specific condition.
 * `count`: Returns the total number of elements in the Collection.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->count();
   ```
 
@@ -210,6 +242,9 @@ elements, or finding elements that match a specific condition.
 * `isEmpty`: Determines whether the collection has no elements.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFromEmpty();
   $collection->isEmpty();
   ```
 
@@ -219,6 +254,9 @@ elements, or finding elements that match a specific condition.
   When called without predicates, it returns `null`.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: $cryptos);
   $collection->findBy(predicates: static fn(CryptoCurrency $crypto): bool => $crypto->symbol === 'ETH');
   ```
 
@@ -227,16 +265,25 @@ elements, or finding elements that match a specific condition.
 * `first`: Retrieves the first element from the Collection or returns a default value if the Collection is empty.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->first(defaultValueIfNotFound: 'fallback');
   ```
 * `getBy`: Retrieves an element by its zero-based index or returns a default value if the index is out of bounds.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->getBy(index: 0, defaultValueIfNotFound: 'fallback');
   ```
 * `last`: Retrieves the last element from the Collection or returns a default value if the Collection is empty.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->last(defaultValueIfNotFound: 'fallback');
   ```
 
@@ -247,6 +294,9 @@ elements, or finding elements that match a specific condition.
   If length is not provided or set to -1, it returns all elements from the specified offset to the end.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
   $collection->slice(offset: 1, length: 2);
   ```
 
@@ -260,6 +310,9 @@ These methods enable comparing collections to check for equality or to verify el
   for objects.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->contains(element: 5);
   ```
 
@@ -268,6 +321,10 @@ These methods enable comparing collections to check for equality or to verify el
 * `equals`: Compares the current Collection with another collection for element-wise equality.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collectionA = Collection::createFrom(elements: [1, 2, 3]);
+  $collectionB = Collection::createFrom(elements: [1, 2, 3]);
   $collectionA->equals(other: $collectionB);
   ```
 
@@ -280,6 +337,9 @@ combining elements.
   initial value. This method is helpful for accumulating results, like summing or concatenating values.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [10.0, 20.0, 30.0]);
   $collection->reduce(
       accumulator: static fn(float $carry, float $amount): float => $carry + $amount,
       initial: 0.0
@@ -288,6 +348,9 @@ combining elements.
 * `joinToString`: Joins all elements into a string with the given separator.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: ['a', 'b', 'c']);
   $collection->joinToString(separator: ', ');
   ```
 
@@ -301,7 +364,13 @@ These methods allow the Collection's elements to be transformed or converted int
   The method is helpful for performing side effects, such as logging or accumulating values.
 
   ```php
-  $collection->each(actions: static fn(Amount $amount): void => $total += $amount->value);
+  use TinyBlocks\Collection\Collection;
+
+  $total = 0.0;
+  $collection = Collection::createFrom(elements: $amounts);
+  $collection->each(actions: static function (Amount $amount) use (&$total): void {
+      $total += $amount->value;
+  });
   ```
 
 #### Grouping elements
@@ -309,6 +378,9 @@ These methods allow the Collection's elements to be transformed or converted int
 * `groupBy`: Groups the elements in the Collection based on the provided classifier.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: $amounts);
   $collection->groupBy(classifier: static fn(Amount $amount): string => $amount->currency->name);
   ```
 
@@ -318,6 +390,9 @@ These methods allow the Collection's elements to be transformed or converted int
   elements.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->map(transformations: static fn(int $value): int => $value * 2);
   ```
 
@@ -326,6 +401,9 @@ These methods allow the Collection's elements to be transformed or converted int
 * `flatten`: Flattens nested iterables by exactly one level. Non-iterable elements are yielded as-is.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [[1, 2], [3, 4], 5]);
   $collection->flatten();
   ```
 
@@ -341,8 +419,10 @@ These methods allow the Collection's elements to be transformed or converted int
   By default, `KeyPreservation::PRESERVE` is used.
 
   ```php
+  use TinyBlocks\Collection\Collection;
   use TinyBlocks\Mapper\KeyPreservation;
 
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->toArray(keyPreservation: KeyPreservation::DISCARD);
   ```
 
@@ -358,8 +438,10 @@ These methods allow the Collection's elements to be transformed or converted int
   By default, `KeyPreservation::PRESERVE` is used.
 
   ```php
+  use TinyBlocks\Collection\Collection;
   use TinyBlocks\Mapper\KeyPreservation;
 
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->toJson(keyPreservation: KeyPreservation::DISCARD);
   ```
 

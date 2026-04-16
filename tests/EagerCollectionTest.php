@@ -1070,9 +1070,21 @@ final class EagerCollectionTest extends TestCase
 
         /** @And the last element should be 4 (square of 2) */
         self::assertSame(4, $actual->last());
+    }
+
+    public function testReduceOverChainedOperationsWithIntegers(): void
+    {
+        /** @Given an eager collection of integers from 1 to 100 */
+        $collection = Collection::createFrom(elements: range(1, 100));
+
+        /** @And the collection is filtered to even numbers, squared, and sorted descending */
+        $pipeline = $collection
+            ->filter(predicates: static fn(int $value): bool => $value % 2 === 0)
+            ->map(transformations: static fn(int $value): int => $value ** 2)
+            ->sort(order: Order::DESCENDING_VALUE);
 
         /** @When reducing to calculate the sum of all squared even numbers */
-        $sum = $actual->reduce(
+        $sum = $pipeline->reduce(
             accumulator: static fn(int $carry, int $value): int => $carry + $value,
             initial: 0
         );

@@ -8,51 +8,46 @@ use Closure;
 use Generator;
 use TinyBlocks\Collection\Internal\Operations\Operation;
 
-final class EagerPipeline implements Pipeline
+final readonly class EagerPipeline implements Pipeline
 {
-    private ?array $cache = null;
-
-    private function __construct(
-        private readonly array $source,
-        private readonly array $stages = []
-    ) {
+    private function __construct(private Materialization $materialization)
+    {
     }
 
     public static function from(iterable $source): EagerPipeline
     {
         $elements = is_array($source) ? $source : iterator_to_array($source);
 
-        return new EagerPipeline(source: $elements);
+        return new EagerPipeline(materialization: Materialization::from(source: $elements, stages: []));
     }
 
     public static function fromClosure(Closure $factory): EagerPipeline
     {
         $elements = iterator_to_array($factory());
 
-        return new EagerPipeline(source: $elements);
+        return new EagerPipeline(materialization: Materialization::from(source: $elements, stages: []));
     }
 
     public function pipe(Operation $operation): Pipeline
     {
-        $stages = $this->stages;
-        $stages[] = $operation;
+        $elements = $this->materialization->elements();
 
-        return new EagerPipeline(source: $this->source, stages: $stages);
+        return new EagerPipeline(materialization: Materialization::from(source: $elements, stages: [$operation]));
     }
 
     public function count(): int
     {
-        return count($this->materialize());
+        return count($this->materialization->elements());
     }
 
     public function isEmpty(): bool
     {
-        return $this->materialize() === [];
+        return $this->materialization->elements() === [];
     }
 
     public function first(mixed $defaultValueIfNotFound = null): mixed
     {
-        $elements = $this->materialize();
+        $elements = $this->materialization->elements();
 
         return $elements === []
             ? $defaultValueIfNotFound
@@ -61,7 +56,7 @@ final class EagerPipeline implements Pipeline
 
     public function last(mixed $defaultValueIfNotFound = null): mixed
     {
-        $elements = $this->materialize();
+        $elements = $this->materialization->elements();
 
         return $elements === []
             ? $defaultValueIfNotFound
@@ -70,7 +65,7 @@ final class EagerPipeline implements Pipeline
 
     public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed
     {
-        $elements = $this->materialize();
+        $elements = $this->materialization->elements();
 
         return array_key_exists($index, $elements)
             ? $elements[$index]
@@ -79,19 +74,6 @@ final class EagerPipeline implements Pipeline
 
     public function process(): Generator
     {
-        yield from $this->materialize();
-    }
-
-    private function materialize(): array
-    {
-        if (is_null($this->cache)) {
-            $elements = $this->source;
-            foreach ($this->stages as $stage) {
-                $elements = $stage->apply(elements: $elements);
-            }
-            $this->cache = is_array($elements) ? $elements : iterator_to_array($elements);
-        }
-
-        return $this->cache;
+        yield from $this->materialization->elements();
     }
 }
