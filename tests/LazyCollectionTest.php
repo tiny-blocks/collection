@@ -613,6 +613,21 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(['b' => 2, 'c' => 3], $actual->toArray());
     }
 
+    public function testFilterWithMultiplePredicatesRetainsOnlyMatchingAll(): void
+    {
+        /** @Given a lazy collection of integers */
+        $collection = Collection::createLazyFrom(elements: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+
+        /** @When filtering with two predicates: greater than 3 and even */
+        $actual = $collection->filter(
+            static fn(int $value): bool => $value > 3,
+            static fn(int $value): bool => $value % 2 === 0
+        );
+
+        /** @Then only elements satisfying both predicates should remain */
+        self::assertSame([4, 6, 8, 10], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
     public function testLastReturnsElement(): void
     {
         /** @Given a lazy collection with three elements */
