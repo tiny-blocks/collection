@@ -12,6 +12,7 @@
     * [Comparing](#comparing)
     * [Aggregation](#aggregation)
     * [Transforming](#transforming)
+* [Evaluation strategies](#evaluation-strategies)
 * [FAQ](#faq)
 * [License](#license)
 * [Contributing](#contributing)
@@ -101,23 +102,27 @@ final class Invoices extends Collection
 }
 ```
 
-<div id='writing'></div>
-
-#### Creating from a closure
-
-The `createLazyFromClosure` method creates a lazy collection backed by a closure that produces an iterable. The
-closure is invoked each time the collection is iterated, enabling safe re-iteration over generators or other single-use
-iterables.
+### Creating collections
 
 ```php
 use TinyBlocks\Collection\Collection;
 
-$collection = Collection::createLazyFromClosure(factory: static function (): iterable {
+$eager = Collection::createFrom(elements: [1, 2, 3]);
+
+$eagerFromClosure = Collection::createFromClosure(factory: static function (): array {
+    return [1, 2, 3];
+});
+
+$lazy = Collection::createLazyFrom(elements: [1, 2, 3]);
+
+$lazyFromClosure = Collection::createLazyFromClosure(factory: static function (): iterable {
     yield 1;
     yield 2;
     yield 3;
 });
 ```
+
+<div id='writing'></div>
 
 ## Writing
 
@@ -407,6 +412,133 @@ These methods allow the Collection's elements to be transformed or converted int
   $collection->toJson(keyPreservation: KeyPreservation::DISCARD);
   ```
 
+<div id='evaluation-strategies'></div>
+
+## Evaluation strategies
+
+The complexity of every operation in this library is determined by the evaluation strategy chosen at creation time.
+Calling `createFrom`, `createFromEmpty`, or `createFromClosure` produces a collection backed by an `EagerPipeline`.
+Calling `createLazyFrom`, `createLazyFromEmpty`, or `createLazyFromClosure` produces a collection backed by a
+`LazyPipeline`. All subsequent operations on that collection inherit the behavior of the chosen pipeline.
+
+This is analogous to how `java.util.ArrayList` and `java.util.LinkedList` both implement `java.util.List`, but each
+operation has different costs depending on which concrete class backs the list.
+
+### Eager pipeline
+
+When the collection is created eagerly, elements are stored in a plain PHP array. This array is the source of truth
+for all operations.
+
+**Creation.** Factory methods like `createFrom` call `iterator_to_array` on the input, consuming all elements
+immediately. Time: O(n). Space: O(n).
+
+**Transforming operations.** Every call to a transforming method (`add`, `filter`, `map`, `sort`, etc.) calls
+`pipe()` internally, which executes `iterator_to_array($operation->apply($this->elements))`. This means the
+operation is applied to all elements immediately and the result is stored in a new array. The time cost depends
+on the operation (O(n) for filter, O(n log n) for sort), and the space cost is always O(n) because a new array
+is allocated.
+
+**Access operations.** Methods like `count`, `first`, `last`, and `getBy` read the internal array directly.
+`count` calls PHP's native `count()` on the array. `first` and `last` use `array_key_first` and `array_key_last`.
+`getBy` uses `array_key_exists`. All are O(1) time and O(1) space.
+
+**Terminal operations.** Methods like `contains`, `reduce`, `each`, `equals`, and `findBy` iterate over the
+collection. Since the elements are already materialized, the iteration itself is O(n). No additional
+materialization cost is incurred.
+
+### Lazy pipeline
+
+When the collection is created lazily, nothing is computed at creation time. The source (iterable or closure) is
+stored by reference, and operations are accumulated as stages in an array.
+
+**Creation.** Factory methods like `createLazyFrom` store a reference to the iterable. `createLazyFromClosure`
+stores the closure without invoking it. Time: O(1). Space: O(1).
+
+**Transforming operations.** Every call to a transforming method calls `pipe()`, which appends the operation to
+the internal `$stages` array. No elements are processed. Time: O(1). Space: O(1). The actual cost is deferred
+to the moment the collection is consumed.
+
+**Consumption.** When the collection is iterated (explicitly or through `count`, `toArray`, `reduce`, etc.),
+`process()` is called. It invokes the source closure (if applicable), then chains all stages into a generator
+pipeline. Elements flow one at a time through every stage: each element passes through stage 0, then stage 1,
+then stage 2, and so on, before the next element enters the pipeline. For k streaming stages, total time is
+O(n * k).
+
+**Access operations.** `count` calls `iterator_count`, which consumes the entire generator: O(n). `first` and
+`isEmpty` yield one element from the generator: O(1). `last` and `getBy` iterate the generator: O(n) worst case.
+
+**Barrier operations.** Most operations are streaming: they process one element at a time without accumulating
+state. Two operations are exceptions. `sort` must consume all input (via `iterator_to_array`), sort it, then
+yield the sorted result: O(n log n) time, O(n) space. `groupBy` must accumulate all elements into a groups
+array, then yield: O(n) time, O(n) space. When a barrier exists in a lazy pipeline, it forces full evaluation
+of all preceding stages before any subsequent stage can process an element. This means that calling `first()`
+on a lazy collection that has a `sort()` in its pipeline still costs O(n log n), because the sort barrier must
+consume everything first.
+
+### Complexity reference
+
+The table below summarizes the time and space complexity of each method under both strategies. Each value was
+derived by tracing the execution path from `Collection` through the `Pipeline` into the underlying `Operation`.
+The column "Why" references the pipeline behavior described above.
+
+#### Factory methods
+
+| Method                  | Time | Space | Why                                                  |
+|-------------------------|------|-------|------------------------------------------------------|
+| `createFrom`            | O(n) | O(n)  | Calls `iterator_to_array` on the input.              |
+| `createFromEmpty`       | O(1) | O(1)  | Creates an empty array.                              |
+| `createFromClosure`     | O(n) | O(n)  | Invokes the closure, then calls `iterator_to_array`. |
+| `createLazyFrom`        | O(1) | O(1)  | Stores the iterable reference without iterating.     |
+| `createLazyFromEmpty`   | O(1) | O(1)  | Stores an empty array reference.                     |
+| `createLazyFromClosure` | O(1) | O(1)  | Stores the closure without invoking it.              |
+
+#### Transforming methods
+
+For lazy collections, all transforming methods are O(1) time and O(1) space at call time because `pipe()` only
+appends a stage. The cost shown below is for eager collections, where `pipe()` materializes immediately.
+
+| Method      | Time       | Space    | Why                                                                                      |
+|-------------|------------|----------|------------------------------------------------------------------------------------------|
+| `add`       | O(n + m)   | O(n + m) | Yields all existing elements, then the m new ones.                                       |
+| `merge`     | O(n + m)   | O(n + m) | Yields all elements from both collections.                                               |
+| `filter`    | O(n)       | O(n)     | Tests each element against the predicate.                                                |
+| `map`       | O(n * t)   | O(n)     | Applies t transformations to each element.                                               |
+| `flatten`   | O(n + s)   | O(n + s) | Iterates each element; expands nested iterables by one level. s = total nested elements. |
+| `remove`    | O(n)       | O(n)     | Tests each element for equality.                                                         |
+| `removeAll` | O(n)       | O(n)     | Tests each element against the predicate.                                                |
+| `sort`      | O(n log n) | O(n)     | Materializes all elements, sorts via `uasort` or `ksort`, then yields. Barrier.          |
+| `slice`     | O(n)       | O(n)     | Iterates up to offset + length elements.                                                 |
+| `groupBy`   | O(n)       | O(n)     | Accumulates all elements into a groups array, then yields. Barrier.                      |
+
+#### Access methods
+
+These delegate directly to the pipeline. The cost differs between eager and lazy because eager reads the
+internal array, while lazy must evaluate the generator.
+
+| Method    | Eager | Lazy | Why                                                                    |
+|-----------|-------|------|------------------------------------------------------------------------|
+| `count`   | O(1)  | O(n) | Eager: `count($array)`. Lazy: `iterator_count($generator)`.            |
+| `first`   | O(1)  | O(1) | Eager: `array_key_first`. Lazy: first yield from the generator.        |
+| `last`    | O(1)  | O(n) | Eager: `array_key_last`. Lazy: iterates all to reach the last element. |
+| `getBy`   | O(1)  | O(n) | Eager: `array_key_exists`. Lazy: iterates until the index.             |
+| `isEmpty` | O(1)  | O(1) | Checks if the first element exists.                                    |
+
+#### Terminal methods
+
+These iterate the collection to produce a result. Since eager collections already hold a materialized array, the
+iteration cost is the same for both strategies.
+
+| Method         | Time     | Space | Why                                                             |
+|----------------|----------|-------|-----------------------------------------------------------------|
+| `contains`     | O(n)     | O(1)  | Iterates until the element is found or the end is reached.      |
+| `findBy`       | O(n * p) | O(1)  | Tests p predicates per element until a match.                   |
+| `each`         | O(n * a) | O(1)  | Applies a actions to every element.                             |
+| `equals`       | O(n)     | O(1)  | Walks two generators in parallel, comparing element by element. |
+| `reduce`       | O(n)     | O(1)  | Folds all elements into a single carry value.                   |
+| `joinToString` | O(n)     | O(n)  | Accumulates into an intermediate array, then calls `implode`.   |
+| `toArray`      | O(n)     | O(n)  | Iterates all elements into a new array.                         |
+| `toJson`       | O(n)     | O(n)  | Calls `toArray`, then `json_encode`.                            |
+
 <div id='faq'></div> 
 
 ## FAQ
@@ -434,13 +566,12 @@ recreate the `Collection`.
 
 ### 03. What is the difference between eager and lazy evaluation?
 
-- **Eager evaluation** (`createFrom` / `createFromEmpty`): Elements are materialized immediately into an array, enabling
-  constant-time access by index, count, and repeated iteration.
+- **Eager evaluation** (`createFrom` / `createFromEmpty` / `createFromClosure`): Elements are materialized immediately
+  into an array, enabling constant-time access by index, count, first, last, and repeated iteration.
 
 - **Lazy evaluation** (`createLazyFrom` / `createLazyFromEmpty` / `createLazyFromClosure`): Elements are processed
-  on-demand through generators,
-  consuming memory only as each element is yielded. Ideal for large datasets or pipelines where not all elements need to
-  be materialized.
+  on-demand through generators, consuming memory only as each element is yielded. Ideal for large datasets or pipelines
+  where not all elements need to be materialized.
 
 <div id='license'></div>
 

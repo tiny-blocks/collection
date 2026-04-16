@@ -10,9 +10,7 @@ use TinyBlocks\Collection\Internal\LazyPipeline;
 use TinyBlocks\Collection\Internal\Operations\Resolving\Each;
 use TinyBlocks\Collection\Internal\Operations\Resolving\Equality;
 use TinyBlocks\Collection\Internal\Operations\Resolving\Find;
-use TinyBlocks\Collection\Internal\Operations\Resolving\First;
 use TinyBlocks\Collection\Internal\Operations\Resolving\Join;
-use TinyBlocks\Collection\Internal\Operations\Resolving\Last;
 use TinyBlocks\Collection\Internal\Operations\Resolving\Reduce;
 use TinyBlocks\Collection\Internal\Operations\Transforming\Add;
 use TinyBlocks\Collection\Internal\Operations\Transforming\Filter;
@@ -45,6 +43,11 @@ class Collection implements Collectible, IterableMapper
     public static function createFromEmpty(): static
     {
         return static::createFrom(elements: []);
+    }
+
+    public static function createFromClosure(Closure $factory): static
+    {
+        return new static(pipeline: EagerPipeline::fromClosure(factory: $factory));
     }
 
     public static function createLazyFrom(iterable $elements): static
@@ -119,7 +122,7 @@ class Collection implements Collectible, IterableMapper
 
     public function first(mixed $defaultValueIfNotFound = null): mixed
     {
-        return First::from(elements: $this, defaultValueIfNotFound: $defaultValueIfNotFound);
+        return $this->pipeline->first(defaultValueIfNotFound: $defaultValueIfNotFound);
     }
 
     public function flatten(): static
@@ -139,7 +142,7 @@ class Collection implements Collectible, IterableMapper
 
     public function isEmpty(): bool
     {
-        return First::isAbsent(elements: $this);
+        return $this->pipeline->isEmpty();
     }
 
     public function joinToString(string $separator): string
@@ -149,7 +152,7 @@ class Collection implements Collectible, IterableMapper
 
     public function last(mixed $defaultValueIfNotFound = null): mixed
     {
-        return Last::from(elements: $this, defaultValueIfNotFound: $defaultValueIfNotFound);
+        return $this->pipeline->last(defaultValueIfNotFound: $defaultValueIfNotFound);
     }
 
     public function map(Closure ...$transformations): static

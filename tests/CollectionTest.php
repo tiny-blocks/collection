@@ -258,6 +258,7 @@ final class CollectionTest extends TestCase
         $aliceInvoices = $invoices->forCustomer(customer: 'Alice');
 
         /** @Then the result should still be an instance of Invoices */
+        /** @noinspection PhpConditionAlreadyCheckedInspection */
         self::assertInstanceOf(Invoices::class, $aliceInvoices);
 
         /** @And Alice should have two invoices */
@@ -617,8 +618,17 @@ final class CollectionTest extends TestCase
         /** @And a map transformation that multiplies by 10 */
         $map = static fn(int $value): int => $value * 10;
 
-        /** @When applying filter, map and sort on a closure-backed collection */
-        $closureResult = Collection::createLazyFromClosure(factory: static function () use ($elements): array {
+        /** @When applying filter, map and sort on a lazy closure-backed collection */
+        $lazyClosureResult = Collection::createLazyFromClosure(factory: static function () use ($elements): array {
+            return $elements;
+        })
+            ->filter(predicates: $filter)
+            ->map(transformations: $map)
+            ->sort(order: SortOrder::ASCENDING_VALUE)
+            ->toArray(keyPreservation: KeyPreservation::DISCARD);
+
+        /** @And applying the same operations on an eager closure-backed collection */
+        $eagerClosureResult = Collection::createFromClosure(factory: static function () use ($elements): array {
             return $elements;
         })
             ->filter(predicates: $filter)
@@ -640,15 +650,35 @@ final class CollectionTest extends TestCase
             ->sort(order: SortOrder::ASCENDING_VALUE)
             ->toArray(keyPreservation: KeyPreservation::DISCARD);
 
-        /** @Then all three should produce identical arrays */
-        self::assertSame($closureResult, $lazyResult);
-        self::assertSame($closureResult, $eagerResult);
+        /** @Then all four should produce identical arrays */
+        self::assertSame($lazyClosureResult, $eagerClosureResult);
+        self::assertSame($lazyClosureResult, $lazyResult);
+        self::assertSame($lazyClosureResult, $eagerResult);
     }
 
-    public function testClosureBackedCarriersPreservesType(): void
+    public function testLazyClosureBackedCarriersPreservesType(): void
     {
-        /** @Given a closure-backed Carriers collection */
+        /** @Given a lazy closure-backed Carriers collection */
         $carriers = Carriers::createLazyFromClosure(factory: static function (): array {
+            return ['dhl', 'fedex', 'ups'];
+        });
+
+        /** @When mapping to uppercase */
+        $actual = $carriers->map(
+            transformations: static fn(string $name): string => strtoupper($name)
+        );
+
+        /** @Then the result should still be an instance of Carriers */
+        self::assertInstanceOf(Carriers::class, $actual);
+
+        /** @And the carriers should be uppercased */
+        self::assertSame(['DHL', 'FEDEX', 'UPS'], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testEagerClosureBackedCarriersPreservesType(): void
+    {
+        /** @Given an eager closure-backed Carriers collection */
+        $carriers = Carriers::createFromClosure(factory: static function (): array {
             return ['dhl', 'fedex', 'ups'];
         });
 

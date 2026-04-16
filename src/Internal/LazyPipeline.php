@@ -41,6 +41,31 @@ final readonly class LazyPipeline implements Pipeline
         return iterator_count($this->process());
     }
 
+    public function first(mixed $defaultValueIfNotFound = null): mixed
+    {
+        foreach ($this->process() as $element) {
+            return $element;
+        }
+
+        return $defaultValueIfNotFound;
+    }
+
+    public function isEmpty(): bool
+    {
+        return !$this->process()->valid();
+    }
+
+    public function last(mixed $defaultValueIfNotFound = null): mixed
+    {
+        $last = $defaultValueIfNotFound;
+
+        foreach ($this->process() as $element) {
+            $last = $element;
+        }
+
+        return $last;
+    }
+
     public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed
     {
         foreach ($this->process() as $currentIndex => $value) {
