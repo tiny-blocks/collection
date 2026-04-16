@@ -67,7 +67,7 @@ class Collection implements Collectible, IterableMapper
 
     public function getIterator(): Traversable
     {
-        yield from $this->pipeline->process();
+        return $this->pipeline->process();
     }
 
     public function add(mixed ...$elements): static
@@ -82,7 +82,7 @@ class Collection implements Collectible, IterableMapper
 
     public function contains(mixed $element): bool
     {
-        return Equality::exists(elements: $this, element: $element);
+        return Equality::exists(elements: $this->pipeline->process(), element: $element);
     }
 
     public function count(): int
@@ -92,17 +92,17 @@ class Collection implements Collectible, IterableMapper
 
     public function findBy(Closure ...$predicates): mixed
     {
-        return Find::firstMatch(elements: $this, predicates: $predicates);
+        return Find::firstMatch(elements: $this->pipeline->process(), predicates: $predicates);
     }
 
     public function each(Closure ...$actions): void
     {
-        Each::execute(elements: $this, actions: $actions);
+        Each::execute(elements: $this->pipeline->process(), actions: $actions);
     }
 
     public function equals(Collectible $other): bool
     {
-        return Equality::compareAll(elements: $this, other: $other);
+        return Equality::compareAll(elements: $this->pipeline->process(), other: $other);
     }
 
     public function remove(mixed $element): static
@@ -147,7 +147,7 @@ class Collection implements Collectible, IterableMapper
 
     public function joinToString(string $separator): string
     {
-        return Join::elements(elements: $this, separator: $separator);
+        return Join::elements(elements: $this->pipeline->process(), separator: $separator);
     }
 
     public function last(mixed $defaultValueIfNotFound = null): mixed
@@ -162,7 +162,7 @@ class Collection implements Collectible, IterableMapper
 
     public function reduce(Closure $accumulator, mixed $initial): mixed
     {
-        return Reduce::from(elements: $this, accumulator: $accumulator, initial: $initial);
+        return Reduce::from(elements: $this->pipeline->process(), accumulator: $accumulator, initial: $initial);
     }
 
     public function sort(Order $order = Order::ASCENDING_KEY, ?Closure $comparator = null): static

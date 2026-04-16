@@ -1,23 +1,20 @@
 # Collection
 
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/tiny-blocks/collection/blob/main/LICENSE)
 
 * [Overview](#overview)
 * [Installation](#installation)
 * [How to use](#how-to-use)
-    * [Writing](#writing)
-    * [Filtering](#filtering)
-    * [Ordering](#ordering)
-    * [Retrieving](#retrieving)
-    * [Comparing](#comparing)
-    * [Aggregation](#aggregation)
-    * [Transforming](#transforming)
-* [Evaluation strategies](#evaluation-strategies)
+    + [Writing](#writing)
+    + [Filtering](#filtering)
+    + [Ordering](#ordering)
+    + [Retrieving](#retrieving)
+    + [Comparing](#comparing)
+    + [Aggregation](#aggregation)
+    + [Transforming](#transforming)
 * [FAQ](#faq)
 * [License](#license)
 * [Contributing](#contributing)
-
-<div id='overview'></div> 
 
 ## Overview
 
@@ -30,15 +27,11 @@ elements into memory at once.
 
 The library supports adding, removing, filtering, sorting, and transforming elements.
 
-<div id='installation'></div>
-
 ## Installation
 
-```bash
+```
 composer require tiny-blocks/collection
 ```
-
-<div id='how-to-use'></div>
 
 ## How to use
 
@@ -68,11 +61,11 @@ use TinyBlocks\Collection\Order;
 use TinyBlocks\Mapper\KeyPreservation;
 
 $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5])
-    ->add(6, 7) 
-    ->filter(predicates: static fn(int $value): bool => $value > 3) 
-    ->sort(order: Order::ASCENDING_VALUE) 
-    ->map(transformations: static fn(int $value): int => $value * 2) 
-    ->toArray(keyPreservation: KeyPreservation::DISCARD); 
+    ->add(6, 7)
+    ->filter(predicates: static fn(int $value): bool => $value > 3)
+    ->sort(order: Order::ASCENDING_VALUE)
+    ->map(transformations: static fn(int $value): int => $value * 2)
+    ->toArray(keyPreservation: KeyPreservation::DISCARD);
 
 # Output: [8, 10, 12, 14]
 ```
@@ -102,75 +95,68 @@ final class Invoices extends Collection
 }
 ```
 
-### Creating collections
-
-```php
-use TinyBlocks\Collection\Collection;
-
-$eager = Collection::createFrom(elements: [1, 2, 3]);
-
-$eagerFromClosure = Collection::createFromClosure(factory: static function (): array {
-    return [1, 2, 3];
-});
-
-$lazy = Collection::createLazyFrom(elements: [1, 2, 3]);
-
-$lazyFromClosure = Collection::createLazyFromClosure(factory: static function (): iterable {
-    yield 1;
-    yield 2;
-    yield 3;
-});
-```
-
-<div id='writing'></div>
-
-## Writing
+### Writing
 
 These methods enable adding, removing, and modifying elements in the Collection.
 
 #### Adding elements
 
-- `add`: Returns a new collection with the specified elements appended.
+* `add`: Returns a new collection with the specified elements appended.
 
   ```php
-  $collection->add(1, 2, 3);
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
+  $collection->add(4, 5, 6);
   ```
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFromEmpty();
   $collection->add('X', 'Y', 'Z');
   ```
 
 #### Merging collections
 
-- `merge`: Merges the elements of another Collectible into the current Collection.
+* `merge`: Merges the elements of another Collectible into the current Collection.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collectionA = Collection::createFrom(elements: [1, 2]);
+  $collectionB = Collection::createFrom(elements: [3, 4]);
   $collectionA->merge(other: $collectionB);
   ```
 
 #### Removing elements
 
-- `remove`: Returns a new collection with all occurrences of the specified element removed.
+* `remove`: Returns a new collection with all occurrences of the specified element removed.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->remove(element: 1);
   ```
+* `removeAll`: Returns a new collection with elements removed.
 
-- `removeAll`: Returns a new collection with elements removed.
-  </br></br>
-    - **With a predicate**: Removes only the elements that satisfy the given predicate.
+    + **With a predicate**: Removes only the elements that satisfy the given predicate.
 
       ```php
+      use TinyBlocks\Collection\Collection;
+
+      $collection = Collection::createFrom(elements: $amounts);
       $collection->removeAll(predicate: static fn(Amount $amount): bool => $amount->value > 10.0);
       ```
-
-    - **Without a predicate**: Removes all elements from the Collection.
+    + **Without a predicate**: Removes all elements from the Collection.
 
       ```php
+      use TinyBlocks\Collection\Collection;
+
+      $collection = Collection::createFrom(elements: [1, 2, 3]);
       $collection->removeAll();
       ```
-
-<div id='filtering'></div>
 
 ### Filtering
 
@@ -178,22 +164,24 @@ These methods enable filtering elements in the Collection based on specific cond
 
 #### Filter by predicate
 
-- `filter`: Retains only elements satisfying all given predicates.
-  </br></br>
+* `filter`: Retains only elements satisfying all given predicates.
 
-    - **With predicates**: Retains elements that satisfy the provided predicates.
+    + **With predicates**: Retains elements that satisfy the provided predicates.
 
       ```php
+      use TinyBlocks\Collection\Collection;
+
+      $collection = Collection::createFrom(elements: $amounts);
       $collection->filter(predicates: static fn(Amount $amount): bool => $amount->value > 100);
       ```
-
-    - **Without predicates**: Removes all falsy values (e.g., `null`, `false`, `0`, `''`, empty arrays).
+    + **Without predicates**: Removes all falsy values (e.g., `null`, `false`, `0`, `''`, empty arrays).
 
       ```php
+      use TinyBlocks\Collection\Collection;
+
+      $collection = Collection::createFrom(elements: [0, 1, null, 2, '', 3]);
       $collection->filter();
       ```
-
-<div id='ordering'></div>
 
 ### Ordering
 
@@ -201,7 +189,7 @@ These methods enable sorting elements in the Collection based on the specified o
 
 #### Sort by order and custom comparator
 
-- `sort`: Returns a new sorted collection.
+* `sort`: Returns a new sorted collection.
 
   ```
   Order::ASCENDING_KEY: Sorts the collection in ascending order by key.
@@ -213,23 +201,25 @@ These methods enable sorting elements in the Collection based on the specified o
   By default, `Order::ASCENDING_KEY` is used.
 
   ```php
+  use TinyBlocks\Collection\Collection;
   use TinyBlocks\Collection\Order;
-        
+
+  $collection = Collection::createFrom(elements: [3, 1, 2]);
   $collection->sort(order: Order::DESCENDING_VALUE);
   ```
 
   Sort the Collection using a custom comparator to determine how elements should be compared.
 
   ```php
+  use TinyBlocks\Collection\Collection;
   use TinyBlocks\Collection\Order;
-        
+
+  $collection = Collection::createFrom(elements: $amounts);
   $collection->sort(
       order: Order::ASCENDING_VALUE,
       comparator: static fn(Amount $first, Amount $second): int => $first->value <=> $second->value
   );
-  ``` 
-
-<div id='retrieving'></div>
+  ```
 
 ### Retrieving
 
@@ -238,60 +228,77 @@ elements, or finding elements that match a specific condition.
 
 #### Retrieve count
 
-- `count`: Returns the total number of elements in the Collection.
+* `count`: Returns the total number of elements in the Collection.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->count();
   ```
 
 #### Check if empty
 
-- `isEmpty`: Determines whether the collection has no elements.
+* `isEmpty`: Determines whether the collection has no elements.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFromEmpty();
   $collection->isEmpty();
   ```
 
 #### Retrieve by condition
 
-- `findBy`: Finds the first element that satisfies any given predicate, or returns `null` if no predicate matches.
+* `findBy`: Finds the first element that satisfies any given predicate, or returns `null` if no predicate matches.
   When called without predicates, it returns `null`.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: $cryptos);
   $collection->findBy(predicates: static fn(CryptoCurrency $crypto): bool => $crypto->symbol === 'ETH');
   ```
 
 #### Retrieve single elements
 
-- `first`: Retrieves the first element from the Collection or returns a default value if the Collection is empty.
+* `first`: Retrieves the first element from the Collection or returns a default value if the Collection is empty.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->first(defaultValueIfNotFound: 'fallback');
   ```
-
-- `getBy`: Retrieves an element by its zero-based index or returns a default value if the index is out of bounds.
+* `getBy`: Retrieves an element by its zero-based index or returns a default value if the index is out of bounds.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->getBy(index: 0, defaultValueIfNotFound: 'fallback');
   ```
-
-- `last`: Retrieves the last element from the Collection or returns a default value if the Collection is empty.
+* `last`: Retrieves the last element from the Collection or returns a default value if the Collection is empty.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->last(defaultValueIfNotFound: 'fallback');
   ```
 
 #### Retrieve collection segments
 
-- `slice`: Extracts a contiguous segment of the collection, starting at the specified offset.
+* `slice`: Extracts a contiguous segment of the collection, starting at the specified offset.
   If length is negative, it excludes that many elements from the end.
   If length is not provided or set to -1, it returns all elements from the specified offset to the end.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
   $collection->slice(offset: 1, length: 2);
   ```
-
-<div id='comparing'></div>
 
 ### Comparing
 
@@ -299,45 +306,53 @@ These methods enable comparing collections to check for equality or to verify el
 
 #### Check if collection contains element
 
-- `contains`: Checks if the Collection contains a specific element. Uses strict equality for scalars and loose equality
+* `contains`: Checks if the Collection contains a specific element. Uses strict equality for scalars and loose equality
   for objects.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->contains(element: 5);
   ```
 
 #### Compare collections for equality
 
-- `equals`: Compares the current Collection with another collection for element-wise equality.
+* `equals`: Compares the current Collection with another collection for element-wise equality.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collectionA = Collection::createFrom(elements: [1, 2, 3]);
+  $collectionB = Collection::createFrom(elements: [1, 2, 3]);
   $collectionA->equals(other: $collectionB);
   ```
-
-<div id='aggregation'></div>
 
 ### Aggregation
 
 These methods perform operations that return a single value based on the Collection's content, such as summing or
 combining elements.
 
-- `reduce`: Combines all elements in the Collection into a single value using the provided accumulator function and an
+* `reduce`: Combines all elements in the Collection into a single value using the provided accumulator function and an
   initial value. This method is helpful for accumulating results, like summing or concatenating values.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [10.0, 20.0, 30.0]);
   $collection->reduce(
       accumulator: static fn(float $carry, float $amount): float => $carry + $amount,
       initial: 0.0
   );
   ```
-
-- `joinToString`: Joins all elements into a string with the given separator.
+* `joinToString`: Joins all elements into a string with the given separator.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: ['a', 'b', 'c']);
   $collection->joinToString(separator: ', ');
   ```
-
-<div id='transforming'></div>
 
 ### Transforming
 
@@ -345,42 +360,56 @@ These methods allow the Collection's elements to be transformed or converted int
 
 #### Applying actions without modifying elements
 
-- `each`: Executes actions on each element in the Collection without modification.
-  This is a terminal operation that does not return the collection. It is useful for performing side effects, such as
-  logging or accumulating values.
+* `each`: Executes actions on each element in the Collection without modification.
+  The method is helpful for performing side effects, such as logging or accumulating values.
 
   ```php
-  $collection->each(actions: static fn(Amount $amount): void => $total += $amount->value);
+  use TinyBlocks\Collection\Collection;
+
+  $total = 0.0;
+  $collection = Collection::createFrom(elements: $amounts);
+  $collection->each(actions: static function (Amount $amount) use (&$total): void {
+      $total += $amount->value;
+  });
   ```
 
 #### Grouping elements
 
-- `groupBy`: Groups the elements in the Collection based on the provided classifier.
+* `groupBy`: Groups the elements in the Collection based on the provided classifier.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: $amounts);
   $collection->groupBy(classifier: static fn(Amount $amount): string => $amount->currency->name);
   ```
 
 #### Mapping elements
 
-- `map`: Applies transformations to each element in the Collection and returns a new collection with the transformed
+* `map`: Applies transformations to each element in the Collection and returns a new collection with the transformed
   elements.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->map(transformations: static fn(int $value): int => $value * 2);
   ```
 
 #### Flattening elements
 
-- `flatten`: Flattens nested iterables by exactly one level. Non-iterable elements are yielded as-is.
+* `flatten`: Flattens nested iterables by exactly one level. Non-iterable elements are yielded as-is.
 
   ```php
+  use TinyBlocks\Collection\Collection;
+
+  $collection = Collection::createFrom(elements: [[1, 2], [3, 4], 5]);
   $collection->flatten();
   ```
 
 #### Convert to array
 
-- `toArray`: Converts the Collection into an array.
+* `toArray`: Converts the Collection into an array.
 
   ```
   KeyPreservation::DISCARD: Converts while discarding the keys.
@@ -390,14 +419,16 @@ These methods allow the Collection's elements to be transformed or converted int
   By default, `KeyPreservation::PRESERVE` is used.
 
   ```php
+  use TinyBlocks\Collection\Collection;
   use TinyBlocks\Mapper\KeyPreservation;
-  
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->toArray(keyPreservation: KeyPreservation::DISCARD);
   ```
 
 #### Convert to JSON
 
-- `toJson`: Converts the Collection into a JSON string.
+* `toJson`: Converts the Collection into a JSON string.
 
   ```
   KeyPreservation::DISCARD: Converts while discarding the keys.
@@ -407,139 +438,12 @@ These methods allow the Collection's elements to be transformed or converted int
   By default, `KeyPreservation::PRESERVE` is used.
 
   ```php
+  use TinyBlocks\Collection\Collection;
   use TinyBlocks\Mapper\KeyPreservation;
-  
+
+  $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->toJson(keyPreservation: KeyPreservation::DISCARD);
   ```
-
-<div id='evaluation-strategies'></div>
-
-## Evaluation strategies
-
-The complexity of every operation in this library is determined by the evaluation strategy chosen at creation time.
-Calling `createFrom`, `createFromEmpty`, or `createFromClosure` produces a collection backed by an `EagerPipeline`.
-Calling `createLazyFrom`, `createLazyFromEmpty`, or `createLazyFromClosure` produces a collection backed by a
-`LazyPipeline`. All subsequent operations on that collection inherit the behavior of the chosen pipeline.
-
-This is analogous to how `java.util.ArrayList` and `java.util.LinkedList` both implement `java.util.List`, but each
-operation has different costs depending on which concrete class backs the list.
-
-### Eager pipeline
-
-When the collection is created eagerly, elements are stored in a plain PHP array. This array is the source of truth
-for all operations.
-
-**Creation.** Factory methods like `createFrom` call `iterator_to_array` on the input, consuming all elements
-immediately. Time: O(n). Space: O(n).
-
-**Transforming operations.** Every call to a transforming method (`add`, `filter`, `map`, `sort`, etc.) calls
-`pipe()` internally, which executes `iterator_to_array($operation->apply($this->elements))`. This means the
-operation is applied to all elements immediately and the result is stored in a new array. The time cost depends
-on the operation (O(n) for filter, O(n log n) for sort), and the space cost is always O(n) because a new array
-is allocated.
-
-**Access operations.** Methods like `count`, `first`, `last`, and `getBy` read the internal array directly.
-`count` calls PHP's native `count()` on the array. `first` and `last` use `array_key_first` and `array_key_last`.
-`getBy` uses `array_key_exists`. All are O(1) time and O(1) space.
-
-**Terminal operations.** Methods like `contains`, `reduce`, `each`, `equals`, and `findBy` iterate over the
-collection. Since the elements are already materialized, the iteration itself is O(n). No additional
-materialization cost is incurred.
-
-### Lazy pipeline
-
-When the collection is created lazily, nothing is computed at creation time. The source (iterable or closure) is
-stored by reference, and operations are accumulated as stages in an array.
-
-**Creation.** Factory methods like `createLazyFrom` store a reference to the iterable. `createLazyFromClosure`
-stores the closure without invoking it. Time: O(1). Space: O(1).
-
-**Transforming operations.** Every call to a transforming method calls `pipe()`, which appends the operation to
-the internal `$stages` array. No elements are processed. Time: O(1). Space: O(1). The actual cost is deferred
-to the moment the collection is consumed.
-
-**Consumption.** When the collection is iterated (explicitly or through `count`, `toArray`, `reduce`, etc.),
-`process()` is called. It invokes the source closure (if applicable), then chains all stages into a generator
-pipeline. Elements flow one at a time through every stage: each element passes through stage 0, then stage 1,
-then stage 2, and so on, before the next element enters the pipeline. For k streaming stages, total time is
-O(n * k).
-
-**Access operations.** `count` calls `iterator_count`, which consumes the entire generator: O(n). `first` and
-`isEmpty` yield one element from the generator: O(1). `last` and `getBy` iterate the generator: O(n) worst case.
-
-**Barrier operations.** Most operations are streaming: they process one element at a time without accumulating
-state. Two operations are exceptions. `sort` must consume all input (via `iterator_to_array`), sort it, then
-yield the sorted result: O(n log n) time, O(n) space. `groupBy` must accumulate all elements into a groups
-array, then yield: O(n) time, O(n) space. When a barrier exists in a lazy pipeline, it forces full evaluation
-of all preceding stages before any subsequent stage can process an element. This means that calling `first()`
-on a lazy collection that has a `sort()` in its pipeline still costs O(n log n), because the sort barrier must
-consume everything first.
-
-### Complexity reference
-
-The table below summarizes the time and space complexity of each method under both strategies. Each value was
-derived by tracing the execution path from `Collection` through the `Pipeline` into the underlying `Operation`.
-The column "Why" references the pipeline behavior described above.
-
-#### Factory methods
-
-| Method                  | Time | Space | Why                                                  |
-|-------------------------|------|-------|------------------------------------------------------|
-| `createFrom`            | O(n) | O(n)  | Calls `iterator_to_array` on the input.              |
-| `createFromEmpty`       | O(1) | O(1)  | Creates an empty array.                              |
-| `createFromClosure`     | O(n) | O(n)  | Invokes the closure, then calls `iterator_to_array`. |
-| `createLazyFrom`        | O(1) | O(1)  | Stores the iterable reference without iterating.     |
-| `createLazyFromEmpty`   | O(1) | O(1)  | Stores an empty array reference.                     |
-| `createLazyFromClosure` | O(1) | O(1)  | Stores the closure without invoking it.              |
-
-#### Transforming methods
-
-For lazy collections, all transforming methods are O(1) time and O(1) space at call time because `pipe()` only
-appends a stage. The cost shown below is for eager collections, where `pipe()` materializes immediately.
-
-| Method      | Time       | Space    | Why                                                                                      |
-|-------------|------------|----------|------------------------------------------------------------------------------------------|
-| `add`       | O(n + m)   | O(n + m) | Yields all existing elements, then the m new ones.                                       |
-| `merge`     | O(n + m)   | O(n + m) | Yields all elements from both collections.                                               |
-| `filter`    | O(n)       | O(n)     | Tests each element against the predicate.                                                |
-| `map`       | O(n * t)   | O(n)     | Applies t transformations to each element.                                               |
-| `flatten`   | O(n + s)   | O(n + s) | Iterates each element; expands nested iterables by one level. s = total nested elements. |
-| `remove`    | O(n)       | O(n)     | Tests each element for equality.                                                         |
-| `removeAll` | O(n)       | O(n)     | Tests each element against the predicate.                                                |
-| `sort`      | O(n log n) | O(n)     | Materializes all elements, sorts via `uasort` or `ksort`, then yields. Barrier.          |
-| `slice`     | O(n)       | O(n)     | Iterates up to offset + length elements.                                                 |
-| `groupBy`   | O(n)       | O(n)     | Accumulates all elements into a groups array, then yields. Barrier.                      |
-
-#### Access methods
-
-These delegate directly to the pipeline. The cost differs between eager and lazy because eager reads the
-internal array, while lazy must evaluate the generator.
-
-| Method    | Eager | Lazy | Why                                                                    |
-|-----------|-------|------|------------------------------------------------------------------------|
-| `count`   | O(1)  | O(n) | Eager: `count($array)`. Lazy: `iterator_count($generator)`.            |
-| `first`   | O(1)  | O(1) | Eager: `array_key_first`. Lazy: first yield from the generator.        |
-| `last`    | O(1)  | O(n) | Eager: `array_key_last`. Lazy: iterates all to reach the last element. |
-| `getBy`   | O(1)  | O(n) | Eager: `array_key_exists`. Lazy: iterates until the index.             |
-| `isEmpty` | O(1)  | O(1) | Checks if the first element exists.                                    |
-
-#### Terminal methods
-
-These iterate the collection to produce a result. Since eager collections already hold a materialized array, the
-iteration cost is the same for both strategies.
-
-| Method         | Time     | Space | Why                                                             |
-|----------------|----------|-------|-----------------------------------------------------------------|
-| `contains`     | O(n)     | O(1)  | Iterates until the element is found or the end is reached.      |
-| `findBy`       | O(n * p) | O(1)  | Tests p predicates per element until a match.                   |
-| `each`         | O(n * a) | O(1)  | Applies a actions to every element.                             |
-| `equals`       | O(n)     | O(1)  | Walks two generators in parallel, comparing element by element. |
-| `reduce`       | O(n)     | O(1)  | Folds all elements into a single carry value.                   |
-| `joinToString` | O(n)     | O(n)  | Accumulates into an intermediate array, then calls `implode`.   |
-| `toArray`      | O(n)     | O(n)  | Iterates all elements into a new array.                         |
-| `toJson`       | O(n)     | O(n)  | Calls `toArray`, then `json_encode`.                            |
-
-<div id='faq'></div> 
 
 ## FAQ
 
@@ -566,20 +470,75 @@ recreate the `Collection`.
 
 ### 03. What is the difference between eager and lazy evaluation?
 
-- **Eager evaluation** (`createFrom` / `createFromEmpty` / `createFromClosure`): Elements are materialized immediately
-  into an array, enabling constant-time access by index, count, first, last, and repeated iteration.
+Both modes share the same execution model. Transforming operations append a stage to the pipeline at the call site
+without iterating. Terminal operations run the fused pass over all chained stages.
 
-- **Lazy evaluation** (`createLazyFrom` / `createLazyFromEmpty` / `createLazyFromClosure`): Elements are processed
-  on-demand through generators, consuming memory only as each element is yielded. Ideal for large datasets or pipelines
-  where not all elements need to be materialized.
+The difference is what each mode does at creation and after the fused pass completes:
 
-<div id='license'></div>
+* **Eager** (`createFrom*`): the source is materialized into an array at creation. The first terminal call runs the
+  fused pass and caches the result. Subsequent terminal calls reuse the cache.
+* **Lazy** (`createLazyFrom*`): the source is stored by reference. Every terminal call re-runs the entire pipeline.
+
+**Notation.** `n` = source size at the terminal call. `P` = total cost of the fused pass, equal to the sum of the
+per-element contributions of every chained stage. For a pipeline of pure per-element stages, `P` is O(n · s), where
+`s` is the number of stages. Non-linear stages (`sort`, `groupBy`) dominate `P`.
+
+#### Creation
+
+| Method                  | Eager                                                             | Lazy                                                           |
+|-------------------------|-------------------------------------------------------------------|----------------------------------------------------------------|
+| `createFrom`            | O(n) time, O(n) space. Iterates the input once and stores it.     | —                                                              |
+| `createFromEmpty`       | O(1) time, O(1) space.                                            | —                                                              |
+| `createFromClosure`     | O(n) time, O(n) space. Invokes the factory and stores the result. | —                                                              |
+| `createLazyFrom`        | —                                                                 | O(1) time, O(1) space. Stores the iterable by reference.       |
+| `createLazyFromEmpty`   | —                                                                 | O(1) time, O(1) space.                                         |
+| `createLazyFromClosure` | —                                                                 | O(1) time, O(1) space. Stores the factory without invoking it. |
+
+#### Transforming
+
+Transforming methods append a pipeline stage at the call site and execute only during the fused pass.
+
+| Method      | Call site (both modes) | Contribution to the fused pass                                                           |
+|-------------|------------------------|------------------------------------------------------------------------------------------|
+| `add`       | O(1) time, O(1) space. | O(m) time, O(m) space, where `m` is the number of appended elements.                     |
+| `merge`     | O(1) time, O(1) space. | O(m) time, O(m) space, where `m` is the number of elements in the other collection.      |
+| `remove`    | O(1) time, O(1) space. | O(n) time, O(1) space.                                                                   |
+| `removeAll` | O(1) time, O(1) space. | O(n) time, O(1) space.                                                                   |
+| `filter`    | O(1) time, O(1) space. | O(n · p) time, O(1) space, where `p` is the number of predicates.                        |
+| `flatten`   | O(1) time, O(1) space. | O(n + s) time, O(1) space, where `s` is the total number of nested elements.             |
+| `map`       | O(1) time, O(1) space. | O(n · t) time, O(1) space, where `t` is the number of transformations.                   |
+| `slice`     | O(1) time, O(1) space. | O(min(offset + length, n)) time, O(1) space. Short-circuits once the segment is emitted. |
+| `groupBy`   | O(1) time, O(1) space. | O(n) time, O(n) space. Buffers all groups before emitting. Breaks streaming.             |
+| `sort`      | O(1) time, O(1) space. | O(n log n) time, O(n) space. Buffers all elements before emitting. Breaks streaming.     |
+
+#### Terminal
+
+Terminal methods trigger the fused pass. Eager cells show **first call / subsequent calls** when they differ.
+Subsequent calls read the cache without re-running the pipeline.
+
+| Method         | Eager                                                                                              | Lazy                                                             |
+|----------------|----------------------------------------------------------------------------------------------------|------------------------------------------------------------------|
+| `count`        | Amortized O(P) / O(1).                                                                             | O(P) per call. Must reach the end.                               |
+| `first`        | Amortized O(P) / O(1).                                                                             | O(P_first) per call. Short-circuits at the first element.        |
+| `last`         | Amortized O(P) / O(1).                                                                             | O(P) per call. Must reach the end.                               |
+| `getBy`        | Amortized O(P) / O(1).                                                                             | O(P_index) per call. Short-circuits at the requested index.      |
+| `isEmpty`      | Amortized O(P) / O(1).                                                                             | O(P_first) per call. Short-circuits at the first element.        |
+| `contains`     | O(P + n) / O(n). Short-circuits at the first match.                                                | O(P) per call. Short-circuits at the first match.                |
+| `findBy`       | O(P + n · p) / O(n · p), where `p` is the number of predicates. Short-circuits at the first match. | O(P + p) per emitted element. Short-circuits at the first match. |
+| `each`         | O(P + n · a) / O(n · a), where `a` is the number of actions.                                       | O(P + n · a) per call.                                           |
+| `equals`       | O(P + n) / O(n). Short-circuits at the first mismatch.                                             | O(P + n) per call. Short-circuits at the first mismatch.         |
+| `joinToString` | O(P + n) / O(n) time, O(n) space.                                                                  | O(P + n) per call.                                               |
+| `reduce`       | O(P + n) / O(n) time, O(1) intermediate space.                                                     | O(P + n) per call.                                               |
+| `toArray`      | O(P + n) / O(n) time, O(n) space.                                                                  | O(P + n) per call.                                               |
+| `toJson`       | O(P + n) / O(n) time, O(n) space.                                                                  | O(P + n) per call.                                               |
+
+Eager aggregation terminals iterate the cached array without re-running the pipeline. Lazy terminals re-run the
+pipeline on every call. Eager indexing terminals (`count`, `first`, `last`, `getBy`, `isEmpty`) return in O(1) from
+the cache after the first access.
 
 ## License
 
-Collection is licensed under [MIT](LICENSE).
-
-<div id='contributing'></div>
+Collection is licensed under [MIT](https://github.com/tiny-blocks/collection/blob/main/LICENSE).
 
 ## Contributing
 

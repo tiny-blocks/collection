@@ -38,6 +38,10 @@ review: ## Run static code analysis
 show-reports: ## Open static analysis reports (e.g., coverage, lints) in the browser
 	@sensible-browser report/coverage/coverage-html/index.html report/coverage/mutation-report.html
 
+.PHONY: show-outdated
+show-outdated: ## Show outdated direct dependencies
+	@${DOCKER_RUN} composer outdated --direct
+
 .PHONY: clean
 clean: ## Remove dependencies and generated artifacts
 	@sudo chown -R ${USER}:${USER} ${PWD}
@@ -60,7 +64,7 @@ help:  ## Display this help message
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "$(YELLOW)%-25s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "$$(printf '$(GREEN)')Reports$$(printf '$(RESET)')"
-	@grep -E '^(show-reports):.*?## .*$$' $(MAKEFILE_LIST) \
+	@grep -E '^(show-reports|show-outdated):.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "$(YELLOW)%-25s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "$$(printf '$(GREEN)')Cleanup$$(printf '$(RESET)')"

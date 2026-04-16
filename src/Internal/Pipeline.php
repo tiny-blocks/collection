@@ -13,6 +13,13 @@ use TinyBlocks\Collection\Internal\Operations\Operation;
  *
  * The evaluation strategy (lazy or eager) is determined by the
  * concrete implementation, encapsulating the Strategy pattern.
+ *
+ * Complexity notation used throughout this interface:
+ *
+ *  - n = number of source elements at the time of the terminal call.
+ *  - P = total cost of running all chained stages over n elements (the "fused pass"). For a pipeline
+ *        of pure per-element stages, P is O(n * s) where s is the number of stages. Stages with
+ *        non-linear contributions (e.g., `sort` is O(n log n)) dominate P.
  */
 interface Pipeline
 {
@@ -22,6 +29,9 @@ interface Pipeline
      * Returns a new pipeline instance containing all previous stages
      * plus the given operation, preserving immutability.
      *
+     * Eager: O(1) time, O(1) space. Appends the stage. Materialization deferred to first terminal access.
+     * Lazy: O(1) time, O(1) space. Appends the stage without iterating.
+     *
      * @param Operation $operation The operation to append as the next stage.
      * @return Pipeline A new pipeline with the added stage.
      */
@@ -30,8 +40,9 @@ interface Pipeline
     /**
      * Returns the total number of elements in the pipeline.
      *
-     * Eager: O(1) time, O(1) space. Direct array count.
-     * Lazy: O(n) time, O(1) space. Must iterate all elements.
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P) per call (must reach the end of the pipeline). O(1) intermediate space.
      *
      * @return int The element count.
      */
@@ -40,8 +51,9 @@ interface Pipeline
     /**
      * Returns the first element, or a default if empty.
      *
-     * Eager: O(1) time, O(1) space. Direct array access via array_key_first.
-     * Lazy: O(1) time, O(1) space. Yields once from the pipeline.
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P_first) per call. Short-circuits at the first emitted element. O(1) intermediate space.
      *
      * @param mixed $defaultValueIfNotFound Value returned when empty.
      * @return mixed The first element or the default.
@@ -51,8 +63,9 @@ interface Pipeline
     /**
      * Determines whether the pipeline has no elements.
      *
-     * Eager: O(1) time, O(1) space. Checks if the array is empty.
-     * Lazy: O(1) time, O(1) space. Checks if the generator produces a value.
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P_first) per call. Short-circuits at the first emitted element. O(1) intermediate space.
      *
      * @return bool True if the pipeline is empty.
      */
@@ -61,8 +74,9 @@ interface Pipeline
     /**
      * Returns the last element, or a default if empty.
      *
-     * Eager: O(1) time, O(1) space. Direct array access via array_key_last.
-     * Lazy: O(n) time, O(1) space. Must iterate all elements.
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P) per call. Must reach the end of the pipeline. O(1) intermediate space.
      *
      * @param mixed $defaultValueIfNotFound Value returned when empty.
      * @return mixed The last element or the default.
@@ -72,8 +86,9 @@ interface Pipeline
     /**
      * Returns the element at the given zero-based index.
      *
-     * Eager: O(1) time, O(1) space. Direct array access via array_key_exists.
-     * Lazy: O(n) time, O(1) space. Must iterate up to the index.
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P_index) per call. Short-circuits at the requested position. O(1) intermediate space.
      *
      * @param int $index The zero-based position.
      * @param mixed $defaultValueIfNotFound Value returned when the index is out of bounds.
@@ -83,6 +98,10 @@ interface Pipeline
 
     /**
      * Executes all accumulated stages and yields the resulting elements.
+     *
+     * Eager: amortized O(P) on first terminal call. O(n) on subsequent calls (over cached result).
+     *        O(n) cached space.
+     * Lazy: O(P) per iteration. O(1) intermediate space.
      *
      * @return Generator A generator producing the processed elements.
      */

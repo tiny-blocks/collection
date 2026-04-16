@@ -48,7 +48,7 @@
         "tiny-blocks/mapper": "^2.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^11.5",
+        "phpunit/phpunit": "^13.1",
         "phpstan/phpstan": "^2.1",
         "infection/infection": "^0.32",
         "tiny-blocks/currency": "^2.3",

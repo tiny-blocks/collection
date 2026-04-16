@@ -613,6 +613,21 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(['b' => 2, 'c' => 3], $actual->toArray());
     }
 
+    public function testFilterWithMultiplePredicatesRetainsOnlyMatchingAll(): void
+    {
+        /** @Given a lazy collection of integers */
+        $collection = Collection::createLazyFrom(elements: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+
+        /** @When filtering with two predicates: greater than 3 and even */
+        $actual = $collection->filter(
+            static fn(int $value): bool => $value > 3,
+            static fn(int $value): bool => $value % 2 === 0
+        );
+
+        /** @Then only elements satisfying both predicates should remain */
+        self::assertSame([4, 6, 8, 10], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
     public function testLastReturnsElement(): void
     {
         /** @Given a lazy collection with three elements */
@@ -1029,9 +1044,21 @@ final class LazyCollectionTest extends TestCase
 
         /** @And the last element should be 4 (square of 2) */
         self::assertSame(4, $actual->last());
+    }
+
+    public function testReduceOverChainedOperationsWithIntegers(): void
+    {
+        /** @Given a lazy collection of integers from 1 to 100 */
+        $collection = Collection::createLazyFrom(elements: range(1, 100));
+
+        /** @And the collection is filtered to even numbers, squared, and sorted descending */
+        $pipeline = $collection
+            ->filter(predicates: static fn(int $value): bool => $value % 2 === 0)
+            ->map(transformations: static fn(int $value): int => $value ** 2)
+            ->sort(order: Order::DESCENDING_VALUE);
 
         /** @When reducing to calculate the sum of all squared even numbers */
-        $sum = $actual->reduce(
+        $sum = $pipeline->reduce(
             accumulator: static fn(int $carry, int $value): int => $carry + $value,
             initial: 0
         );
