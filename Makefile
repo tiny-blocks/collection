@@ -17,6 +17,7 @@ YELLOW := \033[0;33m
 .PHONY: configure
 configure: ## Configure development environment
 	@${DOCKER_RUN} composer update --optimize-autoloader
+	@${DOCKER_RUN} composer normalize
 
 .PHONY: test
 test: ## Run all tests with coverage

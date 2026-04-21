@@ -23,7 +23,8 @@ final readonly class EagerPipeline implements Pipeline
 
     public static function fromClosure(Closure $factory): EagerPipeline
     {
-        $elements = iterator_to_array($factory());
+        $result = $factory();
+        $elements = is_array($result) ? $result : iterator_to_array($result);
 
         return new EagerPipeline(materialization: Materialization::from(source: $elements, stages: []));
     }

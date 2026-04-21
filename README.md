@@ -18,14 +18,11 @@
 
 ## Overview
 
-The `Collection` library provides a flexible and efficient API to manipulate, iterate, and manage collections in a
-structured and type-safe manner.
-
-It leverages [PHP's Generators](https://www.php.net/manual/en/language.generators.overview.php) for optimized memory
-usage and lazy evaluation, ensuring that large datasets are handled efficiently without loading all
-elements into memory at once.
-
-The library supports adding, removing, filtering, sorting, and transforming elements.
+Models a type-safe, fluent collection API for PHP, unifying arrays, iterators,
+and [generators](https://www.php.net/manual/en/language.generators.overview.php) behind a single
+Collectible contract. Supports both eager and lazy evaluation pipelines, with chainable operations for mapping,
+filtering, grouping, reducing, and joining. Designed for predictable memory and CPU profiles in data-intensive
+workloads.
 
 ## Installation
 

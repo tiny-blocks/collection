@@ -14,7 +14,7 @@ final readonly class Filter implements Operation
 
     private function __construct(?Closure ...$predicates)
     {
-        $filtered = array_filter($predicates);
+        $filtered = array_filter($predicates, static fn(?Closure $predicate): bool => !is_null($predicate));
 
         $this->compiledPredicate = $filtered === []
             ? static fn(mixed $value, mixed $key): bool => (bool)$value
