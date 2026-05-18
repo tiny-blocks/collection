@@ -602,7 +602,8 @@ final class CollectionTest extends TestCase
         self::assertSame(4, $all->count());
 
         /** @And the carriers should be in the expected order */
-        self::assertSame(['Correios', 'Jadlog', 'DHL', 'FedEx'],
+        self::assertSame(
+            ['Correios', 'Jadlog', 'DHL', 'FedEx'],
             $all->toArray(keyPreservation: KeyPreservation::DISCARD)
         );
     }
