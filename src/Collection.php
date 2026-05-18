@@ -97,7 +97,7 @@ class Collection implements Collectible, IterableMapper
 
     public function each(Closure ...$actions): void
     {
-        Each::execute(elements: $this->pipeline->process(), actions: $actions);
+        Each::on(elements: $this->pipeline->process(), actions: $actions);
     }
 
     public function equals(Collectible $other): bool

@@ -10,7 +10,6 @@ use TinyBlocks\Collection\Internal\Operations\Operation;
 
 final readonly class LazyPipeline implements Pipeline
 {
-    /** @var Operation[] */
     private array $stages;
 
     private function __construct(private iterable|Closure $source, array $stages = [])

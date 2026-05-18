@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace TinyBlocks\Collection\Internal;
 
-use TinyBlocks\Collection\Internal\Operations\Operation;
-
 final class Materialization
 {
     private ?array $cache = null;
@@ -25,7 +23,6 @@ final class Materialization
             $elements = $this->source;
 
             foreach ($this->stages as $stage) {
-                /** @var Operation $stage */
                 $elements = $stage->apply(elements: $elements);
             }
 

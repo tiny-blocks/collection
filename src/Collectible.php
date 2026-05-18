@@ -34,6 +34,8 @@ use TinyBlocks\Mapper\KeyPreservation;
  * Streaming-breaking stages: `sort` and `groupBy` must buffer all elements before emitting any output.
  * Any stage placed after them in the same pipeline cannot stream and will see the full buffered set.
  * Place these stages last whenever possible.
+ *
+ * @extends IteratorAggregate<int, mixed>
  */
 interface Collectible extends Countable, IteratorAggregate
 {
@@ -45,7 +47,7 @@ interface Collectible extends Countable, IteratorAggregate
      *
      * O(n) time, O(n) space. Iterates the input once and stores all elements.
      *
-     * @param iterable $elements The elements to populate the collection with.
+     * @param iterable<int, mixed> $elements The elements to populate the collection with.
      * @return static A new collection containing the given elements.
      */
     public static function createFrom(iterable $elements): static;
@@ -79,7 +81,7 @@ interface Collectible extends Countable, IteratorAggregate
      *
      * O(1) time, O(1) space. Stores a reference to the iterable without iterating.
      *
-     * @param iterable $elements The elements to populate the collection with.
+     * @param iterable<int, mixed> $elements The elements to populate the collection with.
      * @return static A new collection containing the given elements.
      */
     public static function createLazyFrom(iterable $elements): static;
@@ -390,7 +392,7 @@ interface Collectible extends Countable, IteratorAggregate
      * By default, `KeyPreservation::PRESERVE` is used.
      *
      * @param KeyPreservation $keyPreservation The option to preserve or discard array keys.
-     * @return array The resulting array.
+     * @return array<int|string, mixed> The resulting array.
      */
     public function toArray(KeyPreservation $keyPreservation = KeyPreservation::PRESERVE): array;
 

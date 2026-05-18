@@ -1,12 +1,147 @@
 parameters:
-  paths:
-    - src
-  level: 9
-  tmpDir: report/phpstan
-  ignoreErrors:
-    - '#mixed given#'
-    - '#iterable type#'
-    - '#of new static#'
-    - '#generic interface#'
-    - '#destructuring on mixed#'
-  reportUnmatchedIgnoredErrors: false
+    level: max
+    paths:
+        - src
+        - tests
+    reportUnmatchedIgnoredErrors: true
+    ignoreErrors:
+        # Collection is an extension point designed for `new static()`. Subclasses inherit
+        # the private constructor via factory methods. PHPStan cannot verify constructor
+        # compatibility at the parent level, but the design enforces it by convention.
+        - identifier: new.static
+          path: src/Collection.php
+
+        # All src/Internal/ files: PHPDoc is prohibited per php-library-code-style.md.
+        # Iterable value types, generic type params, and mixed-origin argument types
+        # cannot be annotated in code. Suppressed by identifier per file.
+
+        - identifier: missingType.iterableValue
+          path: src/Internal/EagerPipeline.php
+        - identifier: argument.type
+          path: src/Internal/EagerPipeline.php
+        - identifier: missingType.generics
+          path: src/Internal/EagerPipeline.php
+
+        - identifier: missingType.generics
+          path: src/Internal/LazyPipeline.php
+        - identifier: missingType.iterableValue
+          path: src/Internal/LazyPipeline.php
+        - identifier: method.nonObject
+          path: src/Internal/LazyPipeline.php
+
+        - identifier: method.nonObject
+          path: src/Internal/Materialization.php
+        - identifier: missingType.iterableValue
+          path: src/Internal/Materialization.php
+        - identifier: argument.type
+          path: src/Internal/Materialization.php
+
+        - identifier: missingType.generics
+          path: src/Internal/Pipeline.php
+
+        - identifier: missingType.iterableValue
+          path: src/Internal/Operations/Resolving/Each.php
+        - identifier: callable.nonCallable
+          path: src/Internal/Operations/Resolving/Each.php
+
+        - identifier: missingType.iterableValue
+          path: src/Internal/Operations/Resolving/Equality.php
+
+        - identifier: missingType.iterableValue
+          path: src/Internal/Operations/Resolving/Find.php
+        - identifier: return.type
+          path: src/Internal/Operations/Resolving/Find.php
+        - identifier: argument.type
+          path: src/Internal/Operations/Resolving/Find.php
+
+        - identifier: missingType.iterableValue
+          path: src/Internal/Operations/Resolving/Join.php
+        - identifier: argument.type
+          path: src/Internal/Operations/Resolving/Join.php
+
+        - identifier: missingType.iterableValue
+          path: src/Internal/Operations/Resolving/Reduce.php
+
+        - identifier: missingType.generics
+          path: src/Internal/Operations/Transforming/Add.php
+        - identifier: missingType.iterableValue
+          path: src/Internal/Operations/Transforming/Add.php
+
+        - identifier: missingType.generics
+          path: src/Internal/Operations/Transforming/Filter.php
+        - identifier: return.type
+          path: src/Internal/Operations/Transforming/Filter.php
+
+        - identifier: missingType.generics
+          path: src/Internal/Operations/Transforming/FlatMap.php
+
+        - identifier: missingType.generics
+          path: src/Internal/Operations/Transforming/GroupInto.php
+        - identifier: offsetAccess.invalidOffset
+          path: src/Internal/Operations/Transforming/GroupInto.php
+
+        - identifier: missingType.generics
+          path: src/Internal/Operations/Transforming/Map.php
+        - identifier: missingType.iterableValue
+          path: src/Internal/Operations/Transforming/Map.php
+
+        - identifier: missingType.generics
+          path: src/Internal/Operations/Transforming/Merge.php
+        - identifier: missingType.iterableValue
+          path: src/Internal/Operations/Transforming/Merge.php
+
+        - identifier: missingType.generics
+          path: src/Internal/Operations/Transforming/Rearrange.php
+        - identifier: return.type
+          path: src/Internal/Operations/Transforming/Rearrange.php
+
+        - identifier: missingType.generics
+          path: src/Internal/Operations/Transforming/Remove.php
+
+        - identifier: missingType.generics
+          path: src/Internal/Operations/Transforming/RemoveAll.php
+
+        - identifier: missingType.generics
+          path: src/Internal/Operations/Transforming/Segment.php
+        - identifier: offsetAccess.nonArray
+          path: src/Internal/Operations/Transforming/Segment.php
+        - identifier: generator.keyType
+          path: src/Internal/Operations/Transforming/Segment.php
+
+        # Test files: PHPDoc is prohibited on concrete classes. Mixed types originate
+        # from Collection's generic element access (first, last, getBy, reduce, groupBy)
+        # which returns mixed at the PHPStan level.
+
+        - identifier: property.nonObject
+          path: tests/CollectionTest.php
+        - identifier: argument.type
+          path: tests/CollectionTest.php
+
+        - identifier: property.nonObject
+          path: tests/EagerCollectionTest.php
+        - identifier: argument.type
+          path: tests/EagerCollectionTest.php
+
+        - identifier: property.nonObject
+          path: tests/LazyCollectionTest.php
+        - identifier: argument.type
+          path: tests/LazyCollectionTest.php
+
+        - identifier: return.type
+          path: tests/Models/InvoiceSummaries.php
+
+        - identifier: return.type
+          path: tests/Models/Invoices.php
+
+        - identifier: missingType.generics
+          path: tests/Models/Products.php
+        - identifier: missingType.iterableValue
+          path: tests/Models/Products.php
+
+        - identifier: missingType.iterableValue
+          path: tests/Models/Shipment.php
+
+        - identifier: missingType.iterableValue
+          path: tests/Models/ShipmentRecord.php
+        - identifier: argument.type
+          path: tests/Models/ShipmentRecord.php
