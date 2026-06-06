@@ -19,6 +19,17 @@ parameters:
         - identifier: return.type
           path: src/Collection.php
 
+        # LazyPipeline defers element production, holding its source as `iterable|Closure` until
+        # iteration. The element type is only realized on materialization, so level max cannot bind
+        # the template through the constructor. `new LazyPipeline(...)` then reads as `<mixed>`, which
+        # leaves the source parameter without an iterable value type and the typed `from`,
+        # `fromClosure`, and `pipe` returns unnarrowable. The lazy design is intentional. Suppressed
+        # by identifier and path.
+        - identifier: missingType.iterableValue
+          path: src/Internal/LazyPipeline.php
+        - identifier: return.type
+          path: src/Internal/LazyPipeline.php
+
         # src/Internal/ operations and resolvers carry no PHPDoc per php-library-code-style.md.
         # Their iterable value types and mixed-origin argument types cannot be annotated in
         # code (the generics carve-out covers only template type parameters, which these
