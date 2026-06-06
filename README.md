@@ -7,6 +7,7 @@
 * [How to use](#how-to-use)
     + [Concrete implementation](#concrete-implementation)
     + [Extending Collection](#extending-collection)
+    + [Mapping to and from a source](#mapping-to-and-from-a-source)
     + [Writing](#writing)
         - [Adding elements](#adding-elements)
         - [Merging collections](#merging-collections)
@@ -75,7 +76,7 @@ namespace Example;
 
 use TinyBlocks\Collection\Collection;
 use TinyBlocks\Collection\Order;
-use TinyBlocks\Mapper\KeyPreservation;
+use TinyBlocks\Collection\KeyPreservation;
 
 $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5])
     ->add(6, 7)
@@ -111,6 +112,72 @@ final class Invoices extends Collection
     }
 }
 ```
+
+### Mapping to and from a source
+
+`Collection` implements the `IterableMappable` contract from
+[tiny-blocks/mapper](https://github.com/tiny-blocks/mapper), so a collection maps itself to and from arrays,
+JSON, and iterables. PHP carries no runtime element type for a collection, so a typed collection declares its
+element with the `#[ElementType]` attribute. The mapper builds each element through the declared type. Without
+the attribute, elements pass through unchanged.
+
+An invoice the collection holds.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Example;
+
+final readonly class Invoice
+{
+    public function __construct(public string $id, public float $amount, public string $customer)
+    {
+    }
+}
+```
+
+The collection declares its element type with the attribute.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Example;
+
+use TinyBlocks\Collection\Collection;
+use TinyBlocks\Mapper\ElementType;
+
+#[ElementType(Invoice::class)]
+final class Invoices extends Collection
+{
+}
+```
+
+The mapper builds the typed collection from a list of rows and serializes it back symmetrically.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Example\Invoices;
+use TinyBlocks\Mapper\Mapper;
+
+$mapper = Mapper::create();
+
+$invoices = $mapper->toObject(type: Invoices::class, source: [
+    ['id' => 'INV-001', 'amount' => 100.0, 'customer' => 'Alice'],
+    ['id' => 'INV-002', 'amount' => 200.0, 'customer' => 'Bob']
+]);
+
+$rows = $mapper->toArray(source: $invoices);
+```
+
+`toArray` and `toJson` on the collection produce the same portable shape, so a collection serializes without an
+explicit `Mapper` at the call site.
 
 ### Writing
 
@@ -541,7 +608,7 @@ These methods allow the Collection's elements to be transformed or converted int
   declare(strict_types=1);
 
   use TinyBlocks\Collection\Collection;
-  use TinyBlocks\Mapper\KeyPreservation;
+  use TinyBlocks\Collection\KeyPreservation;
 
   $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->toArray(keyPreservation: KeyPreservation::DISCARD);
@@ -564,7 +631,7 @@ These methods allow the Collection's elements to be transformed or converted int
   declare(strict_types=1);
 
   use TinyBlocks\Collection\Collection;
-  use TinyBlocks\Mapper\KeyPreservation;
+  use TinyBlocks\Collection\KeyPreservation;
 
   $collection = Collection::createFrom(elements: [1, 2, 3]);
   $collection->toJson(keyPreservation: KeyPreservation::DISCARD);

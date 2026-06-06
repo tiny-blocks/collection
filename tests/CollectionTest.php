@@ -18,13 +18,13 @@ use Test\TinyBlocks\Collection\Models\Product;
 use Test\TinyBlocks\Collection\Models\Products;
 use Test\TinyBlocks\Collection\Models\Status;
 use TinyBlocks\Collection\Collection;
+use TinyBlocks\Collection\KeyPreservation;
 use TinyBlocks\Collection\Order as SortOrder;
 use TinyBlocks\Currency\Currency;
-use TinyBlocks\Mapper\KeyPreservation;
 
 final class CollectionTest extends TestCase
 {
-    public function testLazyAndEagerProduceSameResultsWithIntegerPipeline(): void
+    public function testPipelineWhenIntegerElementsThenLazyAndEagerProduceIdenticalArrays(): void
     {
         /** @Given a set of elements */
         $elements = [5, 3, 1, 4, 2];
@@ -53,7 +53,7 @@ final class CollectionTest extends TestCase
         self::assertSame($lazyResult, $eagerResult);
     }
 
-    public function testLazyAndEagerProduceSameResultsWithObjectPipeline(): void
+    public function testPipelineWhenObjectElementsThenLazyAndEagerProduceEqualResults(): void
     {
         /** @Given a set of Amount objects */
         $elements = [
@@ -103,7 +103,7 @@ final class CollectionTest extends TestCase
         self::assertSame($lazy->last()->value, $eager->last()->value);
     }
 
-    public function testConcatLazyWithEager(): void
+    public function testMergeWhenLazyReceivesEagerThenAllElementsArePresent(): void
     {
         /** @Given a lazy collection */
         $lazy = Collection::createLazyFrom(elements: [1, 2]);
@@ -118,7 +118,7 @@ final class CollectionTest extends TestCase
         self::assertSame([1, 2, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testConcatEagerWithLazy(): void
+    public function testMergeWhenEagerReceivesLazyThenAllElementsArePresent(): void
     {
         /** @Given an eager collection */
         $eager = Collection::createFrom(elements: [1, 2]);
@@ -133,7 +133,7 @@ final class CollectionTest extends TestCase
         self::assertSame([1, 2, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testEqualsAcrossStrategies(): void
+    public function testEqualsWhenSameElementsAcrossStrategiesThenComparisonIsTrue(): void
     {
         /** @Given a lazy collection with elements 1, 2, 3 */
         $lazy = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -154,7 +154,7 @@ final class CollectionTest extends TestCase
         self::assertTrue($eagerEqualsLazy);
     }
 
-    public function testReduceProducesSameResultAcrossStrategies(): void
+    public function testReduceWhenSummingAcrossStrategiesThenBothYieldSameSum(): void
     {
         /** @Given a set of elements */
         $elements = [1, 2, 3, 4, 5];
@@ -177,7 +177,7 @@ final class CollectionTest extends TestCase
         self::assertSame(15, $eagerSum);
     }
 
-    public function testCarriersPreservesTypeAfterFilter(): void
+    public function testFilterWhenTypedCarriersThenTypeIsPreserved(): void
     {
         /** @Given a Carriers collection with three carrier names */
         $carriers = Carriers::createFrom(elements: ['DHL', 'FedEx', 'UPS']);
@@ -197,7 +197,7 @@ final class CollectionTest extends TestCase
         self::assertSame(['FedEx', 'UPS'], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testCarriersPreservesTypeAfterAdd(): void
+    public function testAddWhenTypedCarriersThenTypeIsPreserved(): void
     {
         /** @Given a Carriers collection with two carrier names */
         $carriers = Carriers::createFrom(elements: ['DHL', 'FedEx']);
@@ -212,7 +212,7 @@ final class CollectionTest extends TestCase
         self::assertSame(3, $actual->count());
     }
 
-    public function testCarriersLazyPreservesTypeAfterMap(): void
+    public function testMapWhenLazyTypedCarriersThenTypeIsPreserved(): void
     {
         /** @Given a lazy Carriers collection */
         $carriers = Carriers::createLazyFrom(elements: ['dhl', 'fedex', 'ups']);
@@ -229,7 +229,7 @@ final class CollectionTest extends TestCase
         self::assertSame(['DHL', 'FEDEX', 'UPS'], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testInvoicesTotalAmount(): void
+    public function testTotalAmountWhenMultipleInvoicesThenSumIsReturned(): void
     {
         /** @Given a set of invoices */
         $invoices = Invoices::createFrom(elements: [
@@ -245,7 +245,7 @@ final class CollectionTest extends TestCase
         self::assertSame(450.00, $total);
     }
 
-    public function testInvoicesFilterByCustomer(): void
+    public function testForCustomerWhenInvoicesForDifferentCustomersThenOnlyMatchingAreReturned(): void
     {
         /** @Given a set of invoices for different customers */
         $invoices = Invoices::createFrom(elements: [
@@ -258,7 +258,6 @@ final class CollectionTest extends TestCase
         $aliceInvoices = $invoices->forCustomer(customer: 'Alice');
 
         /** @Then the result should still be an instance of Invoices */
-        /** @noinspection PhpConditionAlreadyCheckedInspection */
         self::assertInstanceOf(Invoices::class, $aliceInvoices);
 
         /** @And Alice should have two invoices */
@@ -268,7 +267,7 @@ final class CollectionTest extends TestCase
         self::assertSame(250.00, $aliceInvoices->totalAmount());
     }
 
-    public function testInvoiceSummariesSumByCustomer(): void
+    public function testSumByCustomerWhenCustomerHasMultipleSummariesThenAmountsAreSummed(): void
     {
         /** @Given a collection of invoice summaries */
         $summaries = InvoiceSummaries::createFrom(elements: [
@@ -285,7 +284,7 @@ final class CollectionTest extends TestCase
         self::assertSame(250.00, $aliceTotal);
     }
 
-    public function testInvoiceSummariesSumByDifferentCustomer(): void
+    public function testSumByCustomerWhenOtherCustomerHasMultipleSummariesThenAmountsAreSummed(): void
     {
         /** @Given a collection of invoice summaries */
         $summaries = InvoiceSummaries::createFrom(elements: [
@@ -302,7 +301,7 @@ final class CollectionTest extends TestCase
         self::assertSame(500.00, $bobTotal);
     }
 
-    public function testInvoiceSummariesSumByNonExistentCustomer(): void
+    public function testSumByCustomerWhenCustomerIsAbsentThenZeroIsReturned(): void
     {
         /** @Given a collection of invoice summaries */
         $summaries = InvoiceSummaries::createFrom(elements: [
@@ -316,7 +315,7 @@ final class CollectionTest extends TestCase
         self::assertSame(0.0, $total);
     }
 
-    public function testDragonsGroupByDescription(): void
+    public function testGroupByWhenDragonsShareDescriptionsThenGroupedByDescription(): void
     {
         /** @Given a collection of dragons */
         $dragons = Collection::createFrom(elements: [
@@ -340,7 +339,7 @@ final class CollectionTest extends TestCase
         self::assertCount(2, $groups['ice']);
     }
 
-    public function testDragonsFindByName(): void
+    public function testFindByWhenDragonMatchesPredicateThenMatchingDragonIsReturned(): void
     {
         /** @Given a collection of dragons */
         $dragons = Collection::createFrom(elements: [
@@ -361,7 +360,7 @@ final class CollectionTest extends TestCase
         self::assertSame('ice', $actual->description);
     }
 
-    public function testCryptoCurrencySortByPrice(): void
+    public function testSortWhenPriceComparatorThenElementsAreOrderedByPrice(): void
     {
         /** @Given a collection of crypto currencies */
         $cryptos = Collection::createFrom(elements: [
@@ -386,7 +385,7 @@ final class CollectionTest extends TestCase
         self::assertSame('BTC', $sorted->last()->symbol);
     }
 
-    public function testCryptoCurrencyFilterAndMapSymbols(): void
+    public function testFilterAndMapWhenCryptoCurrenciesThenMatchingSymbolsAreReturned(): void
     {
         /** @Given a collection of crypto currencies */
         $cryptos = Collection::createFrom(elements: [
@@ -406,7 +405,7 @@ final class CollectionTest extends TestCase
         self::assertSame(['BTC', 'ETH', 'SOL'], $symbols->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testProductsWithAmountFlattenFromOrders(): void
+    public function testFlattenWhenOrdersHoldNestedProductsThenProductsAreFlattened(): void
     {
         /** @Given a set of orders with products */
         $orders = Collection::createFrom(elements: [
@@ -435,7 +434,7 @@ final class CollectionTest extends TestCase
         self::assertSame(600.00, $total);
     }
 
-    public function testStatusEnumCollection(): void
+    public function testFilterWhenStatusEnumElementsThenOnlyMatchingStatusesRemain(): void
     {
         /** @Given a collection of Status enums */
         $statuses = Collection::createFrom(elements: [
@@ -455,7 +454,7 @@ final class CollectionTest extends TestCase
         self::assertSame(3, $paid->count());
     }
 
-    public function testStatusEnumGroupBy(): void
+    public function testGroupByWhenStatusEnumElementsThenGroupedByStatusName(): void
     {
         /** @Given a collection of Status enums */
         $statuses = Collection::createFrom(elements: [
@@ -479,7 +478,7 @@ final class CollectionTest extends TestCase
         self::assertCount(2, $groups['PENDING']);
     }
 
-    public function testInvoicesLazyStrategyPreservesType(): void
+    public function testSortWhenLazyTypedInvoicesThenTypeIsPreserved(): void
     {
         /** @Given a lazy Invoices collection */
         $invoices = Invoices::createLazyFrom(elements: [
@@ -500,7 +499,7 @@ final class CollectionTest extends TestCase
         self::assertSame(200.00, $sorted->first()->amount);
     }
 
-    public function testInvoicesSliceAndCount(): void
+    public function testSliceWhenTypedInvoicesThenSubsetPreservesType(): void
     {
         /** @Given a set of five invoices */
         $invoices = Invoices::createFrom(elements: [
@@ -524,7 +523,7 @@ final class CollectionTest extends TestCase
         self::assertSame(900.00, $sliced->totalAmount());
     }
 
-    public function testInvoicesRemoveSpecificInvoice(): void
+    public function testRemoveWhenInvoiceIsPresentThenElementIsRemoved(): void
     {
         /** @Given a specific invoice to remove */
         $toRemove = new Invoice(id: 'INV-002', amount: 200.00, customer: 'Bob');
@@ -546,7 +545,7 @@ final class CollectionTest extends TestCase
         self::assertSame(400.00, $actual->totalAmount());
     }
 
-    public function testDragonsJoinToString(): void
+    public function testJoinToStringWhenMappedNamesThenNamesAreJoined(): void
     {
         /** @Given a collection of dragons */
         $dragons = Collection::createFrom(elements: [
@@ -564,7 +563,7 @@ final class CollectionTest extends TestCase
         self::assertSame('Smaug, Viserion, Drogon', $names);
     }
 
-    public function testInvoiceSummariesPreservesTypeAfterFilter(): void
+    public function testFilterWhenTypedInvoiceSummariesThenTypeIsPreserved(): void
     {
         /** @Given a collection of invoice summaries */
         $summaries = InvoiceSummaries::createFrom(elements: [
@@ -584,7 +583,7 @@ final class CollectionTest extends TestCase
         self::assertSame(1, $filtered->count());
     }
 
-    public function testConcatCarriersCollections(): void
+    public function testMergeWhenTwoTypedCarriersThenTypeIsPreservedInOrder(): void
     {
         /** @Given a domestic carriers collection */
         $domestic = Carriers::createFrom(elements: ['Correios', 'Jadlog']);
@@ -608,7 +607,7 @@ final class CollectionTest extends TestCase
         );
     }
 
-    public function testClosureAndLazyAndEagerProduceSameResults(): void
+    public function testPipelineWhenClosureAndDirectStrategiesThenResultsAreIdentical(): void
     {
         /** @Given a set of elements */
         $elements = [5, 3, 1, 4, 2];
@@ -657,7 +656,7 @@ final class CollectionTest extends TestCase
         self::assertSame($lazyClosureResult, $eagerResult);
     }
 
-    public function testLazyClosureBackedCarriersPreservesType(): void
+    public function testMapWhenLazyClosureBackedCarriersThenTypeIsPreserved(): void
     {
         /** @Given a lazy closure-backed Carriers collection */
         $carriers = Carriers::createLazyFromClosure(factory: static function (): array {
@@ -676,7 +675,7 @@ final class CollectionTest extends TestCase
         self::assertSame(['DHL', 'FEDEX', 'UPS'], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testEagerClosureBackedCarriersPreservesType(): void
+    public function testMapWhenEagerClosureBackedCarriersThenTypeIsPreserved(): void
     {
         /** @Given an eager closure-backed Carriers collection */
         $carriers = Carriers::createFromClosure(factory: static function (): array {

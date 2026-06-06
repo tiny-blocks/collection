@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace Test\TinyBlocks\Collection\Models;
 
 use TinyBlocks\Collection\Collection;
-use TinyBlocks\Mapper\KeyPreservation;
+use TinyBlocks\Collection\KeyPreservation;
+use TinyBlocks\Mapper\ElementType;
 
+/**
+ * @extends Collection<Shipment>
+ */
+#[ElementType(Shipment::class)]
 final class Shipments extends Collection
 {
     public function toArray(KeyPreservation $keyPreservation = KeyPreservation::PRESERVE): array

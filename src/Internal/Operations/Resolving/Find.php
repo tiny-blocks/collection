@@ -6,8 +6,12 @@ namespace TinyBlocks\Collection\Internal\Operations\Resolving;
 
 use Closure;
 
-final readonly class Find
+final class Find
 {
+    private function __construct()
+    {
+    }
+
     public static function firstMatch(iterable $elements, array $predicates): mixed
     {
         foreach ($elements as $element) {

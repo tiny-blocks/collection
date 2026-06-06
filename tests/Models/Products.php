@@ -8,7 +8,7 @@ use ArrayIterator;
 use IteratorAggregate;
 use Traversable;
 
-final class Products implements IteratorAggregate
+final readonly class Products implements IteratorAggregate
 {
     private array $products;
 

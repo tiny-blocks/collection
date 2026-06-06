@@ -11,41 +11,23 @@ parameters:
         - identifier: new.static
           path: src/Collection.php
 
-        # All src/Internal/ files: PHPDoc is prohibited per php-library-code-style.md.
-        # Iterable value types, generic type params, and mixed-origin argument types
-        # cannot be annotated in code. Suppressed by identifier per file.
+        # Collection is a generic extension point whose creating and mutating methods return
+        # `static`, so a subclass builds its own concrete type. `TValue` must stay invariant
+        # (it is an input in createFrom, add, contains, merge, equals, and remove, so it cannot
+        # be covariant), which leads level max to flag every `static` return as a covariance
+        # violation. The `new static(...)` design is intentional. Suppressed by identifier and path.
+        - identifier: return.type
+          path: src/Collection.php
 
-        - identifier: missingType.iterableValue
-          path: src/Internal/EagerPipeline.php
-        - identifier: argument.type
-          path: src/Internal/EagerPipeline.php
-        - identifier: missingType.generics
-          path: src/Internal/EagerPipeline.php
-
-        - identifier: missingType.generics
-          path: src/Internal/LazyPipeline.php
-        - identifier: missingType.iterableValue
-          path: src/Internal/LazyPipeline.php
-        - identifier: method.nonObject
-          path: src/Internal/LazyPipeline.php
-
-        - identifier: method.nonObject
-          path: src/Internal/Materialization.php
-        - identifier: missingType.iterableValue
-          path: src/Internal/Materialization.php
-        - identifier: argument.type
-          path: src/Internal/Materialization.php
-
-        - identifier: missingType.generics
-          path: src/Internal/Pipeline.php
+        # src/Internal/ operations and resolvers carry no PHPDoc per php-library-code-style.md.
+        # Their iterable value types and mixed-origin argument types cannot be annotated in
+        # code (the generics carve-out covers only template type parameters, which these
+        # collaborators do not need). Suppressed by identifier per file.
 
         - identifier: missingType.iterableValue
           path: src/Internal/Operations/Resolving/Each.php
         - identifier: callable.nonCallable
           path: src/Internal/Operations/Resolving/Each.php
-
-        - identifier: missingType.iterableValue
-          path: src/Internal/Operations/Resolving/Equality.php
 
         - identifier: missingType.iterableValue
           path: src/Internal/Operations/Resolving/Find.php
@@ -69,8 +51,6 @@ parameters:
 
         - identifier: missingType.generics
           path: src/Internal/Operations/Transforming/Filter.php
-        - identifier: return.type
-          path: src/Internal/Operations/Transforming/Filter.php
 
         - identifier: missingType.generics
           path: src/Internal/Operations/Transforming/FlatMap.php
@@ -81,8 +61,6 @@ parameters:
           path: src/Internal/Operations/Transforming/GroupInto.php
 
         - identifier: missingType.generics
-          path: src/Internal/Operations/Transforming/Map.php
-        - identifier: missingType.iterableValue
           path: src/Internal/Operations/Transforming/Map.php
 
         - identifier: missingType.generics
@@ -126,12 +104,6 @@ parameters:
           path: tests/LazyCollectionTest.php
         - identifier: argument.type
           path: tests/LazyCollectionTest.php
-
-        - identifier: return.type
-          path: tests/Models/InvoiceSummaries.php
-
-        - identifier: return.type
-          path: tests/Models/Invoices.php
 
         - identifier: missingType.generics
           path: tests/Models/Products.php

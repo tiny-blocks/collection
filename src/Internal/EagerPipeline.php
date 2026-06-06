@@ -8,12 +8,24 @@ use Closure;
 use Generator;
 use TinyBlocks\Collection\Internal\Operations\Operation;
 
+/**
+ * @template TValue
+ * @implements Pipeline<TValue>
+ */
 final readonly class EagerPipeline implements Pipeline
 {
+    /**
+     * @param Materialization<TValue> $materialization
+     */
     private function __construct(private Materialization $materialization)
     {
     }
 
+    /**
+     * @template TElement
+     * @param iterable<TElement> $source
+     * @return EagerPipeline<TElement>
+     */
     public static function from(iterable $source): EagerPipeline
     {
         $elements = is_array($source) ? $source : iterator_to_array($source);
@@ -21,6 +33,11 @@ final readonly class EagerPipeline implements Pipeline
         return new EagerPipeline(materialization: Materialization::from(source: $elements, stages: []));
     }
 
+    /**
+     * @template TElement
+     * @param Closure(): iterable<TElement> $factory
+     * @return EagerPipeline<TElement>
+     */
     public static function fromClosure(Closure $factory): EagerPipeline
     {
         $result = $factory();
@@ -31,9 +48,7 @@ final readonly class EagerPipeline implements Pipeline
 
     public function pipe(Operation $operation): Pipeline
     {
-        $elements = $this->materialization->elements();
-
-        return new EagerPipeline(materialization: Materialization::from(source: $elements, stages: [$operation]));
+        return new EagerPipeline(materialization: $this->materialization->withStage(operation: $operation));
     }
 
     public function count(): int
@@ -75,6 +90,9 @@ final readonly class EagerPipeline implements Pipeline
 
     public function process(): Generator
     {
-        yield from $this->materialization->elements();
+        /** @var array<int, TValue> $elements */
+        $elements = $this->materialization->elements();
+
+        yield from $elements;
     }
 }

@@ -6,7 +6,7 @@ namespace Test\TinyBlocks\Collection\Models;
 
 use TinyBlocks\Currency\Currency;
 
-final class Amount
+final readonly class Amount
 {
     public function __construct(public float $value, public Currency $currency)
     {
