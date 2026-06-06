@@ -6,8 +6,12 @@ namespace TinyBlocks\Collection\Internal\Operations\Resolving;
 
 use Closure;
 
-final readonly class Reduce
+final class Reduce
 {
+    private function __construct()
+    {
+    }
+
     public static function from(iterable $elements, Closure $accumulator, mixed $initial): mixed
     {
         $carry = $initial;

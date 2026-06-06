@@ -5,7 +5,12 @@ declare(strict_types=1);
 namespace Test\TinyBlocks\Collection\Models;
 
 use TinyBlocks\Collection\Collection;
+use TinyBlocks\Mapper\ElementType;
 
+/**
+ * @extends Collection<InvoiceSummary>
+ */
+#[ElementType(InvoiceSummary::class)]
 final class InvoiceSummaries extends Collection
 {
     public function sumByCustomer(string $customer): float

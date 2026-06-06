@@ -16,12 +16,20 @@ final readonly class Filter implements Operation
     {
         $filtered = array_filter($predicates, static fn(?Closure $predicate): bool => !is_null($predicate));
 
-        $this->compiledPredicate = $filtered === []
-            ? static fn(mixed $value, mixed $key): bool => (bool)$value
-            : static fn(mixed $value, mixed $key): bool => array_all(
-                $filtered,
-                static fn(Closure $predicate): bool => $predicate($value, $key)
-            );
+        if ($filtered === []) {
+            $this->compiledPredicate = static fn(mixed $value, mixed $key): bool => (bool)$value;
+
+            return;
+        }
+
+        $first = array_shift($filtered);
+
+        $this->compiledPredicate = array_reduce(
+            $filtered,
+            static fn(Closure $carry, Closure $predicate): Closure
+                => static fn(mixed $value, mixed $key): bool => $carry($value, $key) && $predicate($value, $key),
+            $first
+        );
     }
 
     public static function matching(?Closure ...$predicates): Filter

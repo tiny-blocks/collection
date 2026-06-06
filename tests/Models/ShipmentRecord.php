@@ -19,29 +19,33 @@ final readonly class ShipmentRecord
 
     public function toShipments(): Shipments
     {
-        return Shipments::createFrom(
-            elements: Collection::createFrom(elements: $this->records)
-                ->map(transformations: static fn(array $record): Shipment => Shipment::from(
-                    id: $record['id'],
-                    status: $record['status'],
-                    carrier: $record['carrier'],
-                    createdAt: $record['created_at'],
-                    customerId: $record['customer_id']
-                ))
-        );
+        /** @var Collection<Shipment> $shipments */
+        $shipments = Collection::createFrom(elements: $this->records)
+            ->map(transformations: static fn(array $record): Shipment => Shipment::from(
+                id: $record['id'],
+                status: $record['status'],
+                carrier: $record['carrier'],
+                createdAt: $record['created_at'],
+                customerId: $record['customer_id']
+            ));
+
+        return Shipments::createFrom(elements: $shipments);
     }
 
     public function toShipmentsFromClosure(): Shipments
     {
-        return Shipments::createFromClosure(
-            factory: fn(): Collection => Collection::createFrom(elements: $this->records)
+        return Shipments::createFromClosure(factory: function (): Collection {
+            /** @var Collection<Shipment> $shipments */
+            $shipments = Collection::createFrom(elements: $this->records)
                 ->map(transformations: static fn(array $record): Shipment => Shipment::from(
                     id: $record['id'],
                     status: $record['status'],
                     carrier: $record['carrier'],
                     createdAt: $record['created_at'],
                     customerId: $record['customer_id']
-                ))
-        );
+                ));
+
+            return $shipments;
+        });
     }
 }

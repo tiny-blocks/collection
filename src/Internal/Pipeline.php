@@ -20,6 +20,8 @@ use TinyBlocks\Collection\Internal\Operations\Operation;
  *  - P = total cost of running all chained stages over n elements (the "fused pass"). For a pipeline
  *        of pure per-element stages, P is O(n * s) where s is the number of stages. Stages with
  *        non-linear contributions (e.g., `sort` is O(n log n)) dominate P.
+ *
+ * @template TValue
  */
 interface Pipeline
 {
@@ -32,8 +34,8 @@ interface Pipeline
      * Eager: O(1) time, O(1) space. Appends the stage. Materialization deferred to first terminal access.
      * Lazy: O(1) time, O(1) space. Appends the stage without iterating.
      *
-     * @param Operation $operation The operation to append as the next stage.
-     * @return Pipeline A new pipeline with the added stage.
+     * @param Operation<int|string, mixed> $operation The operation to append as the next stage.
+     * @return Pipeline<TValue> A new pipeline with the added stage.
      */
     public function pipe(Operation $operation): Pipeline;
 
@@ -55,8 +57,9 @@ interface Pipeline
      *        O(n) cached space.
      * Lazy: O(P_first) per call. Short-circuits at the first emitted element. O(1) intermediate space.
      *
-     * @param mixed $defaultValueIfNotFound Value returned when empty.
-     * @return mixed The first element or the default.
+     * @template TDefault
+     * @param TDefault $defaultValueIfNotFound Value returned when empty.
+     * @return TValue|TDefault The first element or the default.
      */
     public function first(mixed $defaultValueIfNotFound = null): mixed;
 
@@ -78,8 +81,9 @@ interface Pipeline
      *        O(n) cached space.
      * Lazy: O(P) per call. Must reach the end of the pipeline. O(1) intermediate space.
      *
-     * @param mixed $defaultValueIfNotFound Value returned when empty.
-     * @return mixed The last element or the default.
+     * @template TDefault
+     * @param TDefault $defaultValueIfNotFound Value returned when empty.
+     * @return TValue|TDefault The last element or the default.
      */
     public function last(mixed $defaultValueIfNotFound = null): mixed;
 
@@ -90,9 +94,10 @@ interface Pipeline
      *        O(n) cached space.
      * Lazy: O(P_index) per call. Short-circuits at the requested position. O(1) intermediate space.
      *
+     * @template TDefault
      * @param int $index The zero-based position.
-     * @param mixed $defaultValueIfNotFound Value returned when the index is out of bounds.
-     * @return mixed The element at the index or the default.
+     * @param TDefault $defaultValueIfNotFound Value returned when the index is out of bounds.
+     * @return TValue|TDefault The element at the index or the default.
      */
     public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed;
 
@@ -103,7 +108,7 @@ interface Pipeline
      *        O(n) cached space.
      * Lazy: O(P) per iteration. O(1) intermediate space.
      *
-     * @return Generator A generator producing the processed elements.
+     * @return Generator<int, TValue> A generator producing the processed elements.
      */
     public function process(): Generator;
 }

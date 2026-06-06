@@ -4,13 +4,8 @@ declare(strict_types=1);
 
 namespace Test\TinyBlocks\Collection\Models;
 
-use TinyBlocks\Mapper\ObjectMappability;
-use TinyBlocks\Mapper\ObjectMapper;
-
-final class CryptoCurrency implements ObjectMapper
+final readonly class CryptoCurrency
 {
-    use ObjectMappability;
-
     public function __construct(public string $name, public float $price, public string $symbol)
     {
     }

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace TinyBlocks\Collection\Internal\Operations\Resolving;
 
-use Generator;
+use Iterator;
 use TinyBlocks\Collection\Collectible;
 
-final readonly class Equality
+final class Equality
 {
+    private function __construct()
+    {
+    }
+
     public static function areSame(mixed $element, mixed $other): bool
     {
         if (is_object($element) !== is_object($other)) {
@@ -20,6 +24,9 @@ final readonly class Equality
             : $element === $other;
     }
 
+    /**
+     * @param iterable<int|string, mixed> $elements
+     */
     public static function exists(iterable $elements, mixed $element): bool
     {
         foreach ($elements as $current) {
@@ -31,25 +38,20 @@ final readonly class Equality
         return false;
     }
 
-    public static function compareAll(iterable $elements, Collectible $other): bool
+    /**
+     * @param Iterator<int|string, mixed> $elements
+     * @param Collectible<mixed> $other
+     */
+    public static function compareAll(Iterator $elements, Collectible $other): bool
     {
-        $iteratorA = (static function () use ($elements): Generator {
-            yield from $elements;
-        })();
-
-        $iteratorB = (static function () use ($other): Generator {
-            yield from $other;
-        })();
-
-        while ($iteratorA->valid() && $iteratorB->valid()) {
-            if (!Equality::areSame(element: $iteratorA->current(), other: $iteratorB->current())) {
+        foreach ($other as $value) {
+            if (!$elements->valid() || !Equality::areSame(element: $elements->current(), other: $value)) {
                 return false;
             }
 
-            $iteratorA->next();
-            $iteratorB->next();
+            $elements->next();
         }
 
-        return !$iteratorA->valid() && !$iteratorB->valid();
+        return !$elements->valid();
     }
 }

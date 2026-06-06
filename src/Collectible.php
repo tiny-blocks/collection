@@ -7,7 +7,7 @@ namespace TinyBlocks\Collection;
 use Closure;
 use Countable;
 use IteratorAggregate;
-use TinyBlocks\Mapper\KeyPreservation;
+use TinyBlocks\Mapper\IterableMappable;
 
 /**
  * Immutable, type-safe collection contract with a fluent API.
@@ -35,9 +35,10 @@ use TinyBlocks\Mapper\KeyPreservation;
  * Any stage placed after them in the same pipeline cannot stream and will see the full buffered set.
  * Place these stages last whenever possible.
  *
- * @extends IteratorAggregate<int, mixed>
+ * @template TValue
+ * @extends IteratorAggregate<int, TValue>
  */
-interface Collectible extends Countable, IteratorAggregate
+interface Collectible extends Countable, IteratorAggregate, IterableMappable
 {
     /**
      * Creates a collection populated with the given elements using eager evaluation.
@@ -47,7 +48,7 @@ interface Collectible extends Countable, IteratorAggregate
      *
      * O(n) time, O(n) space. Iterates the input once and stores all elements.
      *
-     * @param iterable<int, mixed> $elements The elements to populate the collection with.
+     * @param iterable<TValue> $elements The elements to populate the collection with.
      * @return static A new collection containing the given elements.
      */
     public static function createFrom(iterable $elements): static;
@@ -69,7 +70,7 @@ interface Collectible extends Countable, IteratorAggregate
      *
      * O(n) time, O(n) space. Invokes the closure and stores all yielded elements.
      *
-     * @param Closure $factory A closure returning an iterable of elements.
+     * @param Closure(): iterable<TValue> $factory A closure returning an iterable of elements.
      * @return static A new collection backed by the materialized closure result.
      */
     public static function createFromClosure(Closure $factory): static;
@@ -81,7 +82,7 @@ interface Collectible extends Countable, IteratorAggregate
      *
      * O(1) time, O(1) space. Stores a reference to the iterable without iterating.
      *
-     * @param iterable<int, mixed> $elements The elements to populate the collection with.
+     * @param iterable<TValue> $elements The elements to populate the collection with.
      * @return static A new collection containing the given elements.
      */
     public static function createLazyFrom(iterable $elements): static;
@@ -103,7 +104,7 @@ interface Collectible extends Countable, IteratorAggregate
      *
      * O(1) time, O(1) space. Stores the closure without invoking it.
      *
-     * @param Closure $factory A closure returning an iterable of elements.
+     * @param Closure(): iterable<TValue> $factory A closure returning an iterable of elements.
      * @return static A new collection backed by the given factory.
      */
     public static function createLazyFromClosure(Closure $factory): static;
@@ -114,7 +115,7 @@ interface Collectible extends Countable, IteratorAggregate
      * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
      * Pass contribution: O(m) time, O(m) space (m = number of appended elements).
      *
-     * @param mixed ...$elements The elements to append.
+     * @param TValue ...$elements The elements to append.
      * @return static A new collection with the additional elements.
      */
     public function add(mixed ...$elements): static;
@@ -125,7 +126,7 @@ interface Collectible extends Countable, IteratorAggregate
      * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
      * Pass contribution: O(m) time, O(m) space (m = number of elements in `other`).
      *
-     * @param Collectible $other The collection to merge with.
+     * @param Collectible<TValue> $other The collection to merge with.
      * @return static A new collection containing elements from both collections.
      */
     public function merge(Collectible $other): static;
@@ -141,7 +142,7 @@ interface Collectible extends Countable, IteratorAggregate
      * Lazy: O(P) per call. The search is interleaved with the pass and short-circuits when found.
      *       O(1) intermediate space.
      *
-     * @param mixed $element The element to search for.
+     * @param TValue $element The element to search for.
      * @return bool True if the element exists, false otherwise.
      */
     public function contains(mixed $element): bool;
@@ -166,8 +167,8 @@ interface Collectible extends Countable, IteratorAggregate
      *        O(n) cached space.
      * Lazy: O(P + p) per emitted element. Short-circuits when found. O(1) intermediate space.
      *
-     * @param Closure ...$predicates Conditions to test each element against.
-     * @return mixed The first matching element or null if no match is found.
+     * @param Closure(TValue): bool ...$predicates Conditions to test each element against.
+     * @return TValue|null The first matching element or null if no match is found.
      */
     public function findBy(Closure ...$predicates): mixed;
 
@@ -180,7 +181,7 @@ interface Collectible extends Countable, IteratorAggregate
      *        O(n) cached space. a = number of actions.
      * Lazy: O(P + n * a) per call. O(1) intermediate space.
      *
-     * @param Closure ...$actions Actions to perform on each element.
+     * @param Closure(TValue): void ...$actions Actions to perform on each element.
      */
     public function each(Closure ...$actions): void;
 
@@ -194,7 +195,7 @@ interface Collectible extends Countable, IteratorAggregate
      *        Short-circuits at the first mismatch. O(n) cached space.
      * Lazy: O(P + n) per call. Short-circuits at the first mismatch. O(1) intermediate space.
      *
-     * @param Collectible $other The collection to compare against.
+     * @param Collectible<TValue> $other The collection to compare against.
      * @return bool True if both collections are element-wise equal.
      */
     public function equals(Collectible $other): bool;
@@ -207,7 +208,7 @@ interface Collectible extends Countable, IteratorAggregate
      * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
      * Pass contribution: O(n) time, O(1) space.
      *
-     * @param mixed $element The element to remove.
+     * @param TValue $element The element to remove.
      * @return static A new collection without the specified element.
      */
     public function remove(mixed $element): static;
@@ -219,7 +220,7 @@ interface Collectible extends Countable, IteratorAggregate
      * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
      * Pass contribution: O(n) time, O(1) space.
      *
-     * @param Closure|null $predicate Condition to determine which elements to remove.
+     * @param (Closure(TValue): bool)|null $predicate Condition to determine which elements to remove.
      * @return static A new collection with the matching elements removed.
      */
     public function removeAll(?Closure $predicate = null): static;
@@ -232,7 +233,7 @@ interface Collectible extends Countable, IteratorAggregate
      * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
      * Pass contribution: O(n * p) time, O(1) space (p = number of predicates).
      *
-     * @param Closure|null ...$predicates Conditions each element must meet.
+     * @param (Closure(TValue): bool)|null ...$predicates Conditions each element must meet.
      * @return static A new collection with only the matching elements.
      */
     public function filter(?Closure ...$predicates): static;
@@ -244,8 +245,9 @@ interface Collectible extends Countable, IteratorAggregate
      *        O(n) cached space.
      * Lazy: O(P_first) per call. Short-circuits at the first emitted element. O(1) intermediate space.
      *
-     * @param mixed $defaultValueIfNotFound Value returned when the collection is empty.
-     * @return mixed The first element or the default.
+     * @template TDefault
+     * @param TDefault $defaultValueIfNotFound Value returned when the collection is empty.
+     * @return TValue|TDefault The first element or the default.
      */
     public function first(mixed $defaultValueIfNotFound = null): mixed;
 
@@ -266,9 +268,10 @@ interface Collectible extends Countable, IteratorAggregate
      *        O(n) cached space.
      * Lazy: O(P_index) per call. Short-circuits at the requested position. O(1) intermediate space.
      *
+     * @template TDefault
      * @param int $index The zero-based position.
-     * @param mixed $defaultValueIfNotFound Value returned when the index is out of bounds.
-     * @return mixed The element at the index or the default.
+     * @param TDefault $defaultValueIfNotFound Value returned when the index is out of bounds.
+     * @return TValue|TDefault The element at the index or the default.
      */
     public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed;
 
@@ -281,7 +284,7 @@ interface Collectible extends Countable, IteratorAggregate
      * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
      * Pass contribution: O(n) time, O(n) space. Buffers all groups before emitting. Breaks streaming.
      *
-     * @param Closure $classifier Maps each element to its group key.
+     * @param Closure(TValue): array-key $classifier Maps each element to its group key.
      * @return static A new collection of grouped elements.
      */
     public function groupBy(Closure $classifier): static;
@@ -316,8 +319,9 @@ interface Collectible extends Countable, IteratorAggregate
      *        O(n) cached space.
      * Lazy: O(P) per call. Must reach the end of the pipeline. O(1) intermediate space.
      *
-     * @param mixed $defaultValueIfNotFound Value returned when the collection is empty.
-     * @return mixed The last element or the default.
+     * @template TDefault
+     * @param TDefault $defaultValueIfNotFound Value returned when the collection is empty.
+     * @return TValue|TDefault The last element or the default.
      */
     public function last(mixed $defaultValueIfNotFound = null): mixed;
 
@@ -329,7 +333,7 @@ interface Collectible extends Countable, IteratorAggregate
      * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
      * Pass contribution: O(n * t) time, O(1) space (t = number of transformations).
      *
-     * @param Closure ...$transformations Functions applied to each element.
+     * @param Closure(TValue): mixed ...$transformations Functions applied to each element.
      * @return static A new collection with the transformed elements.
      */
     public function map(Closure ...$transformations): static;
@@ -343,9 +347,10 @@ interface Collectible extends Countable, IteratorAggregate
      *        O(n) cached space.
      * Lazy: O(P + n) per call. O(1) intermediate space (single carry value).
      *
-     * @param Closure $accumulator Combines the carry with each element.
-     * @param mixed $initial The starting value for the accumulation.
-     * @return mixed The final accumulated result.
+     * @template TCarry
+     * @param Closure(TCarry, TValue): TCarry $accumulator Combines the carry with each element.
+     * @param TCarry $initial The starting value for the accumulation.
+     * @return TCarry The final accumulated result.
      */
     public function reduce(Closure $accumulator, mixed $initial): mixed;
 
@@ -359,7 +364,7 @@ interface Collectible extends Countable, IteratorAggregate
      * breaks streaming for any stage placed after `sort` in the same pipeline.
      *
      * @param Order $order The sorting direction.
-     * @param Closure|null $comparator Custom comparison function.
+     * @param (Closure(TValue, TValue): int)|null $comparator Custom comparison function.
      * @return static A new sorted collection.
      */
     public function sort(Order $order = Order::ASCENDING_KEY, ?Closure $comparator = null): static;
@@ -392,7 +397,7 @@ interface Collectible extends Countable, IteratorAggregate
      * By default, `KeyPreservation::PRESERVE` is used.
      *
      * @param KeyPreservation $keyPreservation The option to preserve or discard array keys.
-     * @return array<int|string, mixed> The resulting array.
+     * @return array<int|string, TValue> The resulting array.
      */
     public function toArray(KeyPreservation $keyPreservation = KeyPreservation::PRESERVE): array;
 

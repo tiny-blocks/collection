@@ -8,20 +8,35 @@ use Closure;
 use Generator;
 use TinyBlocks\Collection\Internal\Operations\Operation;
 
+/**
+ * @template TValue
+ * @implements Pipeline<TValue>
+ */
 final readonly class LazyPipeline implements Pipeline
 {
-    private array $stages;
-
-    private function __construct(private iterable|Closure $source, array $stages = [])
+    /**
+     * @param iterable|Closure $source
+     * @param list<Operation<int|string, mixed>> $stages
+     */
+    private function __construct(private iterable|Closure $source, private array $stages = [])
     {
-        $this->stages = $stages;
     }
 
+    /**
+     * @template TElement
+     * @param iterable<TElement> $source
+     * @return LazyPipeline<TElement>
+     */
     public static function from(iterable $source): LazyPipeline
     {
         return new LazyPipeline(source: $source);
     }
 
+    /**
+     * @template TElement
+     * @param Closure(): iterable<TElement> $factory
+     * @return LazyPipeline<TElement>
+     */
     public static function fromClosure(Closure $factory): LazyPipeline
     {
         return new LazyPipeline(source: $factory);
@@ -78,6 +93,7 @@ final readonly class LazyPipeline implements Pipeline
 
     public function process(): Generator
     {
+        /** @var iterable<int|string, TValue> $elements */
         $elements = $this->source instanceof Closure
             ? ($this->source)()
             : $this->source;
@@ -86,6 +102,9 @@ final readonly class LazyPipeline implements Pipeline
             $elements = $stage->apply(elements: $elements);
         }
 
-        yield from $elements;
+        /** @var iterable<int, TValue> $result */
+        $result = $elements;
+
+        yield from $result;
     }
 }

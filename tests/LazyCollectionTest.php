@@ -9,13 +9,13 @@ use PHPUnit\Framework\TestCase;
 use stdClass;
 use Test\TinyBlocks\Collection\Models\Amount;
 use TinyBlocks\Collection\Collection;
+use TinyBlocks\Collection\KeyPreservation;
 use TinyBlocks\Collection\Order;
 use TinyBlocks\Currency\Currency;
-use TinyBlocks\Mapper\KeyPreservation;
 
 final class LazyCollectionTest extends TestCase
 {
-    public function testFromElements(): void
+    public function testCreateLazyFromWhenIntegerElementsThenHoldsAllElements(): void
     {
         /** @Given a set of integer elements */
         $elements = [1, 2, 3];
@@ -30,7 +30,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([1, 2, 3], $collection->toArray());
     }
 
-    public function testFromEmpty(): void
+    public function testCreateLazyFromEmptyThenCollectionIsEmpty(): void
     {
         /** @When creating a lazy collection without arguments */
         $collection = Collection::createLazyFromEmpty();
@@ -42,7 +42,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(0, $collection->count());
     }
 
-    public function testFromGenerator(): void
+    public function testCreateLazyFromWhenGeneratorSourceThenHoldsAllElements(): void
     {
         /** @Given a generator that yields three elements */
         $generator = (static function (): Generator {
@@ -58,7 +58,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(3, $collection->count());
     }
 
-    public function testAdd(): void
+    public function testAddWhenElementsAppendedThenNewCollectionContainsAllInOrder(): void
     {
         /** @Given a lazy collection with three elements */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -76,7 +76,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(3, $collection->count());
     }
 
-    public function testConcat(): void
+    public function testMergeWhenTwoCollectionsThenElementsAreCombinedInOrder(): void
     {
         /** @Given a first lazy collection */
         $first = Collection::createLazyFrom(elements: [1, 2]);
@@ -94,7 +94,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([1, 2, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testContainsExistingElement(): void
+    public function testContainsWhenElementIsPresentThenReturnsTrue(): void
     {
         /** @Given a lazy collection with integers */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -106,7 +106,7 @@ final class LazyCollectionTest extends TestCase
         self::assertTrue($actual);
     }
 
-    public function testContainsMissingElement(): void
+    public function testContainsWhenElementIsAbsentThenReturnsFalse(): void
     {
         /** @Given a lazy collection with integers */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -118,7 +118,7 @@ final class LazyCollectionTest extends TestCase
         self::assertFalse($actual);
     }
 
-    public function testContainsObject(): void
+    public function testContainsWhenEquivalentObjectIsPresentThenReturnsTrue(): void
     {
         /** @Given an Amount object to search for */
         $target = new Amount(value: 100.00, currency: Currency::USD);
@@ -137,7 +137,7 @@ final class LazyCollectionTest extends TestCase
         self::assertTrue($actual);
     }
 
-    public function testContainsObjectDoesNotMatchTrueScalar(): void
+    public function testContainsWhenObjectSoughtInScalarCollectionThenReturnsFalse(): void
     {
         /** @Given a lazy collection containing boolean true */
         $collection = Collection::createLazyFrom(elements: [true]);
@@ -149,7 +149,7 @@ final class LazyCollectionTest extends TestCase
         self::assertFalse($actual);
     }
 
-    public function testCollectionWithObjectDoesNotContainTrueScalar(): void
+    public function testContainsWhenScalarSoughtInObjectCollectionThenReturnsFalse(): void
     {
         /** @Given a lazy collection containing a stdClass object */
         $collection = Collection::createLazyFrom(elements: [new stdClass()]);
@@ -161,7 +161,7 @@ final class LazyCollectionTest extends TestCase
         self::assertFalse($actual);
     }
 
-    public function testCount(): void
+    public function testCountWhenCollectionHasElementsThenReturnsElementCount(): void
     {
         /** @Given a lazy collection with five elements */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3, 4, 5]);
@@ -173,7 +173,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(5, $actual);
     }
 
-    public function testFindFirstMatch(): void
+    public function testFindByWhenElementMatchesPredicateThenFirstMatchIsReturned(): void
     {
         /** @Given a lazy collection of integers */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3, 4, 5]);
@@ -185,7 +185,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(4, $actual);
     }
 
-    public function testFindFirstMatchAcrossMultiplePredicates(): void
+    public function testFindByWhenMultiplePredicatesThenFirstMatchAcrossPredicatesIsReturned(): void
     {
         /** @Given a lazy collection of integers */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3, 4, 5]);
@@ -200,7 +200,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(3, $actual);
     }
 
-    public function testFindReturnsNullWithoutPredicates(): void
+    public function testFindByWhenNoPredicatesThenReturnsNull(): void
     {
         /** @Given a lazy collection with truthy and falsy values */
         $collection = Collection::createLazyFrom(elements: [0, 1, 2]);
@@ -212,7 +212,7 @@ final class LazyCollectionTest extends TestCase
         self::assertNull($actual);
     }
 
-    public function testFindReturnsNullWhenNoMatch(): void
+    public function testFindByWhenNoElementMatchesThenReturnsNull(): void
     {
         /** @Given a lazy collection of integers */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -224,7 +224,7 @@ final class LazyCollectionTest extends TestCase
         self::assertNull($actual);
     }
 
-    public function testEach(): void
+    public function testEachWhenActionAppliedThenEveryElementIsVisited(): void
     {
         /** @Given a lazy collection of integers */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -241,7 +241,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(6, $sum);
     }
 
-    public function testEqualsWithIdenticalCollections(): void
+    public function testEqualsWhenCollectionsHaveIdenticalElementsThenReturnsTrue(): void
     {
         /** @Given a first lazy collection */
         $first = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -256,7 +256,7 @@ final class LazyCollectionTest extends TestCase
         self::assertTrue($actual);
     }
 
-    public function testEqualsWithDifferentCollections(): void
+    public function testEqualsWhenCollectionsHaveDifferentElementsThenReturnsFalse(): void
     {
         /** @Given a first lazy collection */
         $first = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -271,7 +271,7 @@ final class LazyCollectionTest extends TestCase
         self::assertFalse($actual);
     }
 
-    public function testEqualsWithDifferentSizes(): void
+    public function testEqualsWhenCollectionsHaveDifferentSizesThenReturnsFalseBothWays(): void
     {
         /** @Given a first lazy collection with three elements */
         $first = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -292,7 +292,7 @@ final class LazyCollectionTest extends TestCase
         self::assertFalse($secondEqualsFirst);
     }
 
-    public function testEqualsWithDifferentSizesButSamePrefix(): void
+    public function testEqualsWhenLongerCollectionSharesPrefixThenReturnsFalse(): void
     {
         /** @Given a first lazy collection with four elements */
         $first = Collection::createLazyFrom(elements: [1, 2, 3, 4]);
@@ -307,7 +307,7 @@ final class LazyCollectionTest extends TestCase
         self::assertFalse($actual);
     }
 
-    public function testEqualsWithNullElementsAndDifferentSizes(): void
+    public function testEqualsWhenTrailingNullExtendsCollectionThenReturnsFalse(): void
     {
         /** @Given a first lazy collection with three elements */
         $first = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -322,7 +322,7 @@ final class LazyCollectionTest extends TestCase
         self::assertFalse($actual);
     }
 
-    public function testRemoveElement(): void
+    public function testRemoveWhenValueHasDuplicatesThenAllOccurrencesAreRemoved(): void
     {
         /** @Given a lazy collection with duplicate elements */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3, 2, 4]);
@@ -334,7 +334,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([1, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testRemoveScalarFromObjectCollection(): void
+    public function testRemoveWhenScalarRemovedFromObjectCollectionThenNothingIsRemoved(): void
     {
         /** @Given a lazy collection with Amount objects */
         $collection = Collection::createLazyFrom(elements: [
@@ -349,7 +349,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(2, $actual->count());
     }
 
-    public function testRemovePreservesKeys(): void
+    public function testRemoveWhenStringKeyedCollectionThenRemainingKeysArePreserved(): void
     {
         /** @Given a lazy collection with string keys */
         $collection = Collection::createLazyFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
@@ -361,7 +361,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(['a' => 1, 'c' => 3], $actual->toArray());
     }
 
-    public function testRemoveAllWithPredicate(): void
+    public function testRemoveAllWhenPredicateGivenThenMatchingElementsAreRemoved(): void
     {
         /** @Given a lazy collection of integers */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3, 4, 5]);
@@ -373,7 +373,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([1, 2, 3], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testRemoveAllWithoutPredicate(): void
+    public function testRemoveAllWhenNoPredicateThenCollectionIsEmptied(): void
     {
         /** @Given a lazy collection of integers */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -385,7 +385,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(0, $actual->count());
     }
 
-    public function testRemoveAllWithNonMatchingFirstElement(): void
+    public function testRemoveAllWhenFirstElementDoesNotMatchThenOnlyMatchingAreRemoved(): void
     {
         /** @Given a lazy collection where the first element does not match the predicate */
         $collection = Collection::createLazyFrom(elements: [1, 10, 2, 20, 3]);
@@ -397,7 +397,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([1, 2, 3], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testRemoveAllPreservesKeys(): void
+    public function testRemoveAllWhenStringKeyedCollectionThenRemainingKeysArePreserved(): void
     {
         /** @Given a lazy collection with string keys */
         $collection = Collection::createLazyFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
@@ -409,7 +409,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(['a' => 1, 'b' => 2], $actual->toArray());
     }
 
-    public function testFirstReturnsElement(): void
+    public function testFirstWhenCollectionIsNotEmptyThenReturnsFirstElement(): void
     {
         /** @Given a lazy collection with three elements */
         $collection = Collection::createLazyFrom(elements: [10, 20, 30]);
@@ -421,7 +421,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(10, $actual);
     }
 
-    public function testFirstReturnsDefaultWhenEmpty(): void
+    public function testFirstWhenCollectionIsEmptyThenReturnsDefaultValue(): void
     {
         /** @Given an empty lazy collection */
         $collection = Collection::createLazyFromEmpty();
@@ -433,7 +433,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame('fallback', $actual);
     }
 
-    public function testFirstReturnsNullWhenEmpty(): void
+    public function testFirstWhenCollectionIsEmptyWithoutDefaultThenReturnsNull(): void
     {
         /** @Given an empty lazy collection */
         $collection = Collection::createLazyFromEmpty();
@@ -445,7 +445,7 @@ final class LazyCollectionTest extends TestCase
         self::assertNull($actual);
     }
 
-    public function testFirstReturnsNullElementInsteadOfDefault(): void
+    public function testFirstWhenFirstElementIsNullThenReturnsNullNotDefault(): void
     {
         /** @Given a lazy collection where the first element is null */
         $collection = Collection::createLazyFrom(elements: [null, 1, 2]);
@@ -457,7 +457,7 @@ final class LazyCollectionTest extends TestCase
         self::assertNull($actual);
     }
 
-    public function testFlatten(): void
+    public function testFlattenWhenNestedArraysThenElementsAreLiftedOneLevel(): void
     {
         /** @Given a lazy collection with nested arrays */
         $collection = Collection::createLazyFrom(elements: [[1, 2], [3, 4], 5]);
@@ -469,7 +469,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([1, 2, 3, 4, 5], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testGetByIndex(): void
+    public function testGetByWhenIndexExistsThenReturnsElementAtIndex(): void
     {
         /** @Given a lazy collection with three elements */
         $collection = Collection::createLazyFrom(elements: ['a', 'b', 'c']);
@@ -481,7 +481,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame('b', $actual);
     }
 
-    public function testGetByIndexReturnsDefaultWhenOutOfBounds(): void
+    public function testGetByWhenIndexIsOutOfBoundsThenReturnsDefaultValue(): void
     {
         /** @Given a lazy collection with three elements */
         $collection = Collection::createLazyFrom(elements: ['a', 'b', 'c']);
@@ -493,7 +493,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame('missing', $actual);
     }
 
-    public function testGroupBy(): void
+    public function testGroupByWhenClassifierGivenThenElementsAreGroupedByClassifier(): void
     {
         /** @Given a lazy collection of integers from 1 to 6 */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3, 4, 5, 6]);
@@ -511,7 +511,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([2, 4, 6], $groups['even']);
     }
 
-    public function testIsEmpty(): void
+    public function testIsEmptyWhenCollectionIsEmptyThenReturnsTrue(): void
     {
         /** @Given an empty lazy collection */
         $empty = Collection::createLazyFromEmpty();
@@ -520,7 +520,7 @@ final class LazyCollectionTest extends TestCase
         self::assertTrue($empty->isEmpty());
     }
 
-    public function testIsNotEmpty(): void
+    public function testIsEmptyWhenCollectionIsNotEmptyThenReturnsFalse(): void
     {
         /** @Given a non-empty lazy collection */
         $nonEmpty = Collection::createLazyFrom(elements: [1]);
@@ -529,7 +529,7 @@ final class LazyCollectionTest extends TestCase
         self::assertFalse($nonEmpty->isEmpty());
     }
 
-    public function testJoinToString(): void
+    public function testJoinToStringWhenStringElementsThenValuesAreJoinedWithSeparator(): void
     {
         /** @Given a lazy collection of strings */
         $collection = Collection::createLazyFrom(elements: ['a', 'b', 'c']);
@@ -541,7 +541,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame('a, b, c', $actual);
     }
 
-    public function testJoinToStringWithIntegers(): void
+    public function testJoinToStringWhenIntegerElementsThenValuesAreJoinedWithSeparator(): void
     {
         /** @Given a lazy collection of integers */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -553,7 +553,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame('1, 2, 3', $actual);
     }
 
-    public function testJoinToStringWithSingleInteger(): void
+    public function testJoinToStringWhenSingleElementThenSeparatorIsOmitted(): void
     {
         /** @Given a lazy collection with a single integer */
         $collection = Collection::createLazyFrom(elements: [42]);
@@ -565,7 +565,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame('42', $actual);
     }
 
-    public function testFilterWithPredicate(): void
+    public function testFilterWhenPredicateGivenThenOnlyMatchingElementsRemain(): void
     {
         /** @Given a lazy collection of integers */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3, 4, 5]);
@@ -577,7 +577,19 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([4, 5], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testFilterWithoutPredicateRemovesFalsyValues(): void
+    public function testFilterWhenSinglePredicateMatchesFalsyValueThenItIsKept(): void
+    {
+        /** @Given a lazy collection containing a falsy value and a non-matching value */
+        $collection = Collection::createLazyFrom(elements: [0, 1, 2, 9]);
+
+        /** @When filtering with a single predicate that matches values below five */
+        $actual = $collection->filter(predicates: static fn(int $value): bool => $value < 5);
+
+        /** @Then the falsy value matched by the predicate is kept and the non-matching value is dropped */
+        self::assertSame([0, 1, 2], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testFilterWhenNoPredicateThenFalsyValuesAreRemoved(): void
     {
         /** @Given a lazy collection with falsy and truthy values */
         $collection = Collection::createLazyFrom(elements: [0, '', null, false, 1, 'hello', 2]);
@@ -589,7 +601,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([1, 'hello', 2], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testFilterWithExplicitNull(): void
+    public function testFilterWhenExplicitNullPredicateThenFalsyValuesAreRemoved(): void
     {
         /** @Given a lazy collection with falsy and truthy values */
         $collection = Collection::createLazyFrom(elements: [0, '', 1, 'hello', 2]);
@@ -601,7 +613,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([1, 'hello', 2], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testFilterPreservesKeys(): void
+    public function testFilterWhenStringKeyedCollectionThenRemainingKeysArePreserved(): void
     {
         /** @Given a lazy collection with string keys */
         $collection = Collection::createLazyFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
@@ -613,7 +625,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(['b' => 2, 'c' => 3], $actual->toArray());
     }
 
-    public function testFilterWithMultiplePredicatesRetainsOnlyMatchingAll(): void
+    public function testFilterWhenMultiplePredicatesThenOnlyElementsMatchingAllRemain(): void
     {
         /** @Given a lazy collection of integers */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
@@ -628,7 +640,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([4, 6, 8, 10], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testLastReturnsElement(): void
+    public function testLastWhenCollectionIsNotEmptyThenReturnsLastElement(): void
     {
         /** @Given a lazy collection with three elements */
         $collection = Collection::createLazyFrom(elements: [10, 20, 30]);
@@ -640,7 +652,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(30, $actual);
     }
 
-    public function testLastReturnsDefaultWhenEmpty(): void
+    public function testLastWhenCollectionIsEmptyThenReturnsDefaultValue(): void
     {
         /** @Given an empty lazy collection */
         $collection = Collection::createLazyFromEmpty();
@@ -652,7 +664,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame('fallback', $actual);
     }
 
-    public function testLastReturnsNullElementInsteadOfDefault(): void
+    public function testLastWhenLastElementIsNullThenReturnsNullNotDefault(): void
     {
         /** @Given a lazy collection where the last element is null */
         $collection = Collection::createLazyFrom(elements: [1, 2, null]);
@@ -664,7 +676,7 @@ final class LazyCollectionTest extends TestCase
         self::assertNull($actual);
     }
 
-    public function testMap(): void
+    public function testMapWhenTransformationGivenThenEachElementIsTransformed(): void
     {
         /** @Given a lazy collection of integers */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -676,7 +688,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([10, 20, 30], $actual->toArray());
     }
 
-    public function testMapPreservesKeys(): void
+    public function testMapWhenStringKeyedCollectionThenKeysArePreserved(): void
     {
         /** @Given a lazy collection with string keys */
         $collection = Collection::createLazyFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
@@ -688,7 +700,34 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(['a' => 10, 'b' => 20, 'c' => 30], $actual->toArray());
     }
 
-    public function testReduce(): void
+    public function testMapWhenMultipleTransformationsThenAppliedInSequence(): void
+    {
+        /** @Given a lazy collection of integers */
+        $collection = Collection::createLazyFrom(elements: [1, 2, 3]);
+
+        /** @When applying two transformations: increment, then double */
+        $actual = $collection->map(
+            static fn(int $value): int => $value + 1,
+            static fn(int $value): int => $value * 2
+        );
+
+        /** @Then both transformations should be applied in order */
+        self::assertSame([4, 6, 8], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testMapWhenNoTransformationsThenElementsAreReturnedUnchanged(): void
+    {
+        /** @Given a lazy collection of integers */
+        $collection = Collection::createLazyFrom(elements: [1, 2, 3]);
+
+        /** @When mapping without any transformation */
+        $actual = $collection->map();
+
+        /** @Then the elements should be returned unchanged */
+        self::assertSame([1, 2, 3], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testReduceWhenAccumulatorGivenThenElementsAreAccumulatedToSingleValue(): void
     {
         /** @Given a lazy collection of integers */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3, 4]);
@@ -703,7 +742,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(10, $actual);
     }
 
-    public function testSortAscending(): void
+    public function testSortWhenAscendingValueOrderThenElementsAreSortedAscending(): void
     {
         /** @Given a lazy collection with unordered elements */
         $collection = Collection::createLazyFrom(elements: [3, 1, 2]);
@@ -715,7 +754,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([1, 2, 3], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testSortDescending(): void
+    public function testSortWhenDescendingValueOrderThenElementsAreSortedDescending(): void
     {
         /** @Given a lazy collection with ordered elements */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -727,7 +766,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([3, 2, 1], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testSortAscendingKey(): void
+    public function testSortWhenDefaultKeyOrderThenKeysAreSortedAscending(): void
     {
         /** @Given a lazy collection with unordered string keys */
         $collection = Collection::createLazyFrom(elements: ['c' => 3, 'a' => 1, 'b' => 2]);
@@ -739,7 +778,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(['a' => 1, 'b' => 2, 'c' => 3], $actual->toArray());
     }
 
-    public function testSortDescendingKey(): void
+    public function testSortWhenDescendingKeyOrderThenKeysAreSortedDescending(): void
     {
         /** @Given a lazy collection with ordered string keys */
         $collection = Collection::createLazyFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
@@ -751,7 +790,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(['c' => 3, 'b' => 2, 'a' => 1], $actual->toArray());
     }
 
-    public function testSortAscendingValueWithoutComparator(): void
+    public function testSortWhenAscendingValueWithoutComparatorThenDefaultComparisonIsUsed(): void
     {
         /** @Given a lazy collection with unordered integers */
         $collection = Collection::createLazyFrom(elements: [3, 1, 4, 1, 5]);
@@ -763,7 +802,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([1, 1, 3, 4, 5], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testSortWithCustomComparator(): void
+    public function testSortWhenCustomComparatorGivenThenElementsAreOrderedByComparator(): void
     {
         /** @Given a lazy collection of Amount objects */
         $collection = Collection::createLazyFrom(elements: [
@@ -785,7 +824,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(300.00, $actual->last()->value);
     }
 
-    public function testSortWithCustomComparatorProducesDifferentOrderThanDefault(): void
+    public function testSortWhenComparatorDiffersFromDefaultThenOrdersDiverge(): void
     {
         /** @Given a lazy collection where alphabetical and length order diverge */
         $collection = Collection::createLazyFrom(elements: ['zz', 'a', 'bbb']);
@@ -806,7 +845,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(['a', 'bbb', 'zz'], $byDefault->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testSlice(): void
+    public function testSliceWhenOffsetAndLengthGivenThenSubrangeIsReturned(): void
     {
         /** @Given a lazy collection of five elements */
         $collection = Collection::createLazyFrom(elements: [10, 20, 30, 40, 50]);
@@ -818,7 +857,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([20, 30], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testSliceUntilEnd(): void
+    public function testSliceWhenOffsetWithoutLengthThenRemainderIsReturned(): void
     {
         /** @Given a lazy collection of five elements */
         $collection = Collection::createLazyFrom(elements: [10, 20, 30, 40, 50]);
@@ -830,7 +869,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([30, 40, 50], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testSlicePreservesKeys(): void
+    public function testSliceWhenStringKeyedCollectionThenKeysArePreserved(): void
     {
         /** @Given a lazy collection with string keys */
         $collection = Collection::createLazyFrom(elements: ['a' => 10, 'b' => 20, 'c' => 30, 'd' => 40]);
@@ -842,7 +881,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(['b' => 20, 'c' => 30], $actual->toArray());
     }
 
-    public function testSliceWithZeroLengthReturnsEmpty(): void
+    public function testSliceWhenLengthIsZeroThenResultIsEmpty(): void
     {
         /** @Given a lazy collection with five elements */
         $collection = Collection::createLazyFrom(elements: [10, 20, 30, 40, 50]);
@@ -857,7 +896,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(0, $actual->count());
     }
 
-    public function testSliceWithNegativeLengthExcludesTrailingElements(): void
+    public function testSliceWhenNegativeLengthThenTrailingElementsAreExcluded(): void
     {
         /** @Given a lazy collection with five elements */
         $collection = Collection::createLazyFrom(elements: [10, 20, 30, 40, 50]);
@@ -869,7 +908,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([10, 20, 30], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testSliceWithOffsetAndNegativeLength(): void
+    public function testSliceWhenOffsetAndNegativeLengthThenSubrangeIsReturned(): void
     {
         /** @Given a lazy collection with five elements */
         $collection = Collection::createLazyFrom(elements: [10, 20, 30, 40, 50]);
@@ -881,7 +920,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([20, 30], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testSliceWithNegativeLengthPreservesKeys(): void
+    public function testSliceWhenNegativeLengthOnStringKeysThenKeysArePreserved(): void
     {
         /** @Given a lazy collection with string keys */
         $collection = Collection::createLazyFrom(elements: ['a' => 10, 'b' => 20, 'c' => 30, 'd' => 40]);
@@ -893,7 +932,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(['a' => 10, 'b' => 20], $actual->toArray());
     }
 
-    public function testSliceWithNegativeLengthProducesExactCount(): void
+    public function testSliceWhenNegativeLengthThenRemainingCountIsExact(): void
     {
         /** @Given a lazy collection with six elements */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3, 4, 5, 6]);
@@ -908,7 +947,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([1, 2, 3], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testToArrayPreservingKeys(): void
+    public function testToArrayWhenNonSequentialKeysThenKeysArePreserved(): void
     {
         /** @Given a lazy collection with non-sequential keys */
         $collection = Collection::createLazyFrom(elements: [0 => 'a', 2 => 'b', 5 => 'c']);
@@ -920,7 +959,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([0 => 'a', 2 => 'b', 5 => 'c'], $actual);
     }
 
-    public function testToArrayDiscardingKeys(): void
+    public function testToArrayWhenKeysDiscardedThenValuesAreReindexed(): void
     {
         /** @Given a lazy collection with non-sequential keys */
         $collection = Collection::createLazyFrom(elements: [0 => 'a', 2 => 'b', 5 => 'c']);
@@ -932,7 +971,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(['a', 'b', 'c'], $actual);
     }
 
-    public function testToJson(): void
+    public function testToJsonWhenIntegerElementsThenReturnsJsonArray(): void
     {
         /** @Given a lazy collection of integers */
         $collection = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -944,7 +983,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame('[1,2,3]', $actual);
     }
 
-    public function testToJsonDiscardingKeys(): void
+    public function testToJsonWhenKeysDiscardedThenReturnsSequentialJsonArray(): void
     {
         /** @Given a lazy collection with string keys */
         $collection = Collection::createLazyFrom(elements: ['x' => 1, 'y' => 2]);
@@ -956,7 +995,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame('[1,2]', $actual);
     }
 
-    public function testToJsonPreservesKeysByDefault(): void
+    public function testToJsonWhenKeysPreservedThenReturnsJsonObject(): void
     {
         /** @Given a lazy collection with string keys */
         $collection = Collection::createLazyFrom(elements: ['x' => 1, 'y' => 2]);
@@ -968,7 +1007,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame('{"x":1,"y":2}', $actual);
     }
 
-    public function testImmutability(): void
+    public function testAddWhenElementAddedThenOriginalIsUnchanged(): void
     {
         /** @Given a lazy collection with three elements */
         $original = Collection::createLazyFrom(elements: [1, 2, 3]);
@@ -983,7 +1022,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(4, $modified->count());
     }
 
-    public function testChainedOperationsWithObjects(): void
+    public function testChainedOperationsWhenObjectElementsThenPipelineProducesExpectedResult(): void
     {
         /** @Given a lazy collection of Amount objects */
         $collection = Collection::createLazyFrom(elements: [
@@ -1028,7 +1067,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(225.00, $actual->last()->value);
     }
 
-    public function testChainedOperationsWithIntegers(): void
+    public function testChainedOperationsWhenIntegerElementsThenPipelineProducesExpectedResult(): void
     {
         /** @Given a lazy collection of integers from 1 to 100 */
         $collection = Collection::createLazyFrom(elements: range(1, 100));
@@ -1046,7 +1085,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(4, $actual->last());
     }
 
-    public function testReduceOverChainedOperationsWithIntegers(): void
+    public function testReduceWhenAppliedOverChainedPipelineThenSumIsReturned(): void
     {
         /** @Given a lazy collection of integers from 1 to 100 */
         $collection = Collection::createLazyFrom(elements: range(1, 100));
@@ -1067,7 +1106,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(171700, $sum);
     }
 
-    public function testFromClosure(): void
+    public function testCreateLazyFromClosureWhenGeneratorClosureThenHoldsAllElements(): void
     {
         /** @Given a closure that yields three elements */
         $factory = static function (): Generator {
@@ -1086,7 +1125,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([1, 2, 3], $collection->toArray());
     }
 
-    public function testFromClosureReiteratesSuccessfully(): void
+    public function testCreateLazyFromClosureWhenConsumedMultipleTimesThenRemainsReiterable(): void
     {
         /** @Given a closure that yields elements */
         $collection = Collection::createLazyFromClosure(factory: static function (): Generator {
@@ -1111,7 +1150,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(30, $collection->last());
     }
 
-    public function testFromClosureWithEmptyClosure(): void
+    public function testCreateLazyFromClosureWhenClosureYieldsNothingThenCollectionIsEmpty(): void
     {
         /** @Given a closure that yields nothing */
         $collection = Collection::createLazyFromClosure(factory: static function (): Generator {
@@ -1128,7 +1167,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(0, $collection->count());
     }
 
-    public function testFromClosureWithChainedOperations(): void
+    public function testChainedOperationsWhenClosureBackedThenPipelineProducesExpectedResult(): void
     {
         /** @Given a closure-backed collection with integers */
         $collection = Collection::createLazyFromClosure(factory: static function (): Generator {
@@ -1145,7 +1184,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([30, 40, 50], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testFromClosureWithObjects(): void
+    public function testReduceWhenClosureBackedObjectsThenAmountsAreSummed(): void
     {
         /** @Given a closure that yields Amount objects */
         $collection = Collection::createLazyFromClosure(factory: static function (): Generator {
@@ -1164,7 +1203,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame(600.00, $total);
     }
 
-    public function testFromClosureGetByIndex(): void
+    public function testGetByWhenClosureBackedCollectionThenReturnsElementAtIndex(): void
     {
         /** @Given a closure-backed collection */
         $collection = Collection::createLazyFromClosure(factory: static function (): Generator {
@@ -1180,7 +1219,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame('beta', $actual);
     }
 
-    public function testFromClosureContainsElement(): void
+    public function testContainsWhenClosureBackedCollectionThenDetectsMembership(): void
     {
         /** @Given a closure-backed collection */
         $collection = Collection::createLazyFromClosure(factory: static function (): Generator {
@@ -1199,7 +1238,7 @@ final class LazyCollectionTest extends TestCase
         self::assertFalse($collection->contains(element: 'delta'));
     }
 
-    public function testFromClosureAdd(): void
+    public function testAddWhenClosureBackedCollectionThenElementsAreAppended(): void
     {
         /** @Given a closure-backed collection */
         $collection = Collection::createLazyFromClosure(factory: static function (): Generator {
@@ -1214,7 +1253,7 @@ final class LazyCollectionTest extends TestCase
         self::assertSame([1, 2, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testFromClosureMerge(): void
+    public function testMergeWhenClosureBackedMergedWithEagerThenElementsAreCombined(): void
     {
         /** @Given a closure-backed collection */
         $closureCollection = Collection::createLazyFromClosure(factory: static function (): Generator {

@@ -23,14 +23,21 @@ use TinyBlocks\Collection\Internal\Operations\Transforming\Remove;
 use TinyBlocks\Collection\Internal\Operations\Transforming\RemoveAll;
 use TinyBlocks\Collection\Internal\Operations\Transforming\Segment;
 use TinyBlocks\Collection\Internal\Pipeline;
-use TinyBlocks\Mapper\IterableMappability;
-use TinyBlocks\Mapper\IterableMapper;
+use TinyBlocks\Mapper\Configuration;
+use TinyBlocks\Mapper\Mapper;
 use Traversable;
 
-class Collection implements Collectible, IterableMapper
+/**
+ * Default Collectible implementation backed by an eager or lazy evaluation pipeline.
+ *
+ * @template TValue
+ * @implements Collectible<TValue>
+ */
+class Collection implements Collectible
 {
-    use IterableMappability;
-
+    /**
+     * @param Pipeline<TValue> $pipeline
+     */
     private function __construct(private readonly Pipeline $pipeline)
     {
     }
@@ -175,5 +182,25 @@ class Collection implements Collectible, IterableMapper
     public function slice(int $offset, int $length = -1): static
     {
         return new static(pipeline: $this->pipeline->pipe(operation: Segment::from(offset: $offset, length: $length)));
+    }
+
+    public function toArray(KeyPreservation $keyPreservation = KeyPreservation::PRESERVE): array
+    {
+        $configuration = match ($keyPreservation) {
+            KeyPreservation::DISCARD  => Configuration::default()->discardingKeys(),
+            KeyPreservation::PRESERVE => Configuration::default()
+        };
+
+        return Mapper::create()->toArray(source: $this, configuration: $configuration);
+    }
+
+    public function toJson(KeyPreservation $keyPreservation = KeyPreservation::PRESERVE): string
+    {
+        $configuration = match ($keyPreservation) {
+            KeyPreservation::DISCARD  => Configuration::default()->discardingKeys(),
+            KeyPreservation::PRESERVE => Configuration::default()
+        };
+
+        return Mapper::create()->toJson(source: $this, configuration: $configuration);
     }
 }
