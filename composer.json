@@ -27,7 +27,7 @@
     },
     "require": {
         "php": "^8.5",
-        "tiny-blocks/mapper": "^3.0"
+        "tiny-blocks/mapper": "^3.1"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.52",
