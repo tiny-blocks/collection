@@ -17,15 +17,14 @@ final readonly class FlatMap implements Operation
     public function apply(iterable $elements): Generator
     {
         foreach ($elements as $element) {
-            if (is_iterable($element)) {
-                foreach ($element as $nested) {
-                    yield $nested;
-                }
-
-                continue;
+            foreach ($this->expand(element: $element) as $nested) {
+                yield $nested;
             }
-
-            yield $element;
         }
+    }
+
+    private function expand(mixed $element): iterable
+    {
+        return is_iterable($element) ? $element : [$element];
     }
 }

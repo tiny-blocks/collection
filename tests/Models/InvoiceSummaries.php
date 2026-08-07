@@ -18,7 +18,7 @@ final class InvoiceSummaries extends Collection
         return $this
             ->filter(predicates: static fn(InvoiceSummary $summary): bool => $summary->customer === $customer)
             ->reduce(
-                accumulator: static fn(float $carry, InvoiceSummary $summary): float => $carry + $summary->amount,
+                accumulator: static fn(float $carry, InvoiceSummary $summary): float => ($carry + $summary->amount),
                 initial: 0.0
             );
     }

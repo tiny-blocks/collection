@@ -11,14 +11,6 @@ parameters:
         - identifier: new.static
           path: src/Collection.php
 
-        # Collection is a generic extension point whose creating and mutating methods return
-        # `static`, so a subclass builds its own concrete type. `TValue` must stay invariant
-        # (it is an input in createFrom, add, contains, merge, equals, and remove, so it cannot
-        # be covariant), which leads level max to flag every `static` return as a covariance
-        # violation. The `new static(...)` design is intentional. Suppressed by identifier and path.
-        - identifier: return.type
-          path: src/Collection.php
-
         # LazyPipeline defers element production, holding its source as `iterable|Closure` until
         # iteration. The element type is only realized on materialization, so level max cannot bind
         # the template through the constructor. `new LazyPipeline(...)` then reads as `<mixed>`, which
@@ -65,6 +57,8 @@ parameters:
 
         - identifier: missingType.generics
           path: src/Internal/Operations/Transforming/FlatMap.php
+        - identifier: missingType.iterableValue
+          path: src/Internal/Operations/Transforming/FlatMap.php
 
         - identifier: missingType.generics
           path: src/Internal/Operations/Transforming/GroupInto.php
@@ -91,6 +85,8 @@ parameters:
           path: src/Internal/Operations/Transforming/RemoveAll.php
 
         - identifier: missingType.generics
+          path: src/Internal/Operations/Transforming/Segment.php
+        - identifier: missingType.iterableValue
           path: src/Internal/Operations/Transforming/Segment.php
         - identifier: offsetAccess.nonArray
           path: src/Internal/Operations/Transforming/Segment.php

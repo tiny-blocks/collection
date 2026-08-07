@@ -15,7 +15,6 @@ use TinyBlocks\Collection\Internal\Operations\Operation;
 final readonly class LazyPipeline implements Pipeline
 {
     /**
-     * @param iterable|Closure $source
      * @param list<Operation<int|string, mixed>> $stages
      */
     private function __construct(private iterable|Closure $source, private array $stages = [])

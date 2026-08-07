@@ -25,27 +25,38 @@ final readonly class Segment implements Operation
             return;
         }
 
-        if ($this->length < -1) {
-            $buffer = new SplQueue();
-            $skipFromEnd = abs($this->length);
-            $currentIndex = 0;
+        yield from $this->length < -1
+            ? $this->dropFromEnd(elements: $elements)
+            : $this->takeInOrder(elements: $elements);
+    }
 
-            foreach ($elements as $key => $value) {
-                if ($currentIndex++ < $this->offset) {
-                    continue;
-                }
+    private function hasReached(int $emitted): bool
+    {
+        return $this->length !== -1 && $emitted >= $this->length;
+    }
 
-                $buffer->enqueue([$key, $value]);
+    private function dropFromEnd(iterable $elements): Generator
+    {
+        $buffer = new SplQueue();
+        $skipFromEnd = abs($this->length);
+        $currentIndex = 0;
 
-                if ($buffer->count() > $skipFromEnd) {
-                    [$yieldKey, $yieldValue] = $buffer->dequeue();
-                    yield $yieldKey => $yieldValue;
-                }
+        foreach ($elements as $key => $value) {
+            if ($currentIndex++ < $this->offset) {
+                continue;
             }
 
-            return;
-        }
+            $buffer->enqueue([$key, $value]);
 
+            if ($buffer->count() > $skipFromEnd) {
+                [$yieldKey, $yieldValue] = $buffer->dequeue();
+                yield $yieldKey => $yieldValue;
+            }
+        }
+    }
+
+    private function takeInOrder(iterable $elements): Generator
+    {
         $currentIndex = 0;
         $emitted = 0;
 
@@ -57,7 +68,7 @@ final readonly class Segment implements Operation
             yield $key => $value;
             $emitted++;
 
-            if ($this->length !== -1 && $emitted >= $this->length) {
+            if ($this->hasReached(emitted: $emitted)) {
                 return;
             }
         }

@@ -500,7 +500,7 @@ final class LazyCollectionTest extends TestCase
 
         /** @When grouping by even and odd */
         $actual = $collection->groupBy(
-            classifier: static fn(int $value): string => $value % 2 === 0 ? 'even' : 'odd'
+            classifier: static fn(int $value): string => ($value % 2) === 0 ? 'even' : 'odd'
         );
 
         /** @Then the odd group should contain 1, 3, 5 */
@@ -633,7 +633,7 @@ final class LazyCollectionTest extends TestCase
         /** @When filtering with two predicates: greater than 3 and even */
         $actual = $collection->filter(
             static fn(int $value): bool => $value > 3,
-            static fn(int $value): bool => $value % 2 === 0
+            static fn(int $value): bool => ($value % 2) === 0
         );
 
         /** @Then only elements satisfying both predicates should remain */
@@ -682,7 +682,7 @@ final class LazyCollectionTest extends TestCase
         $collection = Collection::createLazyFrom(elements: [1, 2, 3]);
 
         /** @When transforming each element by multiplying by 10 */
-        $actual = $collection->map(transformations: static fn(int $value): int => $value * 10);
+        $actual = $collection->map(transformations: static fn(int $value): int => ($value * 10));
 
         /** @Then each element should be multiplied */
         self::assertSame([10, 20, 30], $actual->toArray());
@@ -694,7 +694,7 @@ final class LazyCollectionTest extends TestCase
         $collection = Collection::createLazyFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
 
         /** @When transforming each element */
-        $actual = $collection->map(transformations: static fn(int $value): int => $value * 10);
+        $actual = $collection->map(transformations: static fn(int $value): int => ($value * 10));
 
         /** @Then the keys should be preserved */
         self::assertSame(['a' => 10, 'b' => 20, 'c' => 30], $actual->toArray());
@@ -707,8 +707,8 @@ final class LazyCollectionTest extends TestCase
 
         /** @When applying two transformations: increment, then double */
         $actual = $collection->map(
-            static fn(int $value): int => $value + 1,
-            static fn(int $value): int => $value * 2
+            static fn(int $value): int => ($value + 1),
+            static fn(int $value): int => ($value * 2)
         );
 
         /** @Then both transformations should be applied in order */
@@ -734,7 +734,7 @@ final class LazyCollectionTest extends TestCase
 
         /** @When reducing to calculate the sum */
         $actual = $collection->reduce(
-            accumulator: static fn(int $carry, int $value): int => $carry + $value,
+            accumulator: static fn(int $carry, int $value): int => ($carry + $value),
             initial: 0
         );
 
@@ -814,7 +814,7 @@ final class LazyCollectionTest extends TestCase
         /** @When sorting ascending by value with a custom comparator */
         $actual = $collection->sort(
             order: Order::ASCENDING_VALUE,
-            comparator: static fn(Amount $first, Amount $second): int => $first->value <=> $second->value
+            comparator: static fn(Amount $first, Amount $second): int => ($first->value <=> $second->value)
         );
 
         /** @Then the first element should have the lowest value */
@@ -832,7 +832,7 @@ final class LazyCollectionTest extends TestCase
         /** @When sorting ascending by length */
         $byLength = $collection->sort(
             order: Order::ASCENDING_VALUE,
-            comparator: static fn(string $first, string $second): int => strlen($first) <=> strlen($second)
+            comparator: static fn(string $first, string $second): int => (strlen($first) <=> strlen($second))
         );
 
         /** @And sorting ascending by default (alphabetical) */
@@ -1040,13 +1040,13 @@ final class LazyCollectionTest extends TestCase
         $actual = $collection
             ->filter(predicates: static fn(Amount $amount): bool => $amount->value >= 100)
             ->map(transformations: static fn(Amount $amount): Amount => new Amount(
-                value: $amount->value * 0.9,
+                value: ($amount->value * 0.9),
                 currency: $amount->currency
             ))
             ->removeAll(predicate: static fn(Amount $amount): bool => $amount->value > 300)
             ->sort(
                 order: Order::ASCENDING_VALUE,
-                comparator: static fn(Amount $first, Amount $second): int => $first->value <=> $second->value
+                comparator: static fn(Amount $first, Amount $second): int => ($first->value <=> $second->value)
             );
 
         /** @And accumulating the total discounted value via each */
@@ -1074,8 +1074,8 @@ final class LazyCollectionTest extends TestCase
 
         /** @When keeping even numbers, squaring them, and sorting in descending order */
         $actual = $collection
-            ->filter(predicates: static fn(int $value): bool => $value % 2 === 0)
-            ->map(transformations: static fn(int $value): int => $value ** 2)
+            ->filter(predicates: static fn(int $value): bool => ($value % 2) === 0)
+            ->map(transformations: static fn(int $value): int => ($value ** 2))
             ->sort(order: Order::DESCENDING_VALUE);
 
         /** @Then the first element should be 10000 (square of 100) */
@@ -1092,13 +1092,13 @@ final class LazyCollectionTest extends TestCase
 
         /** @And the collection is filtered to even numbers, squared, and sorted descending */
         $pipeline = $collection
-            ->filter(predicates: static fn(int $value): bool => $value % 2 === 0)
-            ->map(transformations: static fn(int $value): int => $value ** 2)
+            ->filter(predicates: static fn(int $value): bool => ($value % 2) === 0)
+            ->map(transformations: static fn(int $value): int => ($value ** 2))
             ->sort(order: Order::DESCENDING_VALUE);
 
         /** @When reducing to calculate the sum of all squared even numbers */
         $sum = $pipeline->reduce(
-            accumulator: static fn(int $carry, int $value): int => $carry + $value,
+            accumulator: static fn(int $carry, int $value): int => ($carry + $value),
             initial: 0
         );
 
@@ -1177,7 +1177,7 @@ final class LazyCollectionTest extends TestCase
         /** @When chaining filter, map and sort */
         $actual = $collection
             ->filter(predicates: static fn(int $value): bool => $value > 2)
-            ->map(transformations: static fn(int $value): int => $value * 10)
+            ->map(transformations: static fn(int $value): int => ($value * 10))
             ->sort(order: Order::ASCENDING_VALUE);
 
         /** @Then the result should contain the filtered, mapped and sorted values */
@@ -1195,7 +1195,7 @@ final class LazyCollectionTest extends TestCase
 
         /** @When reducing to sum all amounts */
         $total = $collection->reduce(
-            accumulator: static fn(float $carry, Amount $amount): float => $carry + $amount->value,
+            accumulator: static fn(float $carry, Amount $amount): float => ($carry + $amount->value),
             initial: 0.0
         );
 
