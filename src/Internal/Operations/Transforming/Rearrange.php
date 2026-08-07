@@ -24,8 +24,8 @@ final readonly class Rearrange implements Operation
     {
         $materialized = is_array($elements) ? $elements : iterator_to_array($elements);
 
-        $comparator = $this->comparator
-            ?? static fn(mixed $first, mixed $second): int => $first <=> $second;
+        $comparator = ($this->comparator
+            ?? static fn(mixed $first, mixed $second): int => ($first <=> $second));
 
         match ($this->order) {
             Order::ASCENDING_KEY    => ksort($materialized),
