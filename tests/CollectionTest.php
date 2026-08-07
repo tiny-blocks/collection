@@ -33,7 +33,7 @@ final class CollectionTest extends TestCase
         $filter = static fn(int $value): bool => $value > 2;
 
         /** @And a map transformation that multiplies by 10 */
-        $map = static fn(int $value): int => $value * 10;
+        $map = static fn(int $value): int => ($value * 10);
 
         /** @When applying filter, map and sort on a lazy collection */
         $lazyResult = Collection::createLazyFrom(elements: $elements)
@@ -69,7 +69,7 @@ final class CollectionTest extends TestCase
 
         /** @And a map transformation that applies a 10% discount */
         $map = static fn(Amount $amount): Amount => new Amount(
-            value: $amount->value * 0.9,
+            value: ($amount->value * 0.9),
             currency: $amount->currency
         );
 
@@ -77,7 +77,7 @@ final class CollectionTest extends TestCase
         $removeAll = static fn(Amount $amount): bool => $amount->value > 300;
 
         /** @And a comparator that sorts by value */
-        $comparator = static fn(Amount $first, Amount $second): int => $first->value <=> $second->value;
+        $comparator = static fn(Amount $first, Amount $second): int => ($first->value <=> $second->value);
 
         /** @When applying the operations on a lazy collection */
         $lazy = Collection::createLazyFrom(elements: $elements)
@@ -160,7 +160,7 @@ final class CollectionTest extends TestCase
         $elements = [1, 2, 3, 4, 5];
 
         /** @And an accumulator that sums values */
-        $accumulator = static fn(int $carry, int $value): int => $carry + $value;
+        $accumulator = static fn(int $carry, int $value): int => ($carry + $value);
 
         /** @When reducing with a lazy collection */
         $lazySum = Collection::createLazyFrom(elements: $elements)
@@ -375,7 +375,7 @@ final class CollectionTest extends TestCase
             comparator: static fn(
                 CryptoCurrency $first,
                 CryptoCurrency $second
-            ): int => $first->price <=> $second->price
+            ): int => ($first->price <=> $second->price)
         );
 
         /** @Then the cheapest should be Solana */
@@ -428,7 +428,7 @@ final class CollectionTest extends TestCase
 
         /** @And the total cost should be 600 */
         $total = $allProducts->reduce(
-            accumulator: static fn(float $carry, Product $product): float => $carry + $product->amount->value,
+            accumulator: static fn(float $carry, Product $product): float => ($carry + $product->amount->value),
             initial: 0.0
         );
         self::assertSame(600.00, $total);
@@ -489,7 +489,7 @@ final class CollectionTest extends TestCase
         /** @When sorting by amount */
         $sorted = $invoices->sort(
             order: SortOrder::DESCENDING_VALUE,
-            comparator: static fn(Invoice $first, Invoice $second): int => $first->amount <=> $second->amount
+            comparator: static fn(Invoice $first, Invoice $second): int => ($first->amount <=> $second->amount)
         );
 
         /** @Then the result should still be an instance of Invoices */
@@ -616,7 +616,7 @@ final class CollectionTest extends TestCase
         $filter = static fn(int $value): bool => $value > 2;
 
         /** @And a map transformation that multiplies by 10 */
-        $map = static fn(int $value): int => $value * 10;
+        $map = static fn(int $value): int => ($value * 10);
 
         /** @When applying filter, map and sort on a lazy closure-backed collection */
         $lazyClosureResult = Collection::createLazyFromClosure(factory: static function () use ($elements): array {

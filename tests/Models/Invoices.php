@@ -16,7 +16,7 @@ final class Invoices extends Collection
     public function totalAmount(): float
     {
         return $this->reduce(
-            accumulator: static fn(float $carry, Invoice $invoice): float => $carry + $invoice->amount,
+            accumulator: static fn(float $carry, Invoice $invoice): float => ($carry + $invoice->amount),
             initial: 0.0
         );
     }
