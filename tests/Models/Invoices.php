@@ -13,18 +13,18 @@ use TinyBlocks\Mapper\ElementType;
 #[ElementType(Invoice::class)]
 final class Invoices extends Collection
 {
+    public function forCustomer(string $customer): Invoices
+    {
+        return $this->filter(
+            predicates: static fn(Invoice $invoice): bool => $invoice->customer === $customer
+        );
+    }
+
     public function totalAmount(): float
     {
         return $this->reduce(
             accumulator: static fn(float $carry, Invoice $invoice): float => ($carry + $invoice->amount),
             initial: 0.0
-        );
-    }
-
-    public function forCustomer(string $customer): Invoices
-    {
-        return $this->filter(
-            predicates: static fn(Invoice $invoice): bool => $invoice->customer === $customer
         );
     }
 }

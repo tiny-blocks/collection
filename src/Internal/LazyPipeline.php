@@ -41,6 +41,17 @@ final readonly class LazyPipeline implements Pipeline
         return new LazyPipeline(source: $factory);
     }
 
+    public function last(mixed $defaultValueIfNotFound = null): mixed
+    {
+        $last = $defaultValueIfNotFound;
+
+        foreach ($this->process() as $element) {
+            $last = $element;
+        }
+
+        return $last;
+    }
+
     public function pipe(Operation $operation): Pipeline
     {
         $stages = $this->stages;
@@ -63,22 +74,6 @@ final readonly class LazyPipeline implements Pipeline
         return $defaultValueIfNotFound;
     }
 
-    public function isEmpty(): bool
-    {
-        return !$this->process()->valid();
-    }
-
-    public function last(mixed $defaultValueIfNotFound = null): mixed
-    {
-        $last = $defaultValueIfNotFound;
-
-        foreach ($this->process() as $element) {
-            $last = $element;
-        }
-
-        return $last;
-    }
-
     public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed
     {
         foreach ($this->process() as $currentIndex => $value) {
@@ -88,6 +83,11 @@ final readonly class LazyPipeline implements Pipeline
         }
 
         return $defaultValueIfNotFound;
+    }
+
+    public function isEmpty(): bool
+    {
+        return !$this->process()->valid();
     }
 
     public function process(): Generator

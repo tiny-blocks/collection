@@ -46,6 +46,15 @@ final readonly class EagerPipeline implements Pipeline
         return new EagerPipeline(materialization: Materialization::from(source: $elements, stages: []));
     }
 
+    public function last(mixed $defaultValueIfNotFound = null): mixed
+    {
+        $elements = $this->materialization->elements();
+
+        return $elements === []
+            ? $defaultValueIfNotFound
+            : $elements[array_key_last($elements)];
+    }
+
     public function pipe(Operation $operation): Pipeline
     {
         return new EagerPipeline(materialization: $this->materialization->withStage(operation: $operation));
@@ -54,11 +63,6 @@ final readonly class EagerPipeline implements Pipeline
     public function count(): int
     {
         return count($this->materialization->elements());
-    }
-
-    public function isEmpty(): bool
-    {
-        return $this->materialization->elements() === [];
     }
 
     public function first(mixed $defaultValueIfNotFound = null): mixed
@@ -70,15 +74,6 @@ final readonly class EagerPipeline implements Pipeline
             : $elements[array_key_first($elements)];
     }
 
-    public function last(mixed $defaultValueIfNotFound = null): mixed
-    {
-        $elements = $this->materialization->elements();
-
-        return $elements === []
-            ? $defaultValueIfNotFound
-            : $elements[array_key_last($elements)];
-    }
-
     public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed
     {
         $elements = $this->materialization->elements();
@@ -86,6 +81,11 @@ final readonly class EagerPipeline implements Pipeline
         return array_key_exists($index, $elements)
             ? $elements[$index]
             : $defaultValueIfNotFound;
+    }
+
+    public function isEmpty(): bool
+    {
+        return $this->materialization->elements() === [];
     }
 
     public function process(): Generator

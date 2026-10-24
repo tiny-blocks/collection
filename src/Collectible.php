@@ -54,6 +54,18 @@ interface Collectible extends Countable, IteratorAggregate, IterableMappable
     public static function createFrom(iterable $elements): static;
 
     /**
+     * Creates a collection populated with the given elements using lazy evaluation.
+     *
+     * Elements are processed on-demand through generators, consuming memory only as each element is yielded.
+     *
+     * O(1) time, O(1) space. Stores a reference to the iterable without iterating.
+     *
+     * @param iterable<TValue> $elements The elements to populate the collection with.
+     * @return static A new collection containing the given elements.
+     */
+    public static function createLazyFrom(iterable $elements): static;
+
+    /**
      * Creates an empty collection using eager evaluation.
      *
      * O(1) time, O(1) space.
@@ -74,18 +86,6 @@ interface Collectible extends Countable, IteratorAggregate, IterableMappable
      * @return static A new collection backed by the materialized closure result.
      */
     public static function createFromClosure(Closure $factory): static;
-
-    /**
-     * Creates a collection populated with the given elements using lazy evaluation.
-     *
-     * Elements are processed on-demand through generators, consuming memory only as each element is yielded.
-     *
-     * O(1) time, O(1) space. Stores a reference to the iterable without iterating.
-     *
-     * @param iterable<TValue> $elements The elements to populate the collection with.
-     * @return static A new collection containing the given elements.
-     */
-    public static function createLazyFrom(iterable $elements): static;
 
     /**
      * Creates an empty collection using lazy evaluation.
@@ -121,56 +121,17 @@ interface Collectible extends Countable, IteratorAggregate, IterableMappable
     public function add(mixed ...$elements): static;
 
     /**
-     * Merges the elements of another Collectible into the current Collection.
+     * Applies one or more transformation functions to each element.
+     *
+     * Transformations are applied in order. Each receives the current value and key.
      *
      * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
-     * Pass contribution: O(m) time, O(m) space (m = number of elements in `other`).
+     * Pass contribution: O(n * t) time, O(1) space (t = number of transformations).
      *
-     * @param Collectible<TValue> $other The collection to merge with.
-     * @return static A new collection containing elements from both collections.
+     * @param Closure(TValue): mixed ...$transformations Functions applied to each element.
+     * @return static A new collection with the transformed elements.
      */
-    public function merge(Collectible $other): static;
-
-    /**
-     * Determines whether the collection contains the specified element.
-     *
-     * Uses strict equality for scalars and loose equality for objects.
-     *
-     * Eager: O(P + n) on first terminal call (triggers fused pass and scans the result).
-     *        O(n) on subsequent calls (scans the cached result). Short-circuits when found.
-     *        O(n) cached space.
-     * Lazy: O(P) per call. The search is interleaved with the pass and short-circuits when found.
-     *       O(1) intermediate space.
-     *
-     * @param TValue $element The element to search for.
-     * @return bool True if the element exists, false otherwise.
-     */
-    public function contains(mixed $element): bool;
-
-    /**
-     * Returns the total number of elements.
-     *
-     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
-     *        O(n) cached space.
-     * Lazy: O(P) per call (must reach the end of the pipeline). O(1) intermediate space.
-     *
-     * @return int The element count.
-     */
-    public function count(): int;
-
-    /**
-     * Finds the first element that satisfies any given predicate.
-     * Without predicates, returns null.
-     *
-     * Eager: O(P + n * p) on first terminal call (triggers fused pass and scans the result).
-     *        O(n * p) on subsequent calls. Short-circuits when found. p = number of predicates.
-     *        O(n) cached space.
-     * Lazy: O(P + p) per emitted element. Short-circuits when found. O(1) intermediate space.
-     *
-     * @param Closure(TValue): bool ...$predicates Conditions to test each element against.
-     * @return TValue|null The first matching element or null if no match is found.
-     */
-    public function findBy(Closure ...$predicates): mixed;
+    public function map(Closure ...$transformations): static;
 
     /**
      * Executes side effect actions on every element without modifying the collection.
@@ -184,6 +145,97 @@ interface Collectible extends Countable, IteratorAggregate, IterableMappable
      * @param Closure(TValue): void ...$actions Actions to perform on each element.
      */
     public function each(Closure ...$actions): void;
+
+    /**
+     * Returns the last element, or a default if the collection is empty.
+     *
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P) per call. Must reach the end of the pipeline. O(1) intermediate space.
+     *
+     * @template TDefault
+     * @param TDefault $defaultValueIfNotFound Value returned when the collection is empty.
+     * @return TValue|TDefault The last element or the default.
+     */
+    public function last(mixed $defaultValueIfNotFound = null): mixed;
+
+    /**
+     * Returns a new collection sorted by the given order and optional comparator.
+     *
+     * Without a comparator, the spaceship operator is used.
+     *
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(n log n) time, O(n) space. Buffers all elements before emitting any output.
+     * breaks streaming for any stage placed after `sort` in the same pipeline.
+     *
+     * @param Order $order The sorting direction.
+     * @param (Closure(TValue, TValue): int)|null $comparator Custom comparison function.
+     * @return static A new sorted collection.
+     */
+    public function sort(Order $order = Order::ASCENDING_KEY, ?Closure $comparator = null): static;
+
+    /**
+     * Returns the total number of elements.
+     *
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P) per call (must reach the end of the pipeline). O(1) intermediate space.
+     *
+     * @return int The element count.
+     */
+    public function count(): int;
+
+    /**
+     * Returns the first element, or a default if the collection is empty.
+     *
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P_first) per call. Short-circuits at the first emitted element. O(1) intermediate space.
+     *
+     * @template TDefault
+     * @param TDefault $defaultValueIfNotFound Value returned when the collection is empty.
+     * @return TValue|TDefault The first element or the default.
+     */
+    public function first(mixed $defaultValueIfNotFound = null): mixed;
+
+    /**
+     * Returns the element at the given zero-based index.
+     *
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P_index) per call. Short-circuits at the requested position. O(1) intermediate space.
+     *
+     * @template TDefault
+     * @param int $index The zero-based position.
+     * @param TDefault $defaultValueIfNotFound Value returned when the index is out of bounds.
+     * @return TValue|TDefault The element at the index or the default.
+     */
+    public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed;
+
+    /**
+     * Merges the elements of another Collectible into the current Collection.
+     *
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(m) time, O(m) space (m = number of elements in `other`).
+     *
+     * @param Collectible<TValue> $other The collection to merge with.
+     * @return static A new collection containing elements from both collections.
+     */
+    public function merge(Collectible $other): static;
+
+    /**
+     * Extracts a contiguous segment of the collection.
+     *
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(min(offset + length, n)) time, O(1) space. Iteration short-circuits once
+     * the segment is fully emitted. An early `slice(0, k)` against a generator source can avoid
+     * touching the rest.
+     *
+     * @param int $offset Zero-based starting position.
+     * @param int $length Number of elements to include. Use -1 for "until the end".
+     * @return static A new collection with the extracted segment.
+     */
+    public function slice(int $offset, int $length = -1): static;
 
     /**
      * Compares this collection with another for element-wise equality.
@@ -201,31 +253,6 @@ interface Collectible extends Countable, IteratorAggregate, IterableMappable
     public function equals(Collectible $other): bool;
 
     /**
-     * Returns a new collection with the specified element removed.
-     *
-     * All occurrences of the element are removed.
-     *
-     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
-     * Pass contribution: O(n) time, O(1) space.
-     *
-     * @param TValue $element The element to remove.
-     * @return static A new collection without the specified element.
-     */
-    public function remove(mixed $element): static;
-
-    /**
-     * Returns a new collection with all elements removed that satisfy the given predicate.
-     * When no predicate is provided (i.e., $predicate is null), all elements are removed.
-     *
-     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
-     * Pass contribution: O(n) time, O(1) space.
-     *
-     * @param (Closure(TValue): bool)|null $predicate Condition to determine which elements to remove.
-     * @return static A new collection with the matching elements removed.
-     */
-    public function removeAll(?Closure $predicate = null): static;
-
-    /**
      * Retains only elements satisfying all given predicates.
      *
      * Without predicates, falsy values are removed.
@@ -239,17 +266,65 @@ interface Collectible extends Countable, IteratorAggregate, IterableMappable
     public function filter(?Closure ...$predicates): static;
 
     /**
-     * Returns the first element, or a default if the collection is empty.
+     * Finds the first element that satisfies any given predicate.
+     * Without predicates, returns null.
      *
-     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     * Eager: O(P + n * p) on first terminal call (triggers fused pass and scans the result).
+     *        O(n * p) on subsequent calls. Short-circuits when found. p = number of predicates.
      *        O(n) cached space.
-     * Lazy: O(P_first) per call. Short-circuits at the first emitted element. O(1) intermediate space.
+     * Lazy: O(P + p) per emitted element. Short-circuits when found. O(1) intermediate space.
      *
-     * @template TDefault
-     * @param TDefault $defaultValueIfNotFound Value returned when the collection is empty.
-     * @return TValue|TDefault The first element or the default.
+     * @param Closure(TValue): bool ...$predicates Conditions to test each element against.
+     * @return TValue|null The first matching element or null if no match is found.
      */
-    public function first(mixed $defaultValueIfNotFound = null): mixed;
+    public function findBy(Closure ...$predicates): mixed;
+
+    /**
+     * Reduces the collection to a single accumulated value.
+     *
+     * The accumulator receives the carry and the current element.
+     *
+     * Eager: O(P + n) on first terminal call. O(n) on subsequent calls (over cached result).
+     *        O(n) cached space.
+     * Lazy: O(P + n) per call. O(1) intermediate space (single carry value).
+     *
+     * @template TCarry
+     * @param Closure(TCarry, TValue): TCarry $accumulator Combines the carry with each element.
+     * @param TCarry $initial The starting value for the accumulation.
+     * @return TCarry The final accumulated result.
+     */
+    public function reduce(Closure $accumulator, mixed $initial): mixed;
+
+    /**
+     * Returns a new collection with the specified element removed.
+     *
+     * All occurrences of the element are removed.
+     *
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(n) time, O(1) space.
+     *
+     * @param TValue $element The element to remove.
+     * @return static A new collection without the specified element.
+     */
+    public function remove(mixed $element): static;
+
+    /**
+     * Converts the Collection to a JSON string.
+     *
+     * Eager: O(P + n) on first terminal call. O(n) on subsequent calls (over cached result).
+     *        O(n) cached space plus O(n) for the JSON string.
+     * Lazy: O(P + n) per call. O(n) for the JSON string.
+     *
+     * The key preservation behavior should be provided from the `KeyPreservation` enum:
+     *  - {@see KeyPreservation::PRESERVE}: Preserves the array keys.
+     *  - {@see KeyPreservation::DISCARD}: Discards the array keys.
+     *
+     * By default, `KeyPreservation::PRESERVE` is used.
+     *
+     * @param KeyPreservation $keyPreservation The option to preserve or discard array keys.
+     * @return string The resulting JSON string.
+     */
+    public function toJson(KeyPreservation $keyPreservation = KeyPreservation::PRESERVE): string;
 
     /**
      * Flattens nested iterables by exactly one level. Non-iterable elements are yielded as-is.
@@ -260,20 +335,6 @@ interface Collectible extends Countable, IteratorAggregate, IterableMappable
      * @return static A new collection with elements flattened by one level.
      */
     public function flatten(): static;
-
-    /**
-     * Returns the element at the given zero-based index.
-     *
-     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
-     *        O(n) cached space.
-     * Lazy: O(P_index) per call. Short-circuits at the requested position. O(1) intermediate space.
-     *
-     * @template TDefault
-     * @param int $index The zero-based position.
-     * @param TDefault $defaultValueIfNotFound Value returned when the index is out of bounds.
-     * @return TValue|TDefault The element at the index or the default.
-     */
-    public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed;
 
     /**
      * Groups elements by a key derived from each element.
@@ -301,89 +362,6 @@ interface Collectible extends Countable, IteratorAggregate, IterableMappable
     public function isEmpty(): bool;
 
     /**
-     * Joins all elements into a string with the given separator.
-     *
-     * Eager: O(P + n) on first terminal call. O(n) on subsequent calls (over cached result).
-     *        O(n) cached space plus O(n) for the resulting string.
-     * Lazy: O(P + n) per call. O(n) for the resulting string.
-     *
-     * @param string $separator The delimiter placed between each element.
-     * @return string The concatenated result.
-     */
-    public function joinToString(string $separator): string;
-
-    /**
-     * Returns the last element, or a default if the collection is empty.
-     *
-     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
-     *        O(n) cached space.
-     * Lazy: O(P) per call. Must reach the end of the pipeline. O(1) intermediate space.
-     *
-     * @template TDefault
-     * @param TDefault $defaultValueIfNotFound Value returned when the collection is empty.
-     * @return TValue|TDefault The last element or the default.
-     */
-    public function last(mixed $defaultValueIfNotFound = null): mixed;
-
-    /**
-     * Applies one or more transformation functions to each element.
-     *
-     * Transformations are applied in order. Each receives the current value and key.
-     *
-     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
-     * Pass contribution: O(n * t) time, O(1) space (t = number of transformations).
-     *
-     * @param Closure(TValue): mixed ...$transformations Functions applied to each element.
-     * @return static A new collection with the transformed elements.
-     */
-    public function map(Closure ...$transformations): static;
-
-    /**
-     * Reduces the collection to a single accumulated value.
-     *
-     * The accumulator receives the carry and the current element.
-     *
-     * Eager: O(P + n) on first terminal call. O(n) on subsequent calls (over cached result).
-     *        O(n) cached space.
-     * Lazy: O(P + n) per call. O(1) intermediate space (single carry value).
-     *
-     * @template TCarry
-     * @param Closure(TCarry, TValue): TCarry $accumulator Combines the carry with each element.
-     * @param TCarry $initial The starting value for the accumulation.
-     * @return TCarry The final accumulated result.
-     */
-    public function reduce(Closure $accumulator, mixed $initial): mixed;
-
-    /**
-     * Returns a new collection sorted by the given order and optional comparator.
-     *
-     * Without a comparator, the spaceship operator is used.
-     *
-     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
-     * Pass contribution: O(n log n) time, O(n) space. Buffers all elements before emitting any output.
-     * breaks streaming for any stage placed after `sort` in the same pipeline.
-     *
-     * @param Order $order The sorting direction.
-     * @param (Closure(TValue, TValue): int)|null $comparator Custom comparison function.
-     * @return static A new sorted collection.
-     */
-    public function sort(Order $order = Order::ASCENDING_KEY, ?Closure $comparator = null): static;
-
-    /**
-     * Extracts a contiguous segment of the collection.
-     *
-     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
-     * Pass contribution: O(min(offset + length, n)) time, O(1) space. Iteration short-circuits once
-     * the segment is fully emitted. An early `slice(0, k)` against a generator source can avoid
-     * touching the rest.
-     *
-     * @param int $offset Zero-based starting position.
-     * @param int $length Number of elements to include. Use -1 for "until the end".
-     * @return static A new collection with the extracted segment.
-     */
-    public function slice(int $offset, int $length = -1): static;
-
-    /**
      * Converts the Collection to an array.
      *
      * Eager: O(P + n) on first terminal call. O(n) on subsequent calls (over cached result).
@@ -402,20 +380,42 @@ interface Collectible extends Countable, IteratorAggregate, IterableMappable
     public function toArray(KeyPreservation $keyPreservation = KeyPreservation::PRESERVE): array;
 
     /**
-     * Converts the Collection to a JSON string.
+     * Determines whether the collection contains the specified element.
+     *
+     * Uses strict equality for scalars and loose equality for objects.
+     *
+     * Eager: O(P + n) on first terminal call (triggers fused pass and scans the result).
+     *        O(n) on subsequent calls (scans the cached result). Short-circuits when found.
+     *        O(n) cached space.
+     * Lazy: O(P) per call. The search is interleaved with the pass and short-circuits when found.
+     *       O(1) intermediate space.
+     *
+     * @param TValue $element The element to search for.
+     * @return bool True if the element exists, false otherwise.
+     */
+    public function contains(mixed $element): bool;
+
+    /**
+     * Returns a new collection with all elements removed that satisfy the given predicate.
+     * When no predicate is provided (i.e., $predicate is null), all elements are removed.
+     *
+     * Call site: O(1) time, O(1) space. Appends a pipeline stage in both eager and lazy modes.
+     * Pass contribution: O(n) time, O(1) space.
+     *
+     * @param (Closure(TValue): bool)|null $predicate Condition to determine which elements to remove.
+     * @return static A new collection with the matching elements removed.
+     */
+    public function removeAll(?Closure $predicate = null): static;
+
+    /**
+     * Joins all elements into a string with the given separator.
      *
      * Eager: O(P + n) on first terminal call. O(n) on subsequent calls (over cached result).
-     *        O(n) cached space plus O(n) for the JSON string.
-     * Lazy: O(P + n) per call. O(n) for the JSON string.
+     *        O(n) cached space plus O(n) for the resulting string.
+     * Lazy: O(P + n) per call. O(n) for the resulting string.
      *
-     * The key preservation behavior should be provided from the `KeyPreservation` enum:
-     *  - {@see KeyPreservation::PRESERVE}: Preserves the array keys.
-     *  - {@see KeyPreservation::DISCARD}: Discards the array keys.
-     *
-     * By default, `KeyPreservation::PRESERVE` is used.
-     *
-     * @param KeyPreservation $keyPreservation The option to preserve or discard array keys.
-     * @return string The resulting JSON string.
+     * @param string $separator The delimiter placed between each element.
+     * @return string The concatenated result.
      */
-    public function toJson(KeyPreservation $keyPreservation = KeyPreservation::PRESERVE): string;
+    public function joinToString(string $separator): string;
 }
