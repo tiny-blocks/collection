@@ -10,13 +10,13 @@ use TinyBlocks\Collection\Internal\Operations\Operation;
 
 final readonly class Segment implements Operation
 {
-    private function __construct(private int $offset, private int $length)
+    private function __construct(private int $length, private int $offset)
     {
     }
 
-    public static function from(int $offset, int $length): Segment
+    public static function from(int $length, int $offset): Segment
     {
-        return new Segment(offset: $offset, length: $length);
+        return new Segment(length: $length, offset: $offset);
     }
 
     public function apply(iterable $elements): Generator

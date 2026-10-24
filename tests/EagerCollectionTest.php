@@ -19,21 +19,6 @@ use TinyBlocks\Currency\Currency;
 
 final class EagerCollectionTest extends TestCase
 {
-    public function testCreateFromWhenIntegerElementsThenHoldsAllElements(): void
-    {
-        /** @Given a set of integer elements */
-        $elements = [1, 2, 3];
-
-        /** @When creating an eager collection from those elements */
-        $collection = Collection::createFrom(elements: $elements);
-
-        /** @Then the collection should contain all three elements */
-        self::assertSame(3, $collection->count());
-
-        /** @And the array should match the original elements */
-        self::assertSame([1, 2, 3], $collection->toArray());
-    }
-
     public function testCreateFromEmptyThenCollectionIsEmpty(): void
     {
         /** @When creating an eager collection without arguments */
@@ -44,186 +29,6 @@ final class EagerCollectionTest extends TestCase
 
         /** @And the count should be zero */
         self::assertSame(0, $collection->count());
-    }
-
-    public function testCreateFromWhenGeneratorSourceThenAllElementsAreMaterialized(): void
-    {
-        /** @Given a generator that yields three elements */
-        $generator = (static function (): Generator {
-            yield 1;
-            yield 2;
-            yield 3;
-        })();
-
-        /** @When creating an eager collection from the generator */
-        $collection = Collection::createFrom(elements: $generator);
-
-        /** @Then the collection should materialize all three elements */
-        self::assertSame(3, $collection->count());
-    }
-
-    public function testCreateFromWhenGeneratorIsConsumedTwiceThenAllElementsRemainAvailable(): void
-    {
-        /** @Given a generator that yields three elements */
-        $generator = (static function (): Generator {
-            yield 1;
-            yield 2;
-            yield 3;
-        })();
-
-        /** @When creating an eager collection from the generator */
-        $collection = Collection::createFrom(elements: $generator);
-
-        /** @And consuming the collection via count */
-        $count = $collection->count();
-
-        /** @Then the count should be 3 */
-        self::assertSame(3, $count);
-
-        /** @And a subsequent toArray should still return all elements */
-        self::assertSame([1, 2, 3], $collection->toArray());
-    }
-
-    public function testAddWhenElementsAppendedThenNewCollectionContainsAllInOrder(): void
-    {
-        /** @Given an eager collection with three elements */
-        $collection = Collection::createFrom(elements: [1, 2, 3]);
-
-        /** @When adding two more elements */
-        $actual = $collection->add(4, 5);
-
-        /** @Then the new collection should contain five elements */
-        self::assertSame(5, $actual->count());
-
-        /** @And the elements should be in the expected order */
-        self::assertSame([1, 2, 3, 4, 5], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-
-        /** @And the original collection should remain unchanged */
-        self::assertSame(3, $collection->count());
-    }
-
-    public function testMergeWhenTwoCollectionsThenElementsAreCombinedInOrder(): void
-    {
-        /** @Given a first eager collection */
-        $first = Collection::createFrom(elements: [1, 2]);
-
-        /** @And a second eager collection */
-        $second = Collection::createFrom(elements: [3, 4]);
-
-        /** @When concatenating the second into the first */
-        $actual = $first->merge(other: $second);
-
-        /** @Then the resulting collection should contain four elements */
-        self::assertSame(4, $actual->count());
-
-        /** @And the elements should be in the expected order */
-        self::assertSame([1, 2, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testContainsWhenElementIsPresentThenReturnsTrue(): void
-    {
-        /** @Given an eager collection with integers */
-        $collection = Collection::createFrom(elements: [1, 2, 3]);
-
-        /** @When checking for an element that exists */
-        $actual = $collection->contains(element: 2);
-
-        /** @Then it should return true */
-        self::assertTrue($actual);
-    }
-
-    public function testContainsWhenElementIsAbsentThenReturnsFalse(): void
-    {
-        /** @Given an eager collection with integers */
-        $collection = Collection::createFrom(elements: [1, 2, 3]);
-
-        /** @When checking for an element that does not exist */
-        $actual = $collection->contains(element: 99);
-
-        /** @Then it should return false */
-        self::assertFalse($actual);
-    }
-
-    public function testContainsWhenEquivalentObjectIsPresentThenReturnsTrue(): void
-    {
-        /** @Given an Amount object to search for */
-        $target = new Amount(value: 100.00, currency: Currency::USD);
-
-        /** @And an eager collection with Amount objects */
-        $collection = Collection::createFrom(elements: [
-            new Amount(value: 50.00, currency: Currency::USD),
-            new Amount(value: 100.00, currency: Currency::USD),
-            new Amount(value: 200.00, currency: Currency::USD)
-        ]);
-
-        /** @When checking if the collection contains an equivalent Amount */
-        $actual = $collection->contains(element: $target);
-
-        /** @Then it should return true */
-        self::assertTrue($actual);
-    }
-
-    public function testContainsWhenObjectSoughtInScalarCollectionThenReturnsFalse(): void
-    {
-        /** @Given an eager collection containing boolean true */
-        $collection = Collection::createFrom(elements: [true]);
-
-        /** @When checking if the collection contains an object */
-        $actual = $collection->contains(element: new stdClass());
-
-        /** @Then it should return false because object and scalar types differ */
-        self::assertFalse($actual);
-    }
-
-    public function testContainsWhenScalarSoughtInObjectCollectionThenReturnsFalse(): void
-    {
-        /** @Given an eager collection containing a stdClass object */
-        $collection = Collection::createFrom(elements: [new stdClass()]);
-
-        /** @When checking if the collection contains boolean true */
-        $actual = $collection->contains(element: true);
-
-        /** @Then it should return false because an object is not a scalar */
-        self::assertFalse($actual);
-    }
-
-    public function testCountWhenCollectionHasElementsThenReturnsElementCount(): void
-    {
-        /** @Given an eager collection with five elements */
-        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
-
-        /** @When counting the elements */
-        $actual = $collection->count();
-
-        /** @Then it should return 5 */
-        self::assertSame(5, $actual);
-    }
-
-    public function testFindByWhenElementMatchesPredicateThenFirstMatchIsReturned(): void
-    {
-        /** @Given an eager collection of integers */
-        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
-
-        /** @When finding the first element greater than 3 */
-        $actual = $collection->findBy(predicates: static fn(int $value): bool => $value > 3);
-
-        /** @Then it should return 4 */
-        self::assertSame(4, $actual);
-    }
-
-    public function testFindByWhenMultiplePredicatesThenFirstMatchAcrossPredicatesIsReturned(): void
-    {
-        /** @Given an eager collection of integers */
-        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
-
-        /** @When finding by multiple predicates (OR semantics) */
-        $matchTen = static fn(int $value): bool => $value === 10;
-        $matchThree = static fn(int $value): bool => $value === 3;
-
-        $actual = $collection->findBy($matchTen, $matchThree);
-
-        /** @Then it should return the first element matching any predicate */
-        self::assertSame(3, $actual);
     }
 
     public function testFindByWhenNoPredicatesThenReturnsNull(): void
@@ -238,6 +43,21 @@ final class EagerCollectionTest extends TestCase
         self::assertNull($actual);
     }
 
+    public function testSliceWhenLengthIsZeroThenResultIsEmpty(): void
+    {
+        /** @Given an eager collection with five elements */
+        $collection = Collection::createFrom(elements: [10, 20, 30, 40, 50]);
+
+        /** @When slicing with length zero */
+        $actual = $collection->slice(offset: 0, length: 0);
+
+        /** @Then the result should be empty */
+        self::assertTrue($actual->isEmpty());
+
+        /** @And the count should be zero */
+        self::assertSame(0, $actual->count());
+    }
+
     public function testFindByWhenNoElementMatchesThenReturnsNull(): void
     {
         /** @Given an eager collection of integers */
@@ -248,6 +68,90 @@ final class EagerCollectionTest extends TestCase
 
         /** @Then it should return null */
         self::assertNull($actual);
+    }
+
+    public function testAddWhenElementAddedThenOriginalIsUnchanged(): void
+    {
+        /** @Given an eager collection with three elements */
+        $original = Collection::createFrom(elements: [1, 2, 3]);
+
+        /** @When adding a new element */
+        $modified = $original->add(4);
+
+        /** @Then the original collection should remain unchanged */
+        self::assertSame(3, $original->count());
+
+        /** @And the new collection should have four elements */
+        self::assertSame(4, $modified->count());
+    }
+
+    public function testContainsWhenElementIsAbsentThenReturnsFalse(): void
+    {
+        /** @Given an eager collection with integers */
+        $collection = Collection::createFrom(elements: [1, 2, 3]);
+
+        /** @When checking for an element that does not exist */
+        $actual = $collection->contains(element: 99);
+
+        /** @Then it should return false */
+        self::assertFalse($actual);
+    }
+
+    public function testContainsWhenElementIsPresentThenReturnsTrue(): void
+    {
+        /** @Given an eager collection with integers */
+        $collection = Collection::createFrom(elements: [1, 2, 3]);
+
+        /** @When checking for an element that exists */
+        $actual = $collection->contains(element: 2);
+
+        /** @Then it should return true */
+        self::assertTrue($actual);
+    }
+
+    public function testIsEmptyWhenCollectionIsEmptyThenReturnsTrue(): void
+    {
+        /** @Given an empty eager collection */
+        $empty = Collection::createFromEmpty();
+
+        /** @Then the empty collection should return true */
+        self::assertTrue($empty->isEmpty());
+    }
+
+    public function testToJsonWhenKeysPreservedThenReturnsJsonObject(): void
+    {
+        /** @Given an eager collection with string keys */
+        $collection = Collection::createFrom(elements: ['x' => 1, 'y' => 2]);
+
+        /** @When converting to JSON without arguments */
+        $actual = $collection->toJson();
+
+        /** @Then the result should preserve keys as a JSON object */
+        self::assertSame('{"x":1,"y":2}', $actual);
+    }
+
+    public function testGetByWhenIndexExistsThenReturnsElementAtIndex(): void
+    {
+        /** @Given an eager collection with three elements */
+        $collection = Collection::createFrom(elements: ['a', 'b', 'c']);
+
+        /** @When retrieving the element at index 1 */
+        $actual = $collection->getBy(index: 1);
+
+        /** @Then it should return 'b' */
+        self::assertSame('b', $actual);
+    }
+
+    public function testToJsonWhenIntegerElementsThenReturnsJsonArray(): void
+    {
+        /** @Given an eager collection of integers */
+        $collection = Collection::createFrom(elements: [1, 2, 3]);
+
+        /** @When converting to JSON */
+        $actual = $collection->toJson();
+
+        /** @Then the result should be a valid JSON array */
+        self::assertSame('[1,2,3]', $actual);
     }
 
     public function testEachWhenActionAppliedThenEveryElementIsVisited(): void
@@ -267,136 +171,37 @@ final class EagerCollectionTest extends TestCase
         self::assertSame(6, $sum);
     }
 
-    public function testEqualsWhenCollectionsHaveIdenticalElementsThenReturnsTrue(): void
+    public function testFilterWhenNoPredicateThenFalsyValuesAreRemoved(): void
     {
-        /** @Given a first eager collection */
-        $first = Collection::createFrom(elements: [1, 2, 3]);
+        /** @Given an eager collection with falsy and truthy values */
+        $collection = Collection::createFrom(elements: [0, '', null, false, 1, 'hello', 2]);
 
-        /** @And a second eager collection with the same elements */
-        $second = Collection::createFrom(elements: [1, 2, 3]);
+        /** @When filtering without a predicate */
+        $actual = $collection->filter();
 
-        /** @When comparing them for equality */
-        $actual = $first->equals(other: $second);
-
-        /** @Then they should be equal */
-        self::assertTrue($actual);
+        /** @Then only truthy values should remain */
+        self::assertSame([1, 'hello', 2], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
-    public function testEqualsWhenCollectionsHaveDifferentElementsThenReturnsFalse(): void
+    public function testToArrayWhenKeysDiscardedThenValuesAreReindexed(): void
     {
-        /** @Given a first eager collection */
-        $first = Collection::createFrom(elements: [1, 2, 3]);
+        /** @Given an eager collection with non-sequential keys */
+        $collection = Collection::createFrom(elements: [0 => 'a', 2 => 'b', 5 => 'c']);
 
-        /** @And a second eager collection with different elements */
-        $second = Collection::createFrom(elements: [1, 2, 4]);
+        /** @When converting to array discarding keys */
+        $actual = $collection->toArray(keyPreservation: KeyPreservation::DISCARD);
 
-        /** @When comparing them for equality */
-        $actual = $first->equals(other: $second);
-
-        /** @Then they should not be equal */
-        self::assertFalse($actual);
+        /** @Then the keys should be re-indexed from 0 */
+        self::assertSame(['a', 'b', 'c'], $actual);
     }
 
-    public function testEqualsWhenCollectionsHaveDifferentSizesThenReturnsFalseBothWays(): void
+    public function testIsEmptyWhenCollectionIsNotEmptyThenReturnsFalse(): void
     {
-        /** @Given a first eager collection with three elements */
-        $first = Collection::createFrom(elements: [1, 2, 3]);
+        /** @Given a non-empty eager collection */
+        $nonEmpty = Collection::createFrom(elements: [1]);
 
-        /** @And a second eager collection with two elements */
-        $second = Collection::createFrom(elements: [1, 2]);
-
-        /** @When comparing first equals second */
-        $firstEqualsSecond = $first->equals(other: $second);
-
-        /** @And comparing second equals first */
-        $secondEqualsFirst = $second->equals(other: $first);
-
-        /** @Then the first comparison should return false */
-        self::assertFalse($firstEqualsSecond);
-
-        /** @And the second comparison should return false */
-        self::assertFalse($secondEqualsFirst);
-    }
-
-    public function testEqualsWhenLongerCollectionSharesPrefixThenReturnsFalse(): void
-    {
-        /** @Given a first eager collection with four elements */
-        $first = Collection::createFrom(elements: [1, 2, 3, 4]);
-
-        /** @And a second eager collection with three elements */
-        $second = Collection::createFrom(elements: [1, 2, 3]);
-
-        /** @When comparing them for equality */
-        $actual = $first->equals(other: $second);
-
-        /** @Then they should not be equal */
-        self::assertFalse($actual);
-    }
-
-    public function testEqualsWhenTrailingNullExtendsCollectionThenReturnsFalse(): void
-    {
-        /** @Given a first eager collection with three elements */
-        $first = Collection::createFrom(elements: [1, 2, 3]);
-
-        /** @And a second eager collection with four elements ending with null */
-        $second = Collection::createFrom(elements: [1, 2, 3, null]);
-
-        /** @When comparing them for equality */
-        $actual = $first->equals(other: $second);
-
-        /** @Then they should not be equal */
-        self::assertFalse($actual);
-    }
-
-    public function testRemoveWhenValueHasDuplicatesThenAllOccurrencesAreRemoved(): void
-    {
-        /** @Given an eager collection with duplicate elements */
-        $collection = Collection::createFrom(elements: [1, 2, 3, 2, 4]);
-
-        /** @When removing the value 2 */
-        $actual = $collection->remove(element: 2);
-
-        /** @Then all occurrences of 2 should be removed */
-        self::assertSame([1, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testRemoveWhenScalarRemovedFromObjectCollectionThenNothingIsRemoved(): void
-    {
-        /** @Given an eager collection with Amount objects */
-        $collection = Collection::createFrom(elements: [
-            new Amount(value: 50.00, currency: Currency::USD),
-            new Amount(value: 100.00, currency: Currency::USD)
-        ]);
-
-        /** @When removing a scalar value */
-        $actual = $collection->remove(element: 50.00);
-
-        /** @Then no elements should be removed */
-        self::assertSame(2, $actual->count());
-    }
-
-    public function testRemoveWhenStringKeyedCollectionThenRemainingKeysArePreserved(): void
-    {
-        /** @Given an eager collection with string keys */
-        $collection = Collection::createFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
-
-        /** @When removing the value 2 */
-        $actual = $collection->remove(element: 2);
-
-        /** @Then the remaining keys should be preserved */
-        self::assertSame(['a' => 1, 'c' => 3], $actual->toArray());
-    }
-
-    public function testRemoveAllWhenPredicateGivenThenMatchingElementsAreRemoved(): void
-    {
-        /** @Given an eager collection of integers */
-        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
-
-        /** @When removing all elements greater than 3 */
-        $actual = $collection->removeAll(predicate: static fn(int $value): bool => $value > 3);
-
-        /** @Then only elements 1, 2, 3 should remain */
-        self::assertSame([1, 2, 3], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+        /** @Then the non-empty collection should return false */
+        self::assertFalse($nonEmpty->isEmpty());
     }
 
     public function testRemoveAllWhenNoPredicateThenCollectionIsEmptied(): void
@@ -411,288 +216,6 @@ final class EagerCollectionTest extends TestCase
         self::assertSame(0, $actual->count());
     }
 
-    public function testRemoveAllWhenFirstElementDoesNotMatchThenOnlyMatchingAreRemoved(): void
-    {
-        /** @Given an eager collection where the first element does not match the predicate */
-        $collection = Collection::createFrom(elements: [1, 10, 2, 20, 3]);
-
-        /** @When removing all elements greater than 5 */
-        $actual = $collection->removeAll(predicate: static fn(int $value): bool => $value > 5);
-
-        /** @Then elements 1, 2, 3 should remain */
-        self::assertSame([1, 2, 3], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testRemoveAllWhenStringKeyedCollectionThenRemainingKeysArePreserved(): void
-    {
-        /** @Given an eager collection with string keys */
-        $collection = Collection::createFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
-
-        /** @When removing elements greater than 2 */
-        $actual = $collection->removeAll(predicate: static fn(int $value): bool => $value > 2);
-
-        /** @Then the remaining keys should be preserved */
-        self::assertSame(['a' => 1, 'b' => 2], $actual->toArray());
-    }
-
-    public function testFirstWhenCollectionIsNotEmptyThenReturnsFirstElement(): void
-    {
-        /** @Given an eager collection with three elements */
-        $collection = Collection::createFrom(elements: [10, 20, 30]);
-
-        /** @When retrieving the first element */
-        $actual = $collection->first();
-
-        /** @Then it should return 10 */
-        self::assertSame(10, $actual);
-    }
-
-    public function testFirstWhenCollectionIsEmptyThenReturnsDefaultValue(): void
-    {
-        /** @Given an empty eager collection */
-        $collection = Collection::createFromEmpty();
-
-        /** @When retrieving the first element with a default */
-        $actual = $collection->first(defaultValueIfNotFound: 'fallback');
-
-        /** @Then it should return the default value */
-        self::assertSame('fallback', $actual);
-    }
-
-    public function testFirstWhenCollectionIsEmptyWithoutDefaultThenReturnsNull(): void
-    {
-        /** @Given an empty eager collection */
-        $collection = Collection::createFromEmpty();
-
-        /** @When retrieving the first element without a default */
-        $actual = $collection->first();
-
-        /** @Then it should return null */
-        self::assertNull($actual);
-    }
-
-    public function testFirstWhenFirstElementIsNullThenReturnsNullNotDefault(): void
-    {
-        /** @Given an eager collection where the first element is null */
-        $collection = Collection::createFrom(elements: [null, 1, 2]);
-
-        /** @When retrieving the first element with a default */
-        $actual = $collection->first(defaultValueIfNotFound: 'fallback');
-
-        /** @Then it should return null, not the default */
-        self::assertNull($actual);
-    }
-
-    public function testFlattenWhenNestedArraysThenElementsAreLiftedOneLevel(): void
-    {
-        /** @Given an eager collection with nested arrays */
-        $collection = Collection::createFrom(elements: [[1, 2], [3, 4], 5]);
-
-        /** @When flattening by one level */
-        $actual = $collection->flatten();
-
-        /** @Then all elements should be at the top level */
-        self::assertSame([1, 2, 3, 4, 5], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testGetByWhenIndexExistsThenReturnsElementAtIndex(): void
-    {
-        /** @Given an eager collection with three elements */
-        $collection = Collection::createFrom(elements: ['a', 'b', 'c']);
-
-        /** @When retrieving the element at index 1 */
-        $actual = $collection->getBy(index: 1);
-
-        /** @Then it should return 'b' */
-        self::assertSame('b', $actual);
-    }
-
-    public function testGetByWhenIndexIsOutOfBoundsThenReturnsDefaultValue(): void
-    {
-        /** @Given an eager collection with three elements */
-        $collection = Collection::createFrom(elements: ['a', 'b', 'c']);
-
-        /** @When retrieving an element at an index that does not exist */
-        $actual = $collection->getBy(index: 99, defaultValueIfNotFound: 'missing');
-
-        /** @Then it should return the default value */
-        self::assertSame('missing', $actual);
-    }
-
-    public function testGroupByWhenClassifierGivenThenElementsAreGroupedByClassifier(): void
-    {
-        /** @Given an eager collection of integers from 1 to 6 */
-        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5, 6]);
-
-        /** @When grouping by even and odd */
-        $actual = $collection->groupBy(
-            classifier: static fn(int $value): string => ($value % 2) === 0 ? 'even' : 'odd'
-        );
-
-        /** @Then the odd group should contain 1, 3, 5 */
-        $groups = $actual->toArray();
-        self::assertSame([1, 3, 5], $groups['odd']);
-
-        /** @And the even group should contain 2, 4, 6 */
-        self::assertSame([2, 4, 6], $groups['even']);
-    }
-
-    public function testIsEmptyWhenCollectionIsEmptyThenReturnsTrue(): void
-    {
-        /** @Given an empty eager collection */
-        $empty = Collection::createFromEmpty();
-
-        /** @Then the empty collection should return true */
-        self::assertTrue($empty->isEmpty());
-    }
-
-    public function testIsEmptyWhenCollectionIsNotEmptyThenReturnsFalse(): void
-    {
-        /** @Given a non-empty eager collection */
-        $nonEmpty = Collection::createFrom(elements: [1]);
-
-        /** @Then the non-empty collection should return false */
-        self::assertFalse($nonEmpty->isEmpty());
-    }
-
-    public function testJoinToStringWhenStringElementsThenValuesAreJoinedWithSeparator(): void
-    {
-        /** @Given an eager collection of strings */
-        $collection = Collection::createFrom(elements: ['a', 'b', 'c']);
-
-        /** @When joining with a comma separator */
-        $actual = $collection->joinToString(separator: ', ');
-
-        /** @Then the result should be "a, b, c" */
-        self::assertSame('a, b, c', $actual);
-    }
-
-    public function testJoinToStringWhenIntegerElementsThenValuesAreJoinedWithSeparator(): void
-    {
-        /** @Given an eager collection of integers */
-        $collection = Collection::createFrom(elements: [1, 2, 3]);
-
-        /** @When joining with a comma separator */
-        $actual = $collection->joinToString(separator: ', ');
-
-        /** @Then the result should be "1, 2, 3" */
-        self::assertSame('1, 2, 3', $actual);
-    }
-
-    public function testJoinToStringWhenSingleElementThenSeparatorIsOmitted(): void
-    {
-        /** @Given an eager collection with a single integer */
-        $collection = Collection::createFrom(elements: [42]);
-
-        /** @When joining to string */
-        $actual = $collection->joinToString(separator: ', ');
-
-        /** @Then the result should be a string */
-        self::assertSame('42', $actual);
-    }
-
-    public function testFilterWhenPredicateGivenThenOnlyMatchingElementsRemain(): void
-    {
-        /** @Given an eager collection of integers */
-        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
-
-        /** @When keeping only elements greater than 3 */
-        $actual = $collection->filter(predicates: static fn(int $value): bool => $value > 3);
-
-        /** @Then only 4 and 5 should remain */
-        self::assertSame([4, 5], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testFilterWhenSinglePredicateMatchesFalsyValueThenItIsKept(): void
-    {
-        /** @Given an eager collection containing a falsy value and a non-matching value */
-        $collection = Collection::createFrom(elements: [0, 1, 2, 9]);
-
-        /** @When filtering with a single predicate that matches values below five */
-        $actual = $collection->filter(predicates: static fn(int $value): bool => $value < 5);
-
-        /** @Then the falsy value matched by the predicate is kept and the non-matching value is dropped */
-        self::assertSame([0, 1, 2], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testFilterWhenNoPredicateThenFalsyValuesAreRemoved(): void
-    {
-        /** @Given an eager collection with falsy and truthy values */
-        $collection = Collection::createFrom(elements: [0, '', null, false, 1, 'hello', 2]);
-
-        /** @When filtering without a predicate */
-        $actual = $collection->filter();
-
-        /** @Then only truthy values should remain */
-        self::assertSame([1, 'hello', 2], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testFilterWhenExplicitNullPredicateThenFalsyValuesAreRemoved(): void
-    {
-        /** @Given an eager collection with falsy and truthy values */
-        $collection = Collection::createFrom(elements: [0, '', 1, 'hello', 2]);
-
-        /** @When filtering with an explicit null predicate */
-        $actual = $collection->filter(null);
-
-        /** @Then only truthy values should remain */
-        self::assertSame([1, 'hello', 2], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testFilterWhenStringKeyedCollectionThenRemainingKeysArePreserved(): void
-    {
-        /** @Given an eager collection with string keys */
-        $collection = Collection::createFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
-
-        /** @When filtering only elements greater than 1 */
-        $actual = $collection->filter(predicates: static fn(int $value): bool => $value > 1);
-
-        /** @Then the remaining keys should be preserved */
-        self::assertSame(['b' => 2, 'c' => 3], $actual->toArray());
-    }
-
-    public function testFilterWhenMultiplePredicatesThenOnlyElementsMatchingAllRemain(): void
-    {
-        /** @Given an eager collection of integers */
-        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-
-        /** @When filtering with two predicates: greater than 3 and even */
-        $actual = $collection->filter(
-            static fn(int $value): bool => $value > 3,
-            static fn(int $value): bool => ($value % 2) === 0
-        );
-
-        /** @Then only elements satisfying both predicates should remain */
-        self::assertSame([4, 6, 8, 10], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testFilterWhenAppliedAfterTerminalThenOperatesOnMaterializedElements(): void
-    {
-        /** @Given an eager collection of integers */
-        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
-
-        /** @And the collection materialized by a prior terminal call */
-        $collection->count();
-
-        /** @When filtering the already-materialized collection */
-        $actual = $collection->filter(predicates: static fn(int $value): bool => ($value % 2) === 0);
-
-        /** @Then the filter operates on the cached elements */
-        self::assertSame([2, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testLastWhenCollectionIsNotEmptyThenReturnsLastElement(): void
-    {
-        /** @Given an eager collection with three elements */
-        $collection = Collection::createFrom(elements: [10, 20, 30]);
-
-        /** @When retrieving the last element */
-        $actual = $collection->last();
-
-        /** @Then it should return 30 */
-        self::assertSame(30, $actual);
-    }
-
     public function testLastWhenCollectionIsEmptyThenReturnsDefaultValue(): void
     {
         /** @Given an empty eager collection */
@@ -705,30 +228,6 @@ final class EagerCollectionTest extends TestCase
         self::assertSame('fallback', $actual);
     }
 
-    public function testLastWhenLastElementIsNullThenReturnsNullNotDefault(): void
-    {
-        /** @Given an eager collection where the last element is null */
-        $collection = Collection::createFrom(elements: [1, 2, null]);
-
-        /** @When retrieving the last element with a default */
-        $actual = $collection->last(defaultValueIfNotFound: 'fallback');
-
-        /** @Then it should return null, not the default */
-        self::assertNull($actual);
-    }
-
-    public function testMapWhenTransformationGivenThenEachElementIsTransformed(): void
-    {
-        /** @Given an eager collection of integers */
-        $collection = Collection::createFrom(elements: [1, 2, 3]);
-
-        /** @When transforming each element by multiplying by 10 */
-        $actual = $collection->map(transformations: static fn(int $value): int => ($value * 10));
-
-        /** @Then each element should be multiplied */
-        self::assertSame([10, 20, 30], $actual->toArray());
-    }
-
     public function testMapWhenStringKeyedCollectionThenKeysArePreserved(): void
     {
         /** @Given an eager collection with string keys */
@@ -739,238 +238,6 @@ final class EagerCollectionTest extends TestCase
 
         /** @Then the keys should be preserved */
         self::assertSame(['a' => 10, 'b' => 20, 'c' => 30], $actual->toArray());
-    }
-
-    public function testMapWhenMultipleTransformationsThenAppliedInSequence(): void
-    {
-        /** @Given an eager collection of integers */
-        $collection = Collection::createFrom(elements: [1, 2, 3]);
-
-        /** @When applying two transformations: increment, then double */
-        $actual = $collection->map(
-            static fn(int $value): int => ($value + 1),
-            static fn(int $value): int => ($value * 2)
-        );
-
-        /** @Then both transformations should be applied in order */
-        self::assertSame([4, 6, 8], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testMapWhenNoTransformationsThenElementsAreReturnedUnchanged(): void
-    {
-        /** @Given an eager collection of integers */
-        $collection = Collection::createFrom(elements: [1, 2, 3]);
-
-        /** @When mapping without any transformation */
-        $actual = $collection->map();
-
-        /** @Then the elements should be returned unchanged */
-        self::assertSame([1, 2, 3], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testReduceWhenAccumulatorGivenThenElementsAreAccumulatedToSingleValue(): void
-    {
-        /** @Given an eager collection of integers */
-        $collection = Collection::createFrom(elements: [1, 2, 3, 4]);
-
-        /** @When reducing to calculate the sum */
-        $actual = $collection->reduce(
-            accumulator: static fn(int $carry, int $value): int => ($carry + $value),
-            initial: 0
-        );
-
-        /** @Then the sum should be 10 */
-        self::assertSame(10, $actual);
-    }
-
-    public function testSortWhenAscendingValueOrderThenElementsAreSortedAscending(): void
-    {
-        /** @Given an eager collection with unordered elements */
-        $collection = Collection::createFrom(elements: [3, 1, 2]);
-
-        /** @When sorting in ascending order by value */
-        $actual = $collection->sort(order: Order::ASCENDING_VALUE);
-
-        /** @Then the elements should be in ascending order */
-        self::assertSame([1, 2, 3], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testSortWhenDescendingValueOrderThenElementsAreSortedDescending(): void
-    {
-        /** @Given an eager collection with ordered elements */
-        $collection = Collection::createFrom(elements: [1, 2, 3]);
-
-        /** @When sorting in descending order by value */
-        $actual = $collection->sort(order: Order::DESCENDING_VALUE);
-
-        /** @Then the elements should be in descending order */
-        self::assertSame([3, 2, 1], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testSortWhenDefaultKeyOrderThenKeysAreSortedAscending(): void
-    {
-        /** @Given an eager collection with unordered string keys */
-        $collection = Collection::createFrom(elements: ['c' => 3, 'a' => 1, 'b' => 2]);
-
-        /** @When sorting by ascending key */
-        $actual = $collection->sort();
-
-        /** @Then the keys should be in ascending order */
-        self::assertSame(['a' => 1, 'b' => 2, 'c' => 3], $actual->toArray());
-    }
-
-    public function testSortWhenDescendingKeyOrderThenKeysAreSortedDescending(): void
-    {
-        /** @Given an eager collection with ordered string keys */
-        $collection = Collection::createFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
-
-        /** @When sorting by descending key */
-        $actual = $collection->sort(order: Order::DESCENDING_KEY);
-
-        /** @Then the keys should be in descending order */
-        self::assertSame(['c' => 3, 'b' => 2, 'a' => 1], $actual->toArray());
-    }
-
-    public function testSortWhenAscendingValueWithoutComparatorThenDefaultComparisonIsUsed(): void
-    {
-        /** @Given an eager collection with unordered integers */
-        $collection = Collection::createFrom(elements: [3, 1, 4, 1, 5]);
-
-        /** @When sorting ascending by value without a custom comparator */
-        $actual = $collection->sort(order: Order::ASCENDING_VALUE);
-
-        /** @Then the elements should be sorted by the default spaceship operator */
-        self::assertSame([1, 1, 3, 4, 5], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testSortWhenCustomComparatorGivenThenElementsAreOrderedByComparator(): void
-    {
-        /** @Given an eager collection of Amount objects */
-        $collection = Collection::createFrom(elements: [
-            new Amount(value: 300.00, currency: Currency::USD),
-            new Amount(value: 100.00, currency: Currency::USD),
-            new Amount(value: 200.00, currency: Currency::USD)
-        ]);
-
-        /** @When sorting ascending by value with a custom comparator */
-        $actual = $collection->sort(
-            order: Order::ASCENDING_VALUE,
-            comparator: static fn(Amount $first, Amount $second): int => ($first->value <=> $second->value)
-        );
-
-        /** @Then the first element should have the lowest value */
-        self::assertSame(100.00, $actual->first()->value);
-
-        /** @And the last element should have the highest value */
-        self::assertSame(300.00, $actual->last()->value);
-    }
-
-    public function testSortWhenComparatorDiffersFromDefaultThenOrdersDiverge(): void
-    {
-        /** @Given an eager collection where alphabetical and length order diverge */
-        $collection = Collection::createFrom(elements: ['zz', 'a', 'bbb']);
-
-        /** @When sorting ascending by length */
-        $byLength = $collection->sort(
-            order: Order::ASCENDING_VALUE,
-            comparator: static fn(string $first, string $second): int => (strlen($first) <=> strlen($second))
-        );
-
-        /** @And sorting ascending by default (alphabetical) */
-        $byDefault = $collection->sort(order: Order::ASCENDING_VALUE);
-
-        /** @Then the custom order should be by length */
-        self::assertSame(['a', 'zz', 'bbb'], $byLength->toArray(keyPreservation: KeyPreservation::DISCARD));
-
-        /** @And the default order should be alphabetical */
-        self::assertSame(['a', 'bbb', 'zz'], $byDefault->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testSliceWhenOffsetAndLengthGivenThenSubrangeIsReturned(): void
-    {
-        /** @Given an eager collection of five elements */
-        $collection = Collection::createFrom(elements: [10, 20, 30, 40, 50]);
-
-        /** @When slicing from offset 1 with length 2 */
-        $actual = $collection->slice(offset: 1, length: 2);
-
-        /** @Then the result should contain elements 20 and 30 */
-        self::assertSame([20, 30], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testSliceWhenOffsetWithoutLengthThenRemainderIsReturned(): void
-    {
-        /** @Given an eager collection of five elements */
-        $collection = Collection::createFrom(elements: [10, 20, 30, 40, 50]);
-
-        /** @When slicing from offset 2 without specifying length */
-        $actual = $collection->slice(offset: 2);
-
-        /** @Then the result should contain all elements from index 2 onward */
-        self::assertSame([30, 40, 50], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testSliceWhenStringKeyedCollectionThenKeysArePreserved(): void
-    {
-        /** @Given an eager collection with string keys */
-        $collection = Collection::createFrom(elements: ['a' => 10, 'b' => 20, 'c' => 30, 'd' => 40]);
-
-        /** @When slicing from offset 1 with length 2 */
-        $actual = $collection->slice(offset: 1, length: 2);
-
-        /** @Then the keys should be preserved */
-        self::assertSame(['b' => 20, 'c' => 30], $actual->toArray());
-    }
-
-    public function testSliceWhenLengthIsZeroThenResultIsEmpty(): void
-    {
-        /** @Given an eager collection with five elements */
-        $collection = Collection::createFrom(elements: [10, 20, 30, 40, 50]);
-
-        /** @When slicing with length zero */
-        $actual = $collection->slice(offset: 0, length: 0);
-
-        /** @Then the result should be empty */
-        self::assertTrue($actual->isEmpty());
-
-        /** @And the count should be zero */
-        self::assertSame(0, $actual->count());
-    }
-
-    public function testSliceWhenNegativeLengthThenTrailingElementsAreExcluded(): void
-    {
-        /** @Given an eager collection with five elements */
-        $collection = Collection::createFrom(elements: [10, 20, 30, 40, 50]);
-
-        /** @When slicing from offset 0 with length -2 (exclude last 2) */
-        $actual = $collection->slice(offset: 0, length: -2);
-
-        /** @Then the result should contain the first three elements */
-        self::assertSame([10, 20, 30], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testSliceWhenOffsetAndNegativeLengthThenSubrangeIsReturned(): void
-    {
-        /** @Given an eager collection with five elements */
-        $collection = Collection::createFrom(elements: [10, 20, 30, 40, 50]);
-
-        /** @When slicing from offset 1 with length -2 (skip first, exclude last 2) */
-        $actual = $collection->slice(offset: 1, length: -2);
-
-        /** @Then the result should contain elements 20 and 30 */
-        self::assertSame([20, 30], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testSliceWhenNegativeLengthOnStringKeysThenKeysArePreserved(): void
-    {
-        /** @Given an eager collection with string keys */
-        $collection = Collection::createFrom(elements: ['a' => 10, 'b' => 20, 'c' => 30, 'd' => 40]);
-
-        /** @When slicing from offset 0 with length -2 */
-        $actual = $collection->slice(offset: 0, length: -2);
-
-        /** @Then the keys should be preserved */
-        self::assertSame(['a' => 10, 'b' => 20], $actual->toArray());
     }
 
     public function testSliceWhenNegativeLengthThenRemainingCountIsExact(): void
@@ -1000,28 +267,372 @@ final class EagerCollectionTest extends TestCase
         self::assertSame([0 => 'a', 2 => 'b', 5 => 'c'], $actual);
     }
 
-    public function testToArrayWhenKeysDiscardedThenValuesAreReindexed(): void
+    public function testCreateFromWhenIntegerElementsThenHoldsAllElements(): void
     {
-        /** @Given an eager collection with non-sequential keys */
-        $collection = Collection::createFrom(elements: [0 => 'a', 2 => 'b', 5 => 'c']);
+        /** @Given a set of integer elements */
+        $elements = [1, 2, 3];
 
-        /** @When converting to array discarding keys */
-        $actual = $collection->toArray(keyPreservation: KeyPreservation::DISCARD);
+        /** @When creating an eager collection from those elements */
+        $collection = Collection::createFrom(elements: $elements);
 
-        /** @Then the keys should be re-indexed from 0 */
-        self::assertSame(['a', 'b', 'c'], $actual);
+        /** @Then the collection should contain all three elements */
+        self::assertSame(3, $collection->count());
+
+        /** @And the array should match the original elements */
+        self::assertSame([1, 2, 3], $collection->toArray());
     }
 
-    public function testToJsonWhenIntegerElementsThenReturnsJsonArray(): void
+    public function testFirstWhenCollectionIsEmptyThenReturnsDefaultValue(): void
+    {
+        /** @Given an empty eager collection */
+        $collection = Collection::createFromEmpty();
+
+        /** @When retrieving the first element with a default */
+        $actual = $collection->first(defaultValueIfNotFound: 'fallback');
+
+        /** @Then it should return the default value */
+        self::assertSame('fallback', $actual);
+    }
+
+    public function testSortWhenDefaultKeyOrderThenKeysAreSortedAscending(): void
+    {
+        /** @Given an eager collection with unordered string keys */
+        $collection = Collection::createFrom(elements: ['c' => 3, 'a' => 1, 'b' => 2]);
+
+        /** @When sorting by ascending key */
+        $actual = $collection->sort();
+
+        /** @Then the keys should be in ascending order */
+        self::assertSame(['a' => 1, 'b' => 2, 'c' => 3], $actual->toArray());
+    }
+
+    public function testGetByWhenIndexIsOutOfBoundsThenReturnsDefaultValue(): void
+    {
+        /** @Given an eager collection with three elements */
+        $collection = Collection::createFrom(elements: ['a', 'b', 'c']);
+
+        /** @When retrieving an element at an index that does not exist */
+        $actual = $collection->getBy(index: 99, defaultValueIfNotFound: 'missing');
+
+        /** @Then it should return the default value */
+        self::assertSame('missing', $actual);
+    }
+
+    public function testLastWhenCollectionIsNotEmptyThenReturnsLastElement(): void
+    {
+        /** @Given an eager collection with three elements */
+        $collection = Collection::createFrom(elements: [10, 20, 30]);
+
+        /** @When retrieving the last element */
+        $actual = $collection->last();
+
+        /** @Then it should return 30 */
+        self::assertSame(30, $actual);
+    }
+
+    public function testLastWhenLastElementIsNullThenReturnsNullNotDefault(): void
+    {
+        /** @Given an eager collection where the last element is null */
+        $collection = Collection::createFrom(elements: [1, 2, null]);
+
+        /** @When retrieving the last element with a default */
+        $actual = $collection->last(defaultValueIfNotFound: 'fallback');
+
+        /** @Then it should return null, not the default */
+        self::assertNull($actual);
+    }
+
+    public function testReduceWhenClosureBackedObjectsThenAmountsAreSummed(): void
+    {
+        /** @Given a closure that returns Amount objects */
+        $collection = Collection::createFromClosure(factory: static function (): array {
+            return [
+                new Amount(value: 100.00, currency: Currency::USD),
+                new Amount(value: 200.00, currency: Currency::USD),
+                new Amount(value: 300.00, currency: Currency::USD),
+            ];
+        });
+
+        /** @When reducing to sum all amounts */
+        $total = $collection->reduce(
+            accumulator: static fn(float $carry, Amount $amount): float => ($carry + $amount->value),
+            initial: 0.0
+        );
+
+        /** @Then the total should be 600 */
+        self::assertSame(600.00, $total);
+    }
+
+    public function testSliceWhenStringKeyedCollectionThenKeysArePreserved(): void
+    {
+        /** @Given an eager collection with string keys */
+        $collection = Collection::createFrom(elements: ['a' => 10, 'b' => 20, 'c' => 30, 'd' => 40]);
+
+        /** @When slicing from offset 1 with length 2 */
+        $actual = $collection->slice(offset: 1, length: 2);
+
+        /** @Then the keys should be preserved */
+        self::assertSame(['b' => 20, 'c' => 30], $actual->toArray());
+    }
+
+    public function testJoinToStringWhenSingleElementThenSeparatorIsOmitted(): void
+    {
+        /** @Given an eager collection with a single integer */
+        $collection = Collection::createFrom(elements: [42]);
+
+        /** @When joining to string */
+        $actual = $collection->joinToString(separator: ', ');
+
+        /** @Then the result should be a string */
+        self::assertSame('42', $actual);
+    }
+
+    public function testMapWhenMultipleTransformationsThenAppliedInSequence(): void
     {
         /** @Given an eager collection of integers */
         $collection = Collection::createFrom(elements: [1, 2, 3]);
 
-        /** @When converting to JSON */
-        $actual = $collection->toJson();
+        /** @When applying two transformations: increment, then double */
+        $actual = $collection->map(
+            static fn(int $value): int => ($value + 1),
+            static fn(int $value): int => ($value * 2)
+        );
 
-        /** @Then the result should be a valid JSON array */
-        self::assertSame('[1,2,3]', $actual);
+        /** @Then both transformations should be applied in order */
+        self::assertSame([4, 6, 8], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testSliceWhenOffsetAndLengthGivenThenSubrangeIsReturned(): void
+    {
+        /** @Given an eager collection of five elements */
+        $collection = Collection::createFrom(elements: [10, 20, 30, 40, 50]);
+
+        /** @When slicing from offset 1 with length 2 */
+        $actual = $collection->slice(offset: 1, length: 2);
+
+        /** @Then the result should contain elements 20 and 30 */
+        self::assertSame([20, 30], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testSliceWhenOffsetWithoutLengthThenRemainderIsReturned(): void
+    {
+        /** @Given an eager collection of five elements */
+        $collection = Collection::createFrom(elements: [10, 20, 30, 40, 50]);
+
+        /** @When slicing from offset 2 without specifying length */
+        $actual = $collection->slice(offset: 2);
+
+        /** @Then the result should contain all elements from index 2 onward */
+        self::assertSame([30, 40, 50], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testToShipmentsWhenRawRecordsThenTypedCollectionIsBuilt(): void
+    {
+        /** @Given raw shipment records as arrays */
+        $records = [
+            [
+                'id'          => 'SHP-001',
+                'status'      => 'shipped',
+                'carrier'     => 'DHL',
+                'created_at'  => '2026-01-10T08:00:00+00:00',
+                'customer_id' => 'C-100'
+            ],
+            [
+                'id'          => 'SHP-002',
+                'status'      => 'pending',
+                'carrier'     => 'FedEx',
+                'created_at'  => '2026-01-11T09:00:00+00:00',
+                'customer_id' => 'C-200'
+            ],
+            [
+                'id'          => 'SHP-003',
+                'status'      => 'shipped',
+                'carrier'     => 'UPS',
+                'created_at'  => '2026-01-12T10:00:00+00:00',
+                'customer_id' => 'C-100'
+            ],
+        ];
+
+        /** @When mapping records to a typed Shipments collection via ShipmentRecord */
+        $shipments = ShipmentRecord::fromRecords(records: $records)->toShipments();
+
+        /** @Then the collection should contain three shipments */
+        self::assertSame(3, $shipments->count());
+
+        /** @And the collection should be an instance of Shipments */
+        self::assertInstanceOf(Shipments::class, $shipments);
+    }
+
+    public function testContainsWhenEquivalentObjectIsPresentThenReturnsTrue(): void
+    {
+        /** @Given an Amount object to search for */
+        $target = new Amount(value: 100.00, currency: Currency::USD);
+
+        /** @And an eager collection with Amount objects */
+        $collection = Collection::createFrom(elements: [
+            new Amount(value: 50.00, currency: Currency::USD),
+            new Amount(value: 100.00, currency: Currency::USD),
+            new Amount(value: 200.00, currency: Currency::USD)
+        ]);
+
+        /** @When checking if the collection contains an equivalent Amount */
+        $actual = $collection->contains(element: $target);
+
+        /** @Then it should return true */
+        self::assertTrue($actual);
+    }
+
+    public function testFirstWhenCollectionIsNotEmptyThenReturnsFirstElement(): void
+    {
+        /** @Given an eager collection with three elements */
+        $collection = Collection::createFrom(elements: [10, 20, 30]);
+
+        /** @When retrieving the first element */
+        $actual = $collection->first();
+
+        /** @Then it should return 10 */
+        self::assertSame(10, $actual);
+    }
+
+    public function testFirstWhenFirstElementIsNullThenReturnsNullNotDefault(): void
+    {
+        /** @Given an eager collection where the first element is null */
+        $collection = Collection::createFrom(elements: [null, 1, 2]);
+
+        /** @When retrieving the first element with a default */
+        $actual = $collection->first(defaultValueIfNotFound: 'fallback');
+
+        /** @Then it should return null, not the default */
+        self::assertNull($actual);
+    }
+
+    public function testFlattenWhenNestedArraysThenElementsAreLiftedOneLevel(): void
+    {
+        /** @Given an eager collection with nested arrays */
+        $collection = Collection::createFrom(elements: [[1, 2], [3, 4], 5]);
+
+        /** @When flattening by one level */
+        $actual = $collection->flatten();
+
+        /** @Then all elements should be at the top level */
+        self::assertSame([1, 2, 3, 4, 5], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testMapWhenClosureBackedTypedCarriersThenTypeIsPreserved(): void
+    {
+        /** @Given a closure-backed Carriers collection */
+        $carriers = Carriers::createFromClosure(factory: static function (): array {
+            return ['dhl', 'fedex', 'ups'];
+        });
+
+        /** @When mapping to uppercase */
+        $actual = $carriers->map(
+            transformations: static fn(string $name): string => strtoupper($name)
+        );
+
+        /** @Then the result should still be an instance of Carriers */
+        self::assertInstanceOf(Carriers::class, $actual);
+
+        /** @And the carriers should be uppercased */
+        self::assertSame(['DHL', 'FEDEX', 'UPS'], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testAddWhenClosureBackedCollectionThenElementsAreAppended(): void
+    {
+        /** @Given a closure-backed eager collection */
+        $collection = Collection::createFromClosure(factory: static function (): array {
+            return [1, 2];
+        });
+
+        /** @When adding elements */
+        $actual = $collection->add(3, 4);
+
+        /** @Then all elements should be present */
+        self::assertSame([1, 2, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testCountWhenCollectionHasElementsThenReturnsElementCount(): void
+    {
+        /** @Given an eager collection with five elements */
+        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
+
+        /** @When counting the elements */
+        $actual = $collection->count();
+
+        /** @Then it should return 5 */
+        self::assertSame(5, $actual);
+    }
+
+    public function testMergeWhenTwoCollectionsThenElementsAreCombinedInOrder(): void
+    {
+        /** @Given a first eager collection */
+        $first = Collection::createFrom(elements: [1, 2]);
+
+        /** @And a second eager collection */
+        $second = Collection::createFrom(elements: [3, 4]);
+
+        /** @When concatenating the second into the first */
+        $actual = $first->merge(other: $second);
+
+        /** @Then the resulting collection should contain four elements */
+        self::assertSame(4, $actual->count());
+
+        /** @And the elements should be in the expected order */
+        self::assertSame([1, 2, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testReduceWhenAppliedOverChainedPipelineThenSumIsReturned(): void
+    {
+        /** @Given an eager collection of integers from 1 to 100 */
+        $collection = Collection::createFrom(elements: range(1, 100));
+
+        /** @And the collection is filtered to even numbers, squared, and sorted descending */
+        $pipeline = $collection
+            ->filter(predicates: static fn(int $value): bool => ($value % 2) === 0)
+            ->map(transformations: static fn(int $value): int => ($value ** 2))
+            ->sort(order: Order::DESCENDING_VALUE);
+
+        /** @When reducing to calculate the sum of all squared even numbers */
+        $sum = $pipeline->reduce(
+            accumulator: static fn(int $carry, int $value): int => ($carry + $value),
+            initial: 0
+        );
+
+        /** @Then the sum should be 171700 */
+        self::assertSame(171700, $sum);
+    }
+
+    public function testSortWhenComparatorDiffersFromDefaultThenOrdersDiverge(): void
+    {
+        /** @Given an eager collection where alphabetical and length order diverge */
+        $collection = Collection::createFrom(elements: ['zz', 'a', 'bbb']);
+
+        /** @When sorting ascending by length */
+        $byLength = $collection->sort(
+            order: Order::ASCENDING_VALUE,
+            comparator: static fn(string $first, string $second): int => (strlen($first) <=> strlen($second))
+        );
+
+        /** @And sorting ascending by default (alphabetical) */
+        $byDefault = $collection->sort(order: Order::ASCENDING_VALUE);
+
+        /** @Then the custom order should be by length */
+        self::assertSame(['a', 'zz', 'bbb'], $byLength->toArray(keyPreservation: KeyPreservation::DISCARD));
+
+        /** @And the default order should be alphabetical */
+        self::assertSame(['a', 'bbb', 'zz'], $byDefault->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testSortWhenDescendingKeyOrderThenKeysAreSortedDescending(): void
+    {
+        /** @Given an eager collection with ordered string keys */
+        $collection = Collection::createFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
+
+        /** @When sorting by descending key */
+        $actual = $collection->sort(order: Order::DESCENDING_KEY);
+
+        /** @Then the keys should be in descending order */
+        self::assertSame(['c' => 3, 'b' => 2, 'a' => 1], $actual->toArray());
     }
 
     public function testToJsonWhenKeysDiscardedThenReturnsSequentialJsonArray(): void
@@ -1036,31 +647,723 @@ final class EagerCollectionTest extends TestCase
         self::assertSame('[1,2]', $actual);
     }
 
-    public function testToJsonWhenKeysPreservedThenReturnsJsonObject(): void
+    public function testCreateFromClosureWhenClosureSourceThenHoldsAllElements(): void
     {
-        /** @Given an eager collection with string keys */
-        $collection = Collection::createFrom(elements: ['x' => 1, 'y' => 2]);
+        /** @Given a closure that returns three elements */
+        $factory = static function (): array {
+            return [1, 2, 3];
+        };
 
-        /** @When converting to JSON without arguments */
-        $actual = $collection->toJson();
+        /** @When creating an eager collection from the closure */
+        $collection = Collection::createFromClosure(factory: $factory);
 
-        /** @Then the result should preserve keys as a JSON object */
-        self::assertSame('{"x":1,"y":2}', $actual);
+        /** @Then the collection should contain all three elements */
+        self::assertSame(3, $collection->count());
+
+        /** @And the array should match the expected elements */
+        self::assertSame([1, 2, 3], $collection->toArray());
     }
 
-    public function testAddWhenElementAddedThenOriginalIsUnchanged(): void
+    public function testEqualsWhenLongerCollectionSharesPrefixThenReturnsFalse(): void
+    {
+        /** @Given a first eager collection with four elements */
+        $first = Collection::createFrom(elements: [1, 2, 3, 4]);
+
+        /** @And a second eager collection with three elements */
+        $second = Collection::createFrom(elements: [1, 2, 3]);
+
+        /** @When comparing them for equality */
+        $actual = $first->equals(other: $second);
+
+        /** @Then they should not be equal */
+        self::assertFalse($actual);
+    }
+
+    public function testFilterWhenPredicateGivenThenOnlyMatchingElementsRemain(): void
+    {
+        /** @Given an eager collection of integers */
+        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
+
+        /** @When keeping only elements greater than 3 */
+        $actual = $collection->filter(predicates: static fn(int $value): bool => $value > 3);
+
+        /** @Then only 4 and 5 should remain */
+        self::assertSame([4, 5], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testFilterWhenSinglePredicateMatchesFalsyValueThenItIsKept(): void
+    {
+        /** @Given an eager collection containing a falsy value and a non-matching value */
+        $collection = Collection::createFrom(elements: [0, 1, 2, 9]);
+
+        /** @When filtering with a single predicate that matches values below five */
+        $actual = $collection->filter(predicates: static fn(int $value): bool => $value < 5);
+
+        /** @Then the falsy value matched by the predicate is kept and the non-matching value is dropped */
+        self::assertSame([0, 1, 2], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testMapWhenTransformationGivenThenEachElementIsTransformed(): void
+    {
+        /** @Given an eager collection of integers */
+        $collection = Collection::createFrom(elements: [1, 2, 3]);
+
+        /** @When transforming each element by multiplying by 10 */
+        $actual = $collection->map(transformations: static fn(int $value): int => ($value * 10));
+
+        /** @Then each element should be multiplied */
+        self::assertSame([10, 20, 30], $actual->toArray());
+    }
+
+    public function testSliceWhenNegativeLengthThenTrailingElementsAreExcluded(): void
+    {
+        /** @Given an eager collection with five elements */
+        $collection = Collection::createFrom(elements: [10, 20, 30, 40, 50]);
+
+        /** @When slicing from offset 0 with length -2 (exclude last 2) */
+        $actual = $collection->slice(offset: 0, length: -2);
+
+        /** @Then the result should contain the first three elements */
+        self::assertSame([10, 20, 30], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testSliceWhenOffsetAndNegativeLengthThenSubrangeIsReturned(): void
+    {
+        /** @Given an eager collection with five elements */
+        $collection = Collection::createFrom(elements: [10, 20, 30, 40, 50]);
+
+        /** @When slicing from offset 1 with length -2 (skip first, exclude last 2) */
+        $actual = $collection->slice(offset: 1, length: -2);
+
+        /** @Then the result should contain elements 20 and 30 */
+        self::assertSame([20, 30], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testEqualsWhenTrailingNullExtendsCollectionThenReturnsFalse(): void
+    {
+        /** @Given a first eager collection with three elements */
+        $first = Collection::createFrom(elements: [1, 2, 3]);
+
+        /** @And a second eager collection with four elements ending with null */
+        $second = Collection::createFrom(elements: [1, 2, 3, null]);
+
+        /** @When comparing them for equality */
+        $actual = $first->equals(other: $second);
+
+        /** @Then they should not be equal */
+        self::assertFalse($actual);
+    }
+
+    public function testFirstWhenCollectionIsEmptyWithoutDefaultThenReturnsNull(): void
+    {
+        /** @Given an empty eager collection */
+        $collection = Collection::createFromEmpty();
+
+        /** @When retrieving the first element without a default */
+        $actual = $collection->first();
+
+        /** @Then it should return null */
+        self::assertNull($actual);
+    }
+
+    public function testSliceWhenNegativeLengthOnStringKeysThenKeysArePreserved(): void
+    {
+        /** @Given an eager collection with string keys */
+        $collection = Collection::createFrom(elements: ['a' => 10, 'b' => 20, 'c' => 30, 'd' => 40]);
+
+        /** @When slicing from offset 0 with length -2 */
+        $actual = $collection->slice(offset: 0, length: -2);
+
+        /** @Then the keys should be preserved */
+        self::assertSame(['a' => 10, 'b' => 20], $actual->toArray());
+    }
+
+    public function testContainsWhenClosureBackedCollectionThenDetectsMembership(): void
+    {
+        /** @Given a closure-backed eager collection */
+        $collection = Collection::createFromClosure(factory: static function (): array {
+            return ['alpha', 'beta', 'gamma'];
+        });
+
+        /** @When checking if the collection contains an existing element */
+        $containsBeta = $collection->contains(element: 'beta');
+
+        /** @Then it should return true */
+        self::assertTrue($containsBeta);
+
+        /** @And checking for a non-existing element should return false */
+        self::assertFalse($collection->contains(element: 'delta'));
+    }
+
+    public function testFilterWhenExplicitNullPredicateThenFalsyValuesAreRemoved(): void
+    {
+        /** @Given an eager collection with falsy and truthy values */
+        $collection = Collection::createFrom(elements: [0, '', 1, 'hello', 2]);
+
+        /** @When filtering with an explicit null predicate */
+        $actual = $collection->filter(null);
+
+        /** @Then only truthy values should remain */
+        self::assertSame([1, 'hello', 2], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testMapWhenNoTransformationsThenElementsAreReturnedUnchanged(): void
+    {
+        /** @Given an eager collection of integers */
+        $collection = Collection::createFrom(elements: [1, 2, 3]);
+
+        /** @When mapping without any transformation */
+        $actual = $collection->map();
+
+        /** @Then the elements should be returned unchanged */
+        self::assertSame([1, 2, 3], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testRemoveWhenValueHasDuplicatesThenAllOccurrencesAreRemoved(): void
+    {
+        /** @Given an eager collection with duplicate elements */
+        $collection = Collection::createFrom(elements: [1, 2, 3, 2, 4]);
+
+        /** @When removing the value 2 */
+        $actual = $collection->remove(element: 2);
+
+        /** @Then all occurrences of 2 should be removed */
+        self::assertSame([1, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testToArrayWhenTypedShipmentsThenSerializedToRecordStructure(): void
+    {
+        /** @Given raw shipment records as arrays */
+        $records = [
+            [
+                'id'          => 'SHP-001',
+                'status'      => 'shipped',
+                'carrier'     => 'DHL',
+                'created_at'  => '2026-01-10T08:00:00+00:00',
+                'customer_id' => 'C-100'
+            ],
+        ];
+
+        /** @When mapping records via ShipmentRecord and converting to array */
+        $actual = ShipmentRecord::fromRecords(records: $records)->toShipments()->toArray();
+
+        /** @Then the serialized array should match the original record structure */
+        self::assertSame([
+            [
+                'id'          => 'SHP-001',
+                'status'      => 'shipped',
+                'carrier'     => 'DHL',
+                'created_at'  => '2026-01-10T08:00:00+00:00',
+                'customer_id' => 'C-100',
+            ],
+        ], $actual);
+    }
+
+    public function testEqualsWhenCollectionsHaveIdenticalElementsThenReturnsTrue(): void
+    {
+        /** @Given a first eager collection */
+        $first = Collection::createFrom(elements: [1, 2, 3]);
+
+        /** @And a second eager collection with the same elements */
+        $second = Collection::createFrom(elements: [1, 2, 3]);
+
+        /** @When comparing them for equality */
+        $actual = $first->equals(other: $second);
+
+        /** @Then they should be equal */
+        self::assertTrue($actual);
+    }
+
+    public function testFindByWhenElementMatchesPredicateThenFirstMatchIsReturned(): void
+    {
+        /** @Given an eager collection of integers */
+        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
+
+        /** @When finding the first element greater than 3 */
+        $actual = $collection->findBy(predicates: static fn(int $value): bool => $value > 3);
+
+        /** @Then it should return 4 */
+        self::assertSame(4, $actual);
+    }
+
+    public function testGetByWhenClosureBackedCollectionThenReturnsElementAtIndex(): void
+    {
+        /** @Given a closure-backed eager collection */
+        $collection = Collection::createFromClosure(factory: static function (): array {
+            return ['alpha', 'beta', 'gamma'];
+        });
+
+        /** @When retrieving element at index 1 */
+        $actual = $collection->getBy(index: 1);
+
+        /** @Then it should return the second element */
+        self::assertSame('beta', $actual);
+    }
+
+    public function testRemoveAllWhenPredicateGivenThenMatchingElementsAreRemoved(): void
+    {
+        /** @Given an eager collection of integers */
+        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
+
+        /** @When removing all elements greater than 3 */
+        $actual = $collection->removeAll(predicate: static fn(int $value): bool => $value > 3);
+
+        /** @Then only elements 1, 2, 3 should remain */
+        self::assertSame([1, 2, 3], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testSortWhenAscendingValueOrderThenElementsAreSortedAscending(): void
+    {
+        /** @Given an eager collection with unordered elements */
+        $collection = Collection::createFrom(elements: [3, 1, 2]);
+
+        /** @When sorting in ascending order by value */
+        $actual = $collection->sort(order: Order::ASCENDING_VALUE);
+
+        /** @Then the elements should be in ascending order */
+        self::assertSame([1, 2, 3], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testAddWhenElementsAppendedThenNewCollectionContainsAllInOrder(): void
     {
         /** @Given an eager collection with three elements */
-        $original = Collection::createFrom(elements: [1, 2, 3]);
+        $collection = Collection::createFrom(elements: [1, 2, 3]);
 
-        /** @When adding a new element */
-        $modified = $original->add(4);
+        /** @When adding two more elements */
+        $actual = $collection->add(4, 5);
 
-        /** @Then the original collection should remain unchanged */
-        self::assertSame(3, $original->count());
+        /** @Then the new collection should contain five elements */
+        self::assertSame(5, $actual->count());
 
-        /** @And the new collection should have four elements */
-        self::assertSame(4, $modified->count());
+        /** @And the elements should be in the expected order */
+        self::assertSame([1, 2, 3, 4, 5], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+
+        /** @And the original collection should remain unchanged */
+        self::assertSame(3, $collection->count());
+    }
+
+    public function testContainsWhenObjectSoughtInScalarCollectionThenReturnsFalse(): void
+    {
+        /** @Given an eager collection containing boolean true */
+        $collection = Collection::createFrom(elements: [true]);
+
+        /** @When checking if the collection contains an object */
+        $actual = $collection->contains(element: new stdClass());
+
+        /** @Then it should return false because object and scalar types differ */
+        self::assertFalse($actual);
+    }
+
+    public function testContainsWhenScalarSoughtInObjectCollectionThenReturnsFalse(): void
+    {
+        /** @Given an eager collection containing a stdClass object */
+        $collection = Collection::createFrom(elements: [new stdClass()]);
+
+        /** @When checking if the collection contains boolean true */
+        $actual = $collection->contains(element: true);
+
+        /** @Then it should return false because an object is not a scalar */
+        self::assertFalse($actual);
+    }
+
+    public function testEqualsWhenCollectionsHaveDifferentElementsThenReturnsFalse(): void
+    {
+        /** @Given a first eager collection */
+        $first = Collection::createFrom(elements: [1, 2, 3]);
+
+        /** @And a second eager collection with different elements */
+        $second = Collection::createFrom(elements: [1, 2, 4]);
+
+        /** @When comparing them for equality */
+        $actual = $first->equals(other: $second);
+
+        /** @Then they should not be equal */
+        self::assertFalse($actual);
+    }
+
+    public function testCreateFromWhenGeneratorSourceThenAllElementsAreMaterialized(): void
+    {
+        /** @Given a generator that yields three elements */
+        $generator = (static function (): Generator {
+            yield 1;
+            yield 2;
+            yield 3;
+        })();
+
+        /** @When creating an eager collection from the generator */
+        $collection = Collection::createFrom(elements: $generator);
+
+        /** @Then the collection should materialize all three elements */
+        self::assertSame(3, $collection->count());
+    }
+
+    public function testSortWhenDescendingValueOrderThenElementsAreSortedDescending(): void
+    {
+        /** @Given an eager collection with ordered elements */
+        $collection = Collection::createFrom(elements: [1, 2, 3]);
+
+        /** @When sorting in descending order by value */
+        $actual = $collection->sort(order: Order::DESCENDING_VALUE);
+
+        /** @Then the elements should be in descending order */
+        self::assertSame([3, 2, 1], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testCreateFromClosureWhenClosureMapsRecordsThenShipmentsAreBuilt(): void
+    {
+        /** @Given raw shipment records as arrays */
+        $records = [
+            [
+                'id'          => 'SHP-001',
+                'status'      => 'shipped',
+                'carrier'     => 'DHL',
+                'created_at'  => '2026-01-10T08:00:00+00:00',
+                'customer_id' => 'C-100'
+            ],
+            [
+                'id'          => 'SHP-002',
+                'status'      => 'pending',
+                'carrier'     => 'FedEx',
+                'created_at'  => '2026-01-11T09:00:00+00:00',
+                'customer_id' => 'C-200'
+            ],
+        ];
+
+        /** @When creating a Shipments collection from a closure that maps records */
+        $shipments = Shipments::createFromClosure(
+            factory: static function () use ($records): Collection {
+                return Collection::createFrom(elements: $records)
+                    ->map(transformations: static fn(array $record): Shipment => Shipment::from(
+                        id: $record['id'],
+                        status: $record['status'],
+                        carrier: $record['carrier'],
+                        createdAt: $record['created_at'],
+                        customerId: $record['customer_id']
+                    ));
+            }
+        );
+
+        /** @Then the collection should contain two shipments */
+        self::assertSame(2, $shipments->count());
+
+        /** @And the first shipment should have the expected id */
+        self::assertSame('SHP-001', $shipments->first()->id);
+    }
+
+    public function testFilterWhenStringKeyedCollectionThenRemainingKeysArePreserved(): void
+    {
+        /** @Given an eager collection with string keys */
+        $collection = Collection::createFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
+
+        /** @When filtering only elements greater than 1 */
+        $actual = $collection->filter(predicates: static fn(int $value): bool => $value > 1);
+
+        /** @Then the remaining keys should be preserved */
+        self::assertSame(['b' => 2, 'c' => 3], $actual->toArray());
+    }
+
+    public function testGroupByWhenClassifierGivenThenElementsAreGroupedByClassifier(): void
+    {
+        /** @Given an eager collection of integers from 1 to 6 */
+        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5, 6]);
+
+        /** @When grouping by even and odd */
+        $actual = $collection->groupBy(
+            classifier: static fn(int $value): string => ($value % 2) === 0 ? 'even' : 'odd'
+        );
+
+        /** @Then the odd group should contain 1, 3, 5 */
+        $groups = $actual->toArray();
+        self::assertSame([1, 3, 5], $groups['odd']);
+
+        /** @And the even group should contain 2, 4, 6 */
+        self::assertSame([2, 4, 6], $groups['even']);
+    }
+
+    public function testMergeWhenClosureBackedMergedWithEagerThenElementsAreCombined(): void
+    {
+        /** @Given a closure-backed eager collection */
+        $closureCollection = Collection::createFromClosure(factory: static function (): array {
+            return [1, 2];
+        });
+
+        /** @And an eager collection */
+        $eagerCollection = Collection::createFrom(elements: [3, 4]);
+
+        /** @When merging them */
+        $actual = $closureCollection->merge(other: $eagerCollection);
+
+        /** @Then the result should contain all elements */
+        self::assertSame([1, 2, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testRemoveWhenStringKeyedCollectionThenRemainingKeysArePreserved(): void
+    {
+        /** @Given an eager collection with string keys */
+        $collection = Collection::createFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
+
+        /** @When removing the value 2 */
+        $actual = $collection->remove(element: 2);
+
+        /** @Then the remaining keys should be preserved */
+        self::assertSame(['a' => 1, 'c' => 3], $actual->toArray());
+    }
+
+    public function testCreateFromClosureWhenClosureReturnsEmptyThenCollectionIsEmpty(): void
+    {
+        /** @Given a closure that returns an empty array */
+        $collection = Collection::createFromClosure(factory: static function (): array {
+            return [];
+        });
+
+        /** @When checking the collection */
+        $isEmpty = $collection->isEmpty();
+
+        /** @Then the collection should be empty */
+        self::assertTrue($isEmpty);
+
+        /** @And the count should be zero */
+        self::assertSame(0, $collection->count());
+    }
+
+    public function testFilterWhenMultiplePredicatesThenOnlyElementsMatchingAllRemain(): void
+    {
+        /** @Given an eager collection of integers */
+        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+
+        /** @When filtering with two predicates: greater than 3 and even */
+        $actual = $collection->filter(
+            static fn(int $value): bool => $value > 3,
+            static fn(int $value): bool => ($value % 2) === 0
+        );
+
+        /** @Then only elements satisfying both predicates should remain */
+        self::assertSame([4, 6, 8, 10], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testJoinToStringWhenStringElementsThenValuesAreJoinedWithSeparator(): void
+    {
+        /** @Given an eager collection of strings */
+        $collection = Collection::createFrom(elements: ['a', 'b', 'c']);
+
+        /** @When joining with a comma separator */
+        $actual = $collection->joinToString(separator: ', ');
+
+        /** @Then the result should be "a, b, c" */
+        self::assertSame('a, b, c', $actual);
+    }
+
+    public function testCreateFromClosureWhenConsumedMultipleTimesThenRemainsReiterable(): void
+    {
+        /** @Given a closure-backed eager collection */
+        $collection = Collection::createFromClosure(factory: static function (): array {
+            return [10, 20, 30];
+        });
+
+        /** @When consuming the collection via count */
+        $count = $collection->count();
+
+        /** @Then the count should be 3 */
+        self::assertSame(3, $count);
+
+        /** @And a subsequent toArray should still return all elements */
+        self::assertSame([10, 20, 30], $collection->toArray());
+
+        /** @And first should return the first element */
+        self::assertSame(10, $collection->first());
+
+        /** @And last should return the last element */
+        self::assertSame(30, $collection->last());
+    }
+
+    public function testEqualsWhenCollectionsHaveDifferentSizesThenReturnsFalseBothWays(): void
+    {
+        /** @Given a first eager collection with three elements */
+        $first = Collection::createFrom(elements: [1, 2, 3]);
+
+        /** @And a second eager collection with two elements */
+        $second = Collection::createFrom(elements: [1, 2]);
+
+        /** @When comparing first equals second */
+        $firstEqualsSecond = $first->equals(other: $second);
+
+        /** @And comparing second equals first */
+        $secondEqualsFirst = $second->equals(other: $first);
+
+        /** @Then the first comparison should return false */
+        self::assertFalse($firstEqualsSecond);
+
+        /** @And the second comparison should return false */
+        self::assertFalse($secondEqualsFirst);
+    }
+
+    public function testJoinToStringWhenIntegerElementsThenValuesAreJoinedWithSeparator(): void
+    {
+        /** @Given an eager collection of integers */
+        $collection = Collection::createFrom(elements: [1, 2, 3]);
+
+        /** @When joining with a comma separator */
+        $actual = $collection->joinToString(separator: ', ');
+
+        /** @Then the result should be "1, 2, 3" */
+        self::assertSame('1, 2, 3', $actual);
+    }
+
+    public function testRemoveAllWhenFirstElementDoesNotMatchThenOnlyMatchingAreRemoved(): void
+    {
+        /** @Given an eager collection where the first element does not match the predicate */
+        $collection = Collection::createFrom(elements: [1, 10, 2, 20, 3]);
+
+        /** @When removing all elements greater than 5 */
+        $actual = $collection->removeAll(predicate: static fn(int $value): bool => $value > 5);
+
+        /** @Then elements 1, 2, 3 should remain */
+        self::assertSame([1, 2, 3], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testRemoveAllWhenStringKeyedCollectionThenRemainingKeysArePreserved(): void
+    {
+        /** @Given an eager collection with string keys */
+        $collection = Collection::createFrom(elements: ['a' => 1, 'b' => 2, 'c' => 3]);
+
+        /** @When removing elements greater than 2 */
+        $actual = $collection->removeAll(predicate: static fn(int $value): bool => $value > 2);
+
+        /** @Then the remaining keys should be preserved */
+        self::assertSame(['a' => 1, 'b' => 2], $actual->toArray());
+    }
+
+    public function testRemoveWhenScalarRemovedFromObjectCollectionThenNothingIsRemoved(): void
+    {
+        /** @Given an eager collection with Amount objects */
+        $collection = Collection::createFrom(elements: [
+            new Amount(value: 50.00, currency: Currency::USD),
+            new Amount(value: 100.00, currency: Currency::USD)
+        ]);
+
+        /** @When removing a scalar value */
+        $actual = $collection->remove(element: 50.00);
+
+        /** @Then no elements should be removed */
+        self::assertSame(2, $actual->count());
+    }
+
+    public function testSortWhenCustomComparatorGivenThenElementsAreOrderedByComparator(): void
+    {
+        /** @Given an eager collection of Amount objects */
+        $collection = Collection::createFrom(elements: [
+            new Amount(value: 300.00, currency: Currency::USD),
+            new Amount(value: 100.00, currency: Currency::USD),
+            new Amount(value: 200.00, currency: Currency::USD)
+        ]);
+
+        /** @When sorting ascending by value with a custom comparator */
+        $actual = $collection->sort(
+            order: Order::ASCENDING_VALUE,
+            comparator: static fn(Amount $first, Amount $second): int => ($first->value <=> $second->value)
+        );
+
+        /** @Then the first element should have the lowest value */
+        self::assertSame(100.00, $actual->first()->value);
+
+        /** @And the last element should have the highest value */
+        self::assertSame(300.00, $actual->last()->value);
+    }
+
+    public function testFilterWhenAppliedAfterTerminalThenOperatesOnMaterializedElements(): void
+    {
+        /** @Given an eager collection of integers */
+        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
+
+        /** @And the collection materialized by a prior terminal call */
+        $collection->count();
+
+        /** @When filtering the already-materialized collection */
+        $actual = $collection->filter(predicates: static fn(int $value): bool => ($value % 2) === 0);
+
+        /** @Then the filter operates on the cached elements */
+        self::assertSame([2, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testReduceWhenAccumulatorGivenThenElementsAreAccumulatedToSingleValue(): void
+    {
+        /** @Given an eager collection of integers */
+        $collection = Collection::createFrom(elements: [1, 2, 3, 4]);
+
+        /** @When reducing to calculate the sum */
+        $actual = $collection->reduce(
+            accumulator: static fn(int $carry, int $value): int => ($carry + $value),
+            initial: 0
+        );
+
+        /** @Then the sum should be 10 */
+        self::assertSame(10, $actual);
+    }
+
+    public function testSortWhenAscendingValueWithoutComparatorThenDefaultComparisonIsUsed(): void
+    {
+        /** @Given an eager collection with unordered integers */
+        $collection = Collection::createFrom(elements: [3, 1, 4, 1, 5]);
+
+        /** @When sorting ascending by value without a custom comparator */
+        $actual = $collection->sort(order: Order::ASCENDING_VALUE);
+
+        /** @Then the elements should be sorted by the default spaceship operator */
+        self::assertSame([1, 1, 3, 4, 5], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testChainedOperationsWhenClosureBackedThenPipelineProducesExpectedResult(): void
+    {
+        /** @Given a closure-backed eager collection with integers */
+        $collection = Collection::createFromClosure(factory: static function (): array {
+            return [5, 3, 1, 4, 2];
+        });
+
+        /** @When chaining filter, map and sort */
+        $actual = $collection
+            ->filter(predicates: static fn(int $value): bool => $value > 2)
+            ->map(transformations: static fn(int $value): int => ($value * 10))
+            ->sort(order: Order::ASCENDING_VALUE);
+
+        /** @Then the result should contain the filtered, mapped and sorted values */
+        self::assertSame([30, 40, 50], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
+    }
+
+    public function testCreateFromWhenGeneratorIsConsumedTwiceThenAllElementsRemainAvailable(): void
+    {
+        /** @Given a generator that yields three elements */
+        $generator = (static function (): Generator {
+            yield 1;
+            yield 2;
+            yield 3;
+        })();
+
+        /** @When creating an eager collection from the generator */
+        $collection = Collection::createFrom(elements: $generator);
+
+        /** @And consuming the collection via count */
+        $count = $collection->count();
+
+        /** @Then the count should be 3 */
+        self::assertSame(3, $count);
+
+        /** @And a subsequent toArray should still return all elements */
+        self::assertSame([1, 2, 3], $collection->toArray());
+    }
+
+    public function testFindByWhenMultiplePredicatesThenFirstMatchAcrossPredicatesIsReturned(): void
+    {
+        /** @Given an eager collection of integers */
+        $collection = Collection::createFrom(elements: [1, 2, 3, 4, 5]);
+
+        /** @When finding by multiple predicates (OR semantics) */
+        $matchTen = static fn(int $value): bool => $value === 10;
+        $matchThree = static fn(int $value): bool => $value === 3;
+
+        $actual = $collection->findBy($matchTen, $matchThree);
+
+        /** @Then it should return the first element matching any predicate */
+        self::assertSame(3, $actual);
     }
 
     public function testChainedOperationsWhenObjectElementsThenPipelineProducesExpectedResult(): void
@@ -1124,309 +1427,6 @@ final class EagerCollectionTest extends TestCase
 
         /** @And the last element should be 4 (square of 2) */
         self::assertSame(4, $actual->last());
-    }
-
-    public function testReduceWhenAppliedOverChainedPipelineThenSumIsReturned(): void
-    {
-        /** @Given an eager collection of integers from 1 to 100 */
-        $collection = Collection::createFrom(elements: range(1, 100));
-
-        /** @And the collection is filtered to even numbers, squared, and sorted descending */
-        $pipeline = $collection
-            ->filter(predicates: static fn(int $value): bool => ($value % 2) === 0)
-            ->map(transformations: static fn(int $value): int => ($value ** 2))
-            ->sort(order: Order::DESCENDING_VALUE);
-
-        /** @When reducing to calculate the sum of all squared even numbers */
-        $sum = $pipeline->reduce(
-            accumulator: static fn(int $carry, int $value): int => ($carry + $value),
-            initial: 0
-        );
-
-        /** @Then the sum should be 171700 */
-        self::assertSame(171700, $sum);
-    }
-
-    public function testCreateFromClosureWhenClosureSourceThenHoldsAllElements(): void
-    {
-        /** @Given a closure that returns three elements */
-        $factory = static function (): array {
-            return [1, 2, 3];
-        };
-
-        /** @When creating an eager collection from the closure */
-        $collection = Collection::createFromClosure(factory: $factory);
-
-        /** @Then the collection should contain all three elements */
-        self::assertSame(3, $collection->count());
-
-        /** @And the array should match the expected elements */
-        self::assertSame([1, 2, 3], $collection->toArray());
-    }
-
-    public function testCreateFromClosureWhenConsumedMultipleTimesThenRemainsReiterable(): void
-    {
-        /** @Given a closure-backed eager collection */
-        $collection = Collection::createFromClosure(factory: static function (): array {
-            return [10, 20, 30];
-        });
-
-        /** @When consuming the collection via count */
-        $count = $collection->count();
-
-        /** @Then the count should be 3 */
-        self::assertSame(3, $count);
-
-        /** @And a subsequent toArray should still return all elements */
-        self::assertSame([10, 20, 30], $collection->toArray());
-
-        /** @And first should return the first element */
-        self::assertSame(10, $collection->first());
-
-        /** @And last should return the last element */
-        self::assertSame(30, $collection->last());
-    }
-
-    public function testCreateFromClosureWhenClosureReturnsEmptyThenCollectionIsEmpty(): void
-    {
-        /** @Given a closure that returns an empty array */
-        $collection = Collection::createFromClosure(factory: static function (): array {
-            return [];
-        });
-
-        /** @When checking the collection */
-        $isEmpty = $collection->isEmpty();
-
-        /** @Then the collection should be empty */
-        self::assertTrue($isEmpty);
-
-        /** @And the count should be zero */
-        self::assertSame(0, $collection->count());
-    }
-
-    public function testChainedOperationsWhenClosureBackedThenPipelineProducesExpectedResult(): void
-    {
-        /** @Given a closure-backed eager collection with integers */
-        $collection = Collection::createFromClosure(factory: static function (): array {
-            return [5, 3, 1, 4, 2];
-        });
-
-        /** @When chaining filter, map and sort */
-        $actual = $collection
-            ->filter(predicates: static fn(int $value): bool => $value > 2)
-            ->map(transformations: static fn(int $value): int => ($value * 10))
-            ->sort(order: Order::ASCENDING_VALUE);
-
-        /** @Then the result should contain the filtered, mapped and sorted values */
-        self::assertSame([30, 40, 50], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testReduceWhenClosureBackedObjectsThenAmountsAreSummed(): void
-    {
-        /** @Given a closure that returns Amount objects */
-        $collection = Collection::createFromClosure(factory: static function (): array {
-            return [
-                new Amount(value: 100.00, currency: Currency::USD),
-                new Amount(value: 200.00, currency: Currency::USD),
-                new Amount(value: 300.00, currency: Currency::USD),
-            ];
-        });
-
-        /** @When reducing to sum all amounts */
-        $total = $collection->reduce(
-            accumulator: static fn(float $carry, Amount $amount): float => ($carry + $amount->value),
-            initial: 0.0
-        );
-
-        /** @Then the total should be 600 */
-        self::assertSame(600.00, $total);
-    }
-
-    public function testGetByWhenClosureBackedCollectionThenReturnsElementAtIndex(): void
-    {
-        /** @Given a closure-backed eager collection */
-        $collection = Collection::createFromClosure(factory: static function (): array {
-            return ['alpha', 'beta', 'gamma'];
-        });
-
-        /** @When retrieving element at index 1 */
-        $actual = $collection->getBy(index: 1);
-
-        /** @Then it should return the second element */
-        self::assertSame('beta', $actual);
-    }
-
-    public function testContainsWhenClosureBackedCollectionThenDetectsMembership(): void
-    {
-        /** @Given a closure-backed eager collection */
-        $collection = Collection::createFromClosure(factory: static function (): array {
-            return ['alpha', 'beta', 'gamma'];
-        });
-
-        /** @When checking if the collection contains an existing element */
-        $containsBeta = $collection->contains(element: 'beta');
-
-        /** @Then it should return true */
-        self::assertTrue($containsBeta);
-
-        /** @And checking for a non-existing element should return false */
-        self::assertFalse($collection->contains(element: 'delta'));
-    }
-
-    public function testAddWhenClosureBackedCollectionThenElementsAreAppended(): void
-    {
-        /** @Given a closure-backed eager collection */
-        $collection = Collection::createFromClosure(factory: static function (): array {
-            return [1, 2];
-        });
-
-        /** @When adding elements */
-        $actual = $collection->add(3, 4);
-
-        /** @Then all elements should be present */
-        self::assertSame([1, 2, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testMergeWhenClosureBackedMergedWithEagerThenElementsAreCombined(): void
-    {
-        /** @Given a closure-backed eager collection */
-        $closureCollection = Collection::createFromClosure(factory: static function (): array {
-            return [1, 2];
-        });
-
-        /** @And an eager collection */
-        $eagerCollection = Collection::createFrom(elements: [3, 4]);
-
-        /** @When merging them */
-        $actual = $closureCollection->merge(other: $eagerCollection);
-
-        /** @Then the result should contain all elements */
-        self::assertSame([1, 2, 3, 4], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
-    }
-
-    public function testToShipmentsWhenRawRecordsThenTypedCollectionIsBuilt(): void
-    {
-        /** @Given raw shipment records as arrays */
-        $records = [
-            [
-                'id'          => 'SHP-001',
-                'status'      => 'shipped',
-                'carrier'     => 'DHL',
-                'created_at'  => '2026-01-10T08:00:00+00:00',
-                'customer_id' => 'C-100'
-            ],
-            [
-                'id'          => 'SHP-002',
-                'status'      => 'pending',
-                'carrier'     => 'FedEx',
-                'created_at'  => '2026-01-11T09:00:00+00:00',
-                'customer_id' => 'C-200'
-            ],
-            [
-                'id'          => 'SHP-003',
-                'status'      => 'shipped',
-                'carrier'     => 'UPS',
-                'created_at'  => '2026-01-12T10:00:00+00:00',
-                'customer_id' => 'C-100'
-            ],
-        ];
-
-        /** @When mapping records to a typed Shipments collection via ShipmentRecord */
-        $shipments = ShipmentRecord::fromRecords(records: $records)->toShipments();
-
-        /** @Then the collection should contain three shipments */
-        self::assertSame(3, $shipments->count());
-
-        /** @And the collection should be an instance of Shipments */
-        self::assertInstanceOf(Shipments::class, $shipments);
-    }
-
-    public function testCreateFromClosureWhenClosureMapsRecordsThenShipmentsAreBuilt(): void
-    {
-        /** @Given raw shipment records as arrays */
-        $records = [
-            [
-                'id'          => 'SHP-001',
-                'status'      => 'shipped',
-                'carrier'     => 'DHL',
-                'created_at'  => '2026-01-10T08:00:00+00:00',
-                'customer_id' => 'C-100'
-            ],
-            [
-                'id'          => 'SHP-002',
-                'status'      => 'pending',
-                'carrier'     => 'FedEx',
-                'created_at'  => '2026-01-11T09:00:00+00:00',
-                'customer_id' => 'C-200'
-            ],
-        ];
-
-        /** @When creating a Shipments collection from a closure that maps records */
-        $shipments = Shipments::createFromClosure(
-            factory: static function () use ($records): Collection {
-                return Collection::createFrom(elements: $records)
-                    ->map(transformations: static fn(array $record): Shipment => Shipment::from(
-                        id: $record['id'],
-                        status: $record['status'],
-                        carrier: $record['carrier'],
-                        createdAt: $record['created_at'],
-                        customerId: $record['customer_id']
-                    ));
-            }
-        );
-
-        /** @Then the collection should contain two shipments */
-        self::assertSame(2, $shipments->count());
-
-        /** @And the first shipment should have the expected id */
-        self::assertSame('SHP-001', $shipments->first()->id);
-    }
-
-    public function testToArrayWhenTypedShipmentsThenSerializedToRecordStructure(): void
-    {
-        /** @Given raw shipment records as arrays */
-        $records = [
-            [
-                'id'          => 'SHP-001',
-                'status'      => 'shipped',
-                'carrier'     => 'DHL',
-                'created_at'  => '2026-01-10T08:00:00+00:00',
-                'customer_id' => 'C-100'
-            ],
-        ];
-
-        /** @When mapping records via ShipmentRecord and converting to array */
-        $actual = ShipmentRecord::fromRecords(records: $records)->toShipments()->toArray();
-
-        /** @Then the serialized array should match the original record structure */
-        self::assertSame([
-            [
-                'id'          => 'SHP-001',
-                'status'      => 'shipped',
-                'carrier'     => 'DHL',
-                'created_at'  => '2026-01-10T08:00:00+00:00',
-                'customer_id' => 'C-100',
-            ],
-        ], $actual);
-    }
-
-    public function testMapWhenClosureBackedTypedCarriersThenTypeIsPreserved(): void
-    {
-        /** @Given a closure-backed Carriers collection */
-        $carriers = Carriers::createFromClosure(factory: static function (): array {
-            return ['dhl', 'fedex', 'ups'];
-        });
-
-        /** @When mapping to uppercase */
-        $actual = $carriers->map(
-            transformations: static fn(string $name): string => strtoupper($name)
-        );
-
-        /** @Then the result should still be an instance of Carriers */
-        self::assertInstanceOf(Carriers::class, $actual);
-
-        /** @And the carriers should be uppercased */
-        self::assertSame(['DHL', 'FEDEX', 'UPS'], $actual->toArray(keyPreservation: KeyPreservation::DISCARD));
     }
 
     public function testCreateFromAndCreateFromClosureWhenSameRecordsThenProduceIdenticalShipments(): void

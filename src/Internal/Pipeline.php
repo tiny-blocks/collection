@@ -26,6 +26,19 @@ use TinyBlocks\Collection\Internal\Operations\Operation;
 interface Pipeline
 {
     /**
+     * Returns the last element, or a default if empty.
+     *
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P) per call. Must reach the end of the pipeline. O(1) intermediate space.
+     *
+     * @template TDefault
+     * @param TDefault $defaultValueIfNotFound Value returned when empty.
+     * @return TValue|TDefault The last element or the default.
+     */
+    public function last(mixed $defaultValueIfNotFound = null): mixed;
+
+    /**
      * Adds a new operation stage to the pipeline.
      *
      * Returns a new pipeline instance containing all previous stages
@@ -64,30 +77,6 @@ interface Pipeline
     public function first(mixed $defaultValueIfNotFound = null): mixed;
 
     /**
-     * Determines whether the pipeline has no elements.
-     *
-     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
-     *        O(n) cached space.
-     * Lazy: O(P_first) per call. Short-circuits at the first emitted element. O(1) intermediate space.
-     *
-     * @return bool True if the pipeline is empty.
-     */
-    public function isEmpty(): bool;
-
-    /**
-     * Returns the last element, or a default if empty.
-     *
-     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
-     *        O(n) cached space.
-     * Lazy: O(P) per call. Must reach the end of the pipeline. O(1) intermediate space.
-     *
-     * @template TDefault
-     * @param TDefault $defaultValueIfNotFound Value returned when empty.
-     * @return TValue|TDefault The last element or the default.
-     */
-    public function last(mixed $defaultValueIfNotFound = null): mixed;
-
-    /**
      * Returns the element at the given zero-based index.
      *
      * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
@@ -100,6 +89,17 @@ interface Pipeline
      * @return TValue|TDefault The element at the index or the default.
      */
     public function getBy(int $index, mixed $defaultValueIfNotFound = null): mixed;
+
+    /**
+     * Determines whether the pipeline has no elements.
+     *
+     * Eager: amortized O(P) on first terminal call. O(1) on subsequent calls (cached).
+     *        O(n) cached space.
+     * Lazy: O(P_first) per call. Short-circuits at the first emitted element. O(1) intermediate space.
+     *
+     * @return bool True if the pipeline is empty.
+     */
+    public function isEmpty(): bool;
 
     /**
      * Executes all accumulated stages and yields the resulting elements.

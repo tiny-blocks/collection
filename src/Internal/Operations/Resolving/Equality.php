@@ -13,7 +13,21 @@ final class Equality
     {
     }
 
-    public static function areSame(mixed $element, mixed $other): bool
+    /**
+     * @param iterable<int|string, mixed> $elements
+     */
+    public static function exists(mixed $element, iterable $elements): bool
+    {
+        foreach ($elements as $current) {
+            if (Equality::areSame(other: $element, element: $current)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static function areSame(mixed $other, mixed $element): bool
     {
         if (is_object($element) !== is_object($other)) {
             return false;
@@ -25,27 +39,13 @@ final class Equality
     }
 
     /**
-     * @param iterable<int|string, mixed> $elements
-     */
-    public static function exists(iterable $elements, mixed $element): bool
-    {
-        foreach ($elements as $current) {
-            if (Equality::areSame(element: $current, other: $element)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @param Iterator<int|string, mixed> $elements
      * @param Collectible<mixed> $other
+     * @param Iterator<int|string, mixed> $elements
      */
-    public static function compareAll(Iterator $elements, Collectible $other): bool
+    public static function compareAll(Collectible $other, Iterator $elements): bool
     {
         foreach ($other as $value) {
-            if (!$elements->valid() || !Equality::areSame(element: $elements->current(), other: $value)) {
+            if (!$elements->valid() || !Equality::areSame(other: $value, element: $elements->current())) {
                 return false;
             }
 

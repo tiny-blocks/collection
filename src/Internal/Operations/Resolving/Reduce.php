@@ -12,7 +12,7 @@ final class Reduce
     {
     }
 
-    public static function from(iterable $elements, Closure $accumulator, mixed $initial): mixed
+    public static function from(mixed $initial, iterable $elements, Closure $accumulator): mixed
     {
         $carry = $initial;
 

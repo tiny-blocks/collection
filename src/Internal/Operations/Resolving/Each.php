@@ -10,7 +10,7 @@ final class Each
     {
     }
 
-    public static function on(iterable $elements, array $actions): void
+    public static function on(array $actions, iterable $elements): void
     {
         foreach ($elements as $key => $value) {
             foreach ($actions as $action) {

@@ -22,7 +22,7 @@ final readonly class Remove implements Operation
     public function apply(iterable $elements): Generator
     {
         foreach ($elements as $key => $value) {
-            if (!Equality::areSame(element: $this->element, other: $value)) {
+            if (!Equality::areSame(other: $value, element: $this->element)) {
                 yield $key => $value;
             }
         }
